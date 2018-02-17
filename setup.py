@@ -16,7 +16,7 @@ setup(
     author='TakingItCasual',
     author_email='takingitcasual+gh@gmail.com',
     url='https://github.com/TakingItCasual/easymc',
-    download_url='https://github.com/TakingItCasual/easymc/archive/0.1.tar.gz',
+    download_url='https://github.com/TakingItCasual/easymc/archive/0.1.1.tar.gz',
     platforms=['any'],
     license='MIT',
     classifiers=[
@@ -24,7 +24,7 @@ setup(
         'Operating System :: OS Independent',
         'Programming Language :: Python :: 3.6'
     ],
-    keywords='minecraft aws ec2 iam',
+    keywords='mc minecraft server aws ec2 iam',
     packages=find_packages(),
     python_requires='>=3.6',
     entry_points={

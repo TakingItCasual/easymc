@@ -1,19 +1,20 @@
 import os
+import stat
 import configparser
 import boto3
 from botocore.exceptions import ClientError
 
-import constants
+import const
 from stuff import simulate_policy
 from stuff import quit_out
 
 def main():
-    """Verifies existence of client's servers.dat and IAM credentials csv.
+    """Verifies existance of config file, and the values therein.
 
-    Not being able to find servers.dat results in a warning, not being able to
-    find the IAM credentials results in an error.
+    The config file should have an iam_id (AWS access key ID), iam_secret (AWS 
+    Secret Access Key), and optionally servers_dat (file path for servers.dat).
 
-    server_titles.json is verified/managed by manage_titles.py
+    server_titles.json is verified/managed separately by manage_titles.py.
 
     Returns:
         dict:
@@ -26,7 +27,7 @@ def main():
 
     user_info = {}
 
-    config_file = constants.config_folder + "config"
+    config_file = const.CONFIG_FOLDER + "config"
     if not os.path.isfile(config_file):
         quit_out.q([
             "Configuration is not set. Set with \"easymc configure\".", 
@@ -73,37 +74,40 @@ def verify_user(config_dict):
     user_info["iam_id"] = config_dict["default"]["iam_id"]
     user_info["iam_secret"] = config_dict["default"]["iam_secret"]
 
-    # Can't verify access to GetUser, as user's ARN is needed for verification
+    # Test access to iam:GetUser, as SimulatePrincipalPolicy can't be used yet.
     try:
         iam_user = boto3.client("iam", 
             aws_access_key_id=user_info["iam_id"], 
             aws_secret_access_key=user_info["iam_secret"]
         ).get_user()["User"]
     except ClientError as e:
-        print(e.response)
         if e.response["Error"]["Code"] == "InvalidClientTokenId":
             quit_out.q(["Error: IAM ID is invalid."])
         elif e.response["Error"]["Code"] == "SignatureDoesNotMatch":
             quit_out.q(["Error: IAM ID is valid, but its secret is invalid."])
         elif e.response["Error"]["Code"] == "AccessDenied":
             quit_out.assert_empty(["iam:GetUser"])
+        quit_out.q([e])
 
     user_info["iam_name"] = iam_user["UserName"]
-    user_info["iam_arn"] = iam_user["Arn"]
+    # This right here is what is needed for SimulatePrincipalPolicy.
+    user_info["iam_arn"] = iam_user["Arn"] 
 
-    # Meant for testing access to SimulatePrincipalPolicy, rather than GetUser
+    # Meant for testing access to SimulatePrincipalPolicy, rather than GetUser.
     try:
         simulate_policy.blocked(user_info, actions=["iam:GetUser"])
-    except ClientError:
-        quit_out.assert_empty(["iam:SimulatePrincipalPolicy"])
+    except ClientError as e:
+        if e.response["Error"]["Code"] == "AccessDenied":
+            quit_out.assert_empty(["iam:SimulatePrincipalPolicy"])
+        quit_out.q([e])
 
     return user_info
 
 
-def create_configuration():
+def configure():
     """User can set their IAM credentials and servers.dat file path here."""
-    if not os.path.isdir(constants.config_folder):
-        os.mkdir(constants.config_folder)
+    if not os.path.isdir(const.CONFIG_FOLDER):
+        os.mkdir(const.CONFIG_FOLDER)
 
     iam_id_str = "None"
     iam_secret_str = "None"
@@ -112,7 +116,7 @@ def create_configuration():
     config_dict = configparser.ConfigParser()
     config_dict["default"] = {}
 
-    config_file = os.path.join(constants.config_folder, "config")
+    config_file = os.path.join(const.CONFIG_FOLDER, "config")
     if os.path.isfile(config_file):
         config_dict.read(config_file)
         if config_dict.has_option("default", "iam_id"):
@@ -138,5 +142,6 @@ def create_configuration():
     if servers_dat:
         config_dict["default"]["servers_dat"] = servers_dat
 
-    with open(config_file, "w") as output:
+    fdesc = os.open(config_file, os.O_WRONLY | os.O_CREAT, const.CONFIG_PERMS)
+    with os.fdopen(fdesc, "w") as output:
         config_dict.write(output)

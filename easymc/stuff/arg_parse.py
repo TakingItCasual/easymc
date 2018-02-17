@@ -1,11 +1,8 @@
 from verify import verify_instances
 from stuff import quit_out
 
-# Custom CLI argument parsing.
-# TODO: switch over to using argparse
-
 def get_instances(user_info, args):
-    """Wrapper for verify_instances.main(), which verifies the filters.
+    """Wrapper for verify_instances.main(), which verifies the filter args.
 
     Args:
         user_info (dict): iam_id, iam_secret, and iam_arn are needed.
@@ -18,7 +15,7 @@ def get_instances(user_info, args):
         list: dicts of instances: 
             "region": AWS region that an instance is in
             "id": ID of instance
-            "tags": Instance tags
+            "tags": dict: Instance tags.
     """
 
     if not args:

@@ -32,17 +32,17 @@ def main(args=None):
 
         if args:
             if args[0] == "configure":
-                verify_config.create_configuration()
+                verify_config.configure()
                 quit_out.q()
 
         user_info = {}
         commands_list = [
             {"cmd": "start_server", "obj": start_server}, 
             {"cmd": "check_server", "obj": check_server}, 
-            {"cmd": "stop_instance", "obj": stop_instance}, 
-            {"cmd": "download_backup", "obj": download_backup}, 
+            {"cmd": "stop_server", "obj": stop_server}, 
+            {"cmd": "get_backup", "obj": get_backup}, 
             {"cmd": "update_mods", "obj": update_mods}, 
-            {"cmd": "create_instance", "obj": create_instance}
+            {"cmd": "create_server", "obj": create_server}
         ]
 
         user_info = verify_config.main()
@@ -52,7 +52,8 @@ def main(args=None):
         arg_cmd = str(args[0])
 
         if not any(cmd["cmd"] == arg_cmd for cmd in commands_list):
-            quit_out.q(["Error: \"" + arg_cmd + "\" is an invalid argument."])
+            print("Error: \"" + arg_cmd + "\" is an invalid argument.")
+            describe_arguments(user_info, commands_list)
 
         arg_index = [cmd["cmd"] for cmd in commands_list].index(arg_cmd)
         quit_out.assert_empty(
@@ -79,7 +80,7 @@ def describe_arguments(user_info, commands_list):
 
     if allowed_args:
         print("")
-        print("Allowed arguments:")
+        print("Available arguments:")
 
         offset_str = max(len(cmd["cmd"]) for cmd in allowed_args) + 2
         for cmd in allowed_args:

@@ -2,7 +2,7 @@ import os
 import json
 import nbtlib
 
-import constants
+import const
 
 import pprint
 pp = pprint.PrettyPrinter(indent=2)
@@ -21,7 +21,7 @@ def update_dns(aws_region, instance_id, servers_dat_path, new_dns):
     title = [x["title"] for x in titles_dict["instances"] 
         if x["region"] == aws_region and x["id"] == instance_id]
 
-    # It should only be possible for the length of title to be 0 or 1 
+    # It should only be possible for the length of title to be 0 or 1.
     if title:
         title = title[0]
     else:
@@ -38,7 +38,7 @@ def update_dns(aws_region, instance_id, servers_dat_path, new_dns):
 
 def verify_titles_json():
     """Verifies that server_titles.json adheres to basic_struct"""
-    titles_file = constants.config_folder + "server_titles.json"
+    titles_file = const.CONFIG_FOLDER + "server_titles.json"
     basic_struct = {"instances": []}
 
     if os.path.isfile(titles_file):
@@ -56,7 +56,7 @@ def verify_titles_json():
 
 
 def save_titles_json(input_dict):
-    titles_file = constants.config_folder + "server_titles.json"
+    titles_file = const.CONFIG_FOLDER + "server_titles.json"
     with open(titles_file, "w", encoding="utf-8") as out_file:
         json.dump(input_dict, out_file, ensure_ascii=False)    
 
