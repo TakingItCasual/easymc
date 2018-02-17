@@ -84,7 +84,7 @@ def get_regions(user_info, region_filter=None):
     for region in boto3.client("ec2", 
         aws_access_key_id=user_info["iam_id"], 
         aws_secret_access_key=user_info["iam_secret"],
-        region_name="us-east-1"
+        region_name="us-east-1" # Why must listing regions require knowing one
     ).describe_regions()["Regions"]:
         region_list.append(region["RegionName"])
 

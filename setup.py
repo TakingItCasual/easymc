@@ -10,7 +10,7 @@ with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
 
 setup(
     name='easymc',
-    version='0.1.1',
+    version='0.1.0',
     description='AWS EC2 instance manager for Minecraft servers',
     long_description=long_description,
     author='TakingItCasual',

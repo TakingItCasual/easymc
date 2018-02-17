@@ -5,7 +5,7 @@ from stuff import manage_titles
 from stuff import simulate_policy
 
 def main(user_info, args):
-    """Check if instance(s) running & update client's server list.
+    """Check instance status(es) & update client's server list
 
     Args:
         user_info (dict): iam_id, iam_secret, and iam_arn are needed.
@@ -37,6 +37,23 @@ def main(user_info, args):
             if "servers_dat" in user_info:
                 manage_titles.update_dns(instance["region"], instance["id"], 
                     user_info["servers_dat"], instance_dns)
+
+
+def add_cmd_parser(argparse_obj, module_name):
+    cmd_arg = argparse_obj.add_parser(module_name, 
+        help=main.__doc__.splitlines()[0])
+    cmd_arg.add_argument(
+        "-r", "--region", dest="regions", action='append', metavar="", 
+        help=("AWS EC2 region(s) to probe for instances. If not "
+            "set, all regions will be probed."))
+    cmd_arg.add_argument(
+        "-k", "--tagkey", metavar="", 
+        help=("Instance tag key to filter instances by. If not "
+            "set, no filter will be applied."))
+    cmd_arg.add_argument(
+        "-v", "--tagvalue", dest="tagvalues", action='append', metavar="", 
+        help=("Instance tag value(s) to filter by (requires tag "
+            "key filter to be set)."))
 
 
 def blocked_actions(user_info):

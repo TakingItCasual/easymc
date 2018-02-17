@@ -9,7 +9,7 @@ from stuff import simulate_policy
 from stuff import quit_out
 
 def main():
-    """Verifies existance of config file, and the values therein.
+    """Verifies existence of config file, and the values therein.
 
     The config file should have an iam_id (AWS access key ID), iam_secret (AWS 
     Secret Access Key), and optionally servers_dat (file path for servers.dat).
@@ -105,7 +105,7 @@ def verify_user(config_dict):
 
 
 def configure():
-    """User can set their IAM credentials and servers.dat file path here."""
+    """Set IAM user's credentials and servers.dat file path"""
     if not os.path.isdir(const.CONFIG_FOLDER):
         os.mkdir(const.CONFIG_FOLDER)
 
