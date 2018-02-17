@@ -1,11 +1,12 @@
 import boto3
 
+import const
 from stuff import simulate_policy
 
 def main(user_info, args):
-    """Forces the server and instance to stop.
-    
-    Send a StopInstances command to instance(s). Server(s) will save data.
+    """SSH into an EC2 instance using a .pem private key
+
+    The private key is searched for from the script's config folder.
     """
     
     pass
@@ -19,6 +20,5 @@ def add_documentation(argparse_obj, module_name):
 def blocked_actions(user_info):
     """Returns list of denied AWS actions needed to run the above main()."""
     return simulate_policy.blocked(user_info, actions=[
-        "ec2:DescribeInstances", 
-        "ec2:StopInstances"
+        "ec2:DescribeInstances"
     ])

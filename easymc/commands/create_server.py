@@ -2,7 +2,7 @@ import boto3
 
 from stuff import simulate_policy
 
-def main(config_data, *args):
+def main(user_info, args):
     """Creates and initializes a new instance.
 
     Create new instance and initialize it using scripts from the setup folder.
@@ -11,7 +11,7 @@ def main(config_data, *args):
     pass
 
 
-def add_cmd_parser(argparse_obj, module_name):
+def add_documentation(argparse_obj, module_name):
     cmd_arg = argparse_obj.add_parser(module_name, 
         help=main.__doc__.splitlines()[0])
     

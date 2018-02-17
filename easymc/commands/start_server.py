@@ -1,6 +1,6 @@
 import boto3
 
-from stuff import arg_parse
+from verify import verify_instances
 from stuff import manage_titles
 from stuff import simulate_policy
 
@@ -9,10 +9,10 @@ def main(user_info, args):
 
     Args:
         user_info (dict): iam_id, iam_secret, and iam_arn are needed.
-        args (list): See stuff/arg_parse.py for documentation.
+        args (dict): See stuff.verify_instances:main for documentation.
     """
 
-    instances = arg_parse.get_instances(user_info, args)
+    instances = verify_instances.main(user_info, args)
 
     for instance in instances:
         print("")
@@ -57,7 +57,7 @@ def main(user_info, args):
             print("  Instance started. The server should be available soon.")      
 
 
-def add_cmd_parser(argparse_obj, module_name):
+def add_documentation(argparse_obj, module_name):
     cmd_arg = argparse_obj.add_parser(module_name, 
         help=main.__doc__.splitlines()[0])
     cmd_arg.add_argument(

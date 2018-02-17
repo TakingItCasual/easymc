@@ -38,27 +38,11 @@ def main(args=None):
             {"cmd": "stop_server", "obj": stop_server}, 
             {"cmd": "get_backup", "obj": get_backup}, 
             {"cmd": "update_mods", "obj": update_mods}, 
-            {"cmd": "create_server", "obj": create_server}
+            {"cmd": "create_server", "obj": create_server}, 
+            {"cmd": "ssh_server", "obj": ssh_server}
         ]
 
-        parser = argparse.ArgumentParser(
-            description=("AWS EC2 instance manager for Minecraft servers. "
-                "Requires IAM credentials created with an AWS account. Some  "
-                "commands require specific IAM permissions. One command "
-                "requires a .pem file to SSH into servers."))
-        cmd_args = parser.add_subparsers(dest="command", metavar=" "*15)
-
-        cmd_args.add_parser("configure", help=verify_config.configure.__doc__)
-        for cmd in commands_list:
-            cmd["obj"].add_cmd_parser(cmd_args, cmd["cmd"])
-
-        if not args:
-            parser.print_help()
-            quit_out.q()
-
-        args = vars(parser.parse_args(args))
-        if "tagkey" in args and args["tagkey"] and not args["tagvalues"]:
-            parser.error("--tagkey requires --tagvalue")
+        args = argv_to_args(args, commands_list)
 
         if args["command"] == "configure":
             verify_config.configure()
@@ -82,6 +66,39 @@ def main(args=None):
         quit_out.q(["Script completed successfully."])
     except SystemExit:
         pass
+
+
+def argv_to_args(args, commands_list):
+    """Seperating code relating to argparse to its own method.
+
+    Returns:
+        dict: Parsed arguments
+            "command": First positional argument
+            Other key-value pairs vary depending on the command. See the 
+            command's add_documentation function to see its args.
+    """
+
+    parser = argparse.ArgumentParser(
+        description=("AWS EC2 instance manager for Minecraft servers. "
+            "Requires IAM credentials linked to an AWS account. Not all "
+            "commands are necessarily usable, as some commands require "
+            "specific IAM permissions. The SSH command requires a .pem "
+            "private key file."))
+    cmd_args = parser.add_subparsers(dest="command", metavar=" "*15)
+
+    cmd_args.add_parser("configure", help=verify_config.configure.__doc__)
+    for cmd in commands_list:
+        cmd["obj"].add_documentation(cmd_args, cmd["cmd"])
+
+    if not args:
+        parser.print_help()
+        quit_out.q()
+
+    args = vars(parser.parse_args(args))
+    if "tagkey" in args and args["tagkey"] and not args["tagvalues"]:
+        parser.error("--tagkey requires --tagvalue")
+
+    return args
 
 
 if __name__ == "__main__":

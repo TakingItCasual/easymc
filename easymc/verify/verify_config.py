@@ -14,6 +14,8 @@ def main():
     The config file should have an iam_id (AWS access key ID), iam_secret (AWS 
     Secret Access Key), and optionally servers_dat (file path for servers.dat).
 
+    The config file is expected under .easymc/ under the user's home directory.
+
     server_titles.json is verified/managed separately by manage_titles.py.
 
     Returns:
@@ -142,6 +144,10 @@ def configure():
     if servers_dat:
         config_dict["default"]["servers_dat"] = servers_dat
 
-    fdesc = os.open(config_file, os.O_WRONLY | os.O_CREAT, const.CONFIG_PERMS)
+    if os.path.isfile(config_file):
+        os.remove(config_file)
+
+    flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL
+    fdesc = os.open(config_file, flags, const.CONFIG_PERMS)
     with os.fdopen(fdesc, "w") as output:
         config_dict.write(output)

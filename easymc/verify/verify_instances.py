@@ -3,7 +3,72 @@ import boto3
 from stuff import simulate_policy
 from stuff import quit_out
 
-def main(user_info, region_filter=None, tag_filter=None):
+def main(user_info, args):
+    """Wrapper for probe_regions(), which prints information to the console.
+
+    Args:
+        user_info (dict): iam_id, iam_secret, and iam_arn are needed.
+        args (dict):
+            "region": list: AWS region(s) to probe. If None, probe all.
+            "tagkey": Instance tag key to filter. If None, don't filter.
+            "tagvalue": list: Instance tag value(s) to filter (needs tagkey).
+
+    Returns:
+        list: dicts of instances: 
+            "region": AWS region that an instance is in
+            "id": ID of instance
+            "tags": dict: Instance tag key-value pairs
+    """
+
+    region_filter = args["regions"]
+    regions = get_regions(user_info, region_filter)
+
+    tag_filter = None
+    if args["tagkey"] and args["tagvalues"]:
+        tag_filter = {args["tagkey"]: args["tagvalues"]}
+
+    print("")
+    print("Probing " + str(len(regions)) + " AWS region(s) for instances...")
+    offset = max(len(region) for region in regions) + 1
+
+    all_instances = []
+    for region_instances in probe_regions(user_info, region_filter, tag_filter):
+        region = region_instances["region"]
+        region_instances = region_instances["instances"]
+        offset_str = " "*(offset-len(region))
+        if region_instances:
+            print(region + ":" + offset_str + 
+                str(len(region_instances)) + " instance(s) found:")
+            for instance in region_instances:
+                print("  " + instance["id"])
+                for tag_key, tag_value in instance["tags"].items():
+                    print("    " + tag_key + ": " + tag_value)
+
+                all_instances.append({
+                    "region": region, 
+                    "id": instance["id"], 
+                    "tags": instance["tags"]
+                })
+        else:
+            print(region + ":" + offset_str + "0 instance(s) found")
+
+    if not all_instances:
+        if region_filter and not tag_filter:
+            quit_out.q(["Error: No instances found from specified region(s).", 
+                "  Try removing the region filter."])
+        if not region_filter and tag_filter:
+            quit_out.q(["Error: No instances with specified tag(s) found.", 
+                "  Try removing the tag key filter."])
+        if region_filter and tag_filter:
+            quit_out.q([("Error: No instances with specified tag(s) "
+                "found from specified region(s)."), 
+                "  Try removing the region filter and/or the tag key filter."])
+        quit_out.q(["Error: No instances found."])
+
+    return all_instances
+
+
+def probe_regions(user_info, region_filter=None, tag_filter=None):
     """Probe EC2 region(s) for instances, and yield dicts of found instances.
     
     Args:
@@ -13,9 +78,9 @@ def main(user_info, region_filter=None, tag_filter=None):
         tag_filter (dict): Filter out instances that don't have tags matching
             the filter. If None, filter not used.
 
-    Yields:
-        dict: Instances found in a single region matching the tag filter.
-            "region": AWS region containing instance(s)
+    Yields: Yields for each region probed
+        dict: Found instance(s) in region matching the tag filter
+            "region": EC2 region containing instance(s)
             "instances": list: dicts of instances:
                 "id": ID of instance
                 "tags": Instance tags
@@ -37,7 +102,6 @@ def main(user_info, region_filter=None, tag_filter=None):
     else:
         tag_filter = []
 
-    instance_count = 0
     regions = get_regions(user_info, region_filter)
     for region in regions:
         response = boto3.client("ec2", 
@@ -60,22 +124,8 @@ def main(user_info, region_filter=None, tag_filter=None):
                         tag["Key"]: tag["Value"] for tag in instance["Tags"]
                     }
                 })
-                instance_count += 1
 
         yield region_instances
-
-    if not instance_count:
-        if region_filter and not tag_filter:
-            quit_out.q(["Error: No instances found from specified region(s).", 
-                "  Try searching all regions (region filter: [])."])
-        if not region_filter and tag_filter:
-            quit_out.q(["Error: No instances with specified tag(s) found.", 
-                "  Try not using the tag filter (tag key filter: [])."])
-        if region_filter and tag_filter:
-            quit_out.q([("Error: No instances with specified tag(s) "
-                "found from specified region(s)."), 
-                "  Try removing the region filter and/or the tag key filter."])
-        quit_out.q(["Error: No instances found."])
 
 
 def get_regions(user_info, region_filter=None):
