@@ -1,6 +1,10 @@
+import os
+import platform
+import subprocess
+import shutil
 import boto3
-import paramiko
 
+import const
 from verify import verify_instances
 from stuff import simulate_policy
 from stuff import quit_out
@@ -14,15 +18,71 @@ def main(user_info, args):
     not supported: all instances under an AWS account must share a private key.
     """
     
-    instances = verify_instances.main(user_info, args)
+    if platform.system() != "Linux":
+        quit_out.q(["Error: This command is not (yet?) supported for " + 
+            platform.system() + "."])
 
-    if len(instances) > 1:
-        quit_out.q(["Error: Instance search returned multiple results.", 
-            "  Narrow filter(s) so that only one instance is found."])
+    instance = verify_instances.main(user_info, args)
 
-    #pkey = paramiko.RSAKey.from_private_key_file(pkey_file_path)
-    #ssh_client = paramiko.SSHClient()
-    #ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    if len(instance) > 1:
+        quit_out.q(["Error: Instance query returned multiple results.", 
+            "  Narrow filter(s) so that only one instance is returned."])
+    instance = instance[0]
+
+    ec2_client = boto3.client("ec2", 
+        aws_access_key_id=user_info["iam_id"], 
+        aws_secret_access_key=user_info["iam_secret"], 
+        region_name=instance["region"]
+    )
+
+    response = ec2_client.describe_instances(
+        InstanceIds=[instance["id"]]
+    )["Reservations"][0]["Instances"][0]
+    instance_state = response["State"]["Name"]
+    instance_dns = response["PublicDnsName"]
+
+    if instance_state != "running":
+        quit_out.q(["Error: Cannot SSH into instance unless it is running."])
+
+    open_ssh_connection(find_private_key(), instance_dns)
+
+
+def open_ssh_connection(pkey_file_path, instance_dns):
+    if platform.system() == "Linux":
+        linux_ssh(pkey_file_path, instance_dns)
+    elif platform.system() == "Windows":
+        pass
+
+
+def linux_ssh(pkey_file_path, instance_dns):
+    # Detects if the system has the "ssh" command.
+    if shutil.which("ssh"):
+        print("")
+        print("Attempting to SSH into instance...")
+        ssh_cmd_str = ([
+            "ssh", "-q", 
+            "-o", "StrictHostKeyChecking=no", 
+            "-o", "UserKnownHostsFile=/dev/null", 
+            "-i", pkey_file_path, 
+            "ec2-user@"+instance_dns
+        ])
+        subprocess.run(ssh_cmd_str)
+    else:
+        quit_out.q(["Error: SSH executable not found."])
+
+
+def find_private_key():
+    """Returns file path of .pem private key from config, if only one exists."""
+    private_keys = []
+    for file in os.listdir(const.CONFIG_FOLDER):
+        if file.endswith(".pem"):
+            private_keys.append(const.CONFIG_FOLDER + file)
+
+    if not private_keys:
+        quit_out.q(["Error: .pem private key file not found in config."])
+    elif len(private_keys) > 1:
+        quit_out.q(["Error: Multiple .pem private key files found in config."])
+    return private_keys[0]
 
 
 def add_documentation(argparse_obj, module_name):

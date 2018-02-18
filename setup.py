@@ -34,7 +34,6 @@ setup(
     },
     install_requires=[
         'boto3',
-        'nbtlib',
-        'paramiko'
+        'nbtlib'
     ]
 )
