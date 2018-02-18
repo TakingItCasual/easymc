@@ -41,8 +41,9 @@ def main():
     user_info.update(verify_user(config_dict))
 
     if config_dict.has_option("default", "servers_dat"):
-        if os.path.isfile(config_dict["default"]["servers_dat"]):
-            user_info["servers_dat"] = config_dict["default"]["servers_dat"]
+        servers_dat = config_dict["default"]["servers_dat"]
+        if os.path.isfile(servers_dat) and servers_dat.endswith("servers.dat"):
+            user_info["servers_dat"] = servers_dat
 
     if "servers_dat" not in user_info:
         print("Config doesn't have a valid path for MC client's servers.dat.")
@@ -133,9 +134,12 @@ def configure():
     servers_dat = input(
         "File path for Minecraft's servers.dat [" + servers_dat_str + "]: ")
 
-    while servers_dat and not os.path.isfile(servers_dat):
+    while (servers_dat and (
+        not os.path.isfile(servers_dat) or 
+        not servers_dat.endswith("servers.dat")
+        )):
         servers_dat = input(
-            servers_dat + " does not exist, try again or leave empty: ")
+            servers_dat + " is not valid. Try again or leave empty: ")
 
     if iam_id:
         config_dict["default"]["iam_id"] = iam_id
@@ -144,10 +148,6 @@ def configure():
     if servers_dat:
         config_dict["default"]["servers_dat"] = servers_dat
 
-    if os.path.isfile(config_file):
-        os.remove(config_file)
-
-    flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL
-    fdesc = os.open(config_file, flags, const.CONFIG_PERMS)
-    with os.fdopen(fdesc, "w") as output:
+    with open(config_file, "w") as output:
         config_dict.write(output)
+    os.chmod(config_file, const.CONFIG_PERMS)

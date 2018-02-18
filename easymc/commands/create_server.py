@@ -17,7 +17,7 @@ def add_documentation(argparse_obj, module_name):
     
 
 def blocked_actions(user_info):
-    """Returns list of denied AWS actions needed to run the above main()."""
+    """Returns list of denied AWS actions used in the above main()."""
     blocked_actions = []
     blocked_actions.extend(simulate_policy.blocked(user_info, actions=[
         "ec2:DescribeInstances"

@@ -43,16 +43,20 @@ def main(args=None):
         ]
 
         args = argv_to_args(args, commands_list)
+        arg_cmd = args["command"]
 
-        if args["command"] == "configure":
+        if arg_cmd == "configure":
             verify_config.configure()
             quit_out.q()
 
         user_info = verify_config.main()
 
-        # send_bash.main(user_info)
-
-        arg_cmd = args["command"]
+        # For testing SSM...
+        if True:
+            from verify import verify_instances
+            instance_id = verify_instances.main(user_info, args)[0]["id"]
+            send_bash.main(user_info, instance_id, ["ifconfig"])
+            quit_out.q()
 
         if not any(cmd["cmd"] == arg_cmd for cmd in commands_list):
             print("Error: \"" + arg_cmd + "\" is an invalid argument.")

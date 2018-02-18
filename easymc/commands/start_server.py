@@ -3,6 +3,7 @@ import boto3
 from verify import verify_instances
 from stuff import manage_titles
 from stuff import simulate_policy
+from commands.check_server import add_documentation_args
 
 def main(user_info, args):
     """Start stopped instance(s) & update client's server list
@@ -58,24 +59,13 @@ def main(user_info, args):
 
 
 def add_documentation(argparse_obj, module_name):
-    cmd_arg = argparse_obj.add_parser(module_name, 
+    cmd_parser = argparse_obj.add_parser(module_name, 
         help=main.__doc__.splitlines()[0])
-    cmd_arg.add_argument(
-        "-r", "--region", dest="regions", action='append', metavar="", 
-        help=("AWS EC2 region(s) to probe for instances. If not "
-            "set, all regions will be probed."))
-    cmd_arg.add_argument(
-        "-k", "--tagkey", metavar="", 
-        help=("Instance tag key to filter instances by. If not "
-            "set, no filter will be applied."))
-    cmd_arg.add_argument(
-        "-v", "--tagvalue", dest="tagvalues", action='append', metavar="", 
-        help=("Instance tag value(s) to filter by (requires tag "
-            "key filter to be set)."))
+    add_documentation_args(cmd_parser)
 
 
 def blocked_actions(user_info):
-    """Returns list of denied AWS actions needed to run the above main()."""
+    """Returns list of denied AWS actions used in the above main()."""
     return simulate_policy.blocked(user_info, actions=[
         "ec2:DescribeInstances", 
         "ec2:StartInstances"

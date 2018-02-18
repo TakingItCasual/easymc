@@ -4,7 +4,7 @@ from stuff import simulate_policy
 from stuff import quit_out
 
 def main(user_info, args):
-    """Wrapper for probe_regions(), which prints information to the console.
+    """Wrapper for probe_regions(). Prints information to the console.
 
     Args:
         user_info (dict): iam_id, iam_secret, and iam_arn are needed.
@@ -116,8 +116,8 @@ def probe_regions(user_info, region_filter=None, tag_filter=None):
         }
 
         if response:
-            instances = response[0]["Instances"]
-            for instance in instances:
+            for instance in response:
+                instance = instance["Instances"][0]
                 region_instances["instances"].append({
                     "id": instance["InstanceId"], 
                     "tags": {
