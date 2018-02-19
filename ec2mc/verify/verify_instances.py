@@ -41,20 +41,7 @@ def main(user_info, args):
     print("Probing " + str(len(regions)) + " AWS region(s) for instances...")
     offset = max(len(region) for region in regions) + 1
 
-    empty_regions = 0
-    all_instances = []
-    for region_instances in probe_regions(user_info, regions, tag_filter):
-        region = region_instances["region"]
-        region_instances = region_instances["instances"]
-        if not region_instances:
-            empty_regions += 1
-            continue
-        for instance in region_instances:
-            all_instances.append({
-                "region": region, 
-                "id": instance["id"], 
-                "tags": instance["tags"]
-            })
+    all_instances, empty_regions = probe_regions(user_info, regions, tag_filter)
 
     if empty_regions:
         print("No instances found in " + str(empty_regions) + " region(s).")
@@ -96,11 +83,11 @@ def probe_regions(user_info, regions, tag_filter=None):
             the filter. If None, filter not used.
 
     Returns:
-        list: dict(s):
-            "region": Probed EC2 region.
-            "instances": list: dict(s): Found instance(s) matching tag filter.
-                "id": ID of instance.
-                "tags": Instance tags.
+        list: dict(s): Found instance(s).
+            "region": AWS region that an instance is in.
+            "id": ID of instance.
+            "tags": dict: Instance tag key-value pairs.
+        int: Number of regions with no instances matching the tag filter.
     """
 
     results = []
@@ -113,7 +100,22 @@ def probe_regions(user_info, regions, tag_filter=None):
     for thread in region_probe_threads:
         thread.join()
 
-    return results
+    empty_regions = 0
+    all_instances = []
+    for region_instances in results:
+        region = region_instances["region"]
+        region_instances = region_instances["instances"]
+        if not region_instances:
+            empty_regions += 1
+            continue
+        for instance in region_instances:
+            all_instances.append({
+                "region": region, 
+                "id": instance["id"], 
+                "tags": instance["tags"]
+            })
+
+    return all_instances, empty_regions
 
 
 def probe_region(results, user_info, region, tag_filter=None):

@@ -14,7 +14,7 @@ def main():
     The config file should have an iam_id (AWS access key ID), iam_secret (AWS 
     Secret Access Key), and optionally servers_dat (file path for servers.dat).
 
-    The config file is expected under .easymc/ under the user's home directory.
+    The config file is expected under .ec2mc/ under the user's home directory.
 
     server_titles.json is verified/managed separately by manage_titles.py.
 
@@ -32,7 +32,7 @@ def main():
     config_file = const.CONFIG_FOLDER + "config"
     if not os.path.isfile(config_file):
         quit_out.q([
-            "Configuration is not set. Set with \"easymc configure\".", 
+            "Configuration is not set. Set with \"ec2mc configure\".", 
             "IAM credentials must be set to access EC2 instances."
         ])
     config_dict = configparser.ConfigParser()
@@ -72,7 +72,7 @@ def verify_user(config_dict):
     if not (config_dict.has_option("default", "iam_id") and 
             config_dict.has_option("default", "iam_secret")):
         quit_out.q([
-            "Error: Configuration incomplete. Set with \"easymc configure\"."])
+            "Error: Configuration incomplete. Set with \"ec2mc configure\"."])
 
     user_info["iam_id"] = config_dict["default"]["iam_id"]
     user_info["iam_secret"] = config_dict["default"]["iam_secret"]
