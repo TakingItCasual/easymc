@@ -1,5 +1,4 @@
 import os
-import platform
 import subprocess
 import shutil
 import boto3
@@ -18,9 +17,8 @@ def main(user_info, args):
     not supported: all instances under an AWS account must share a private key.
     """
     
-    if platform.system() != "Linux":
-        quit_out.q(["Error: This command is not (yet?) supported for " + 
-            platform.system() + "."])
+    if os.name != "posix":
+        quit_out.q(["Error: This command is only supported on posix systems."])
 
     instance = verify_instances.main(user_info, args)
 
@@ -44,31 +42,20 @@ def main(user_info, args):
     if instance_state != "running":
         quit_out.q(["Error: Cannot SSH into instance unless it is running."])
 
-    open_ssh_connection(find_private_key(), instance_dns)
-
-
-def open_ssh_connection(pkey_file_path, instance_dns):
-    if platform.system() == "Linux":
-        linux_ssh(pkey_file_path, instance_dns)
-    elif platform.system() == "Windows":
-        pass
-
-
-def linux_ssh(pkey_file_path, instance_dns):
     # Detects if the system has the "ssh" command.
-    if shutil.which("ssh"):
-        print("")
-        print("Attempting to SSH into instance...")
-        ssh_cmd_str = ([
-            "ssh", "-q", 
-            "-o", "StrictHostKeyChecking=no", 
-            "-o", "UserKnownHostsFile=/dev/null", 
-            "-i", pkey_file_path, 
-            "ec2-user@"+instance_dns
-        ])
-        subprocess.run(ssh_cmd_str)
-    else:
-        quit_out.q(["Error: SSH executable not found."])
+    if not shutil.which("ssh"):
+        quit_out.q(["Error: SSH executable not found. Please install it."])
+
+    print("")
+    print("Attempting to SSH into instance...")
+    ssh_cmd_str = ([
+        "ssh", "-q", 
+        "-o", "StrictHostKeyChecking=no", 
+        "-o", "UserKnownHostsFile=/dev/null", 
+        "-i", find_private_key(), 
+        "ec2-user@"+instance_dns
+    ])
+    subprocess.run(ssh_cmd_str)
 
 
 def find_private_key():
