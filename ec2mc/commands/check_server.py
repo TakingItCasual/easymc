@@ -59,6 +59,7 @@ def add_documentation_args(cmd_parser):
         help=("Instance tag value(s) to filter by (requires tag "
             "key filter to be set)."))
 
+
 def blocked_actions(user_info):
     """Returns list of denied AWS actions used in the above main()."""
     return simulate_policy.blocked(user_info, actions=[

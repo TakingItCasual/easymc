@@ -2,6 +2,7 @@ from threading import Thread
 import boto3
 
 from stuff import simulate_policy
+from stuff.threader import Threader
 from stuff import quit_out
 
 def main(user_info, args):
@@ -39,12 +40,9 @@ def main(user_info, args):
 
     print("")
     print("Probing " + str(len(regions)) + " AWS region(s) for instances...")
-    offset = max(len(region) for region in regions) + 1
 
-    all_instances, empty_regions = probe_regions(user_info, regions, tag_filter)
+    all_instances = probe_regions(user_info, regions, tag_filter)
 
-    if empty_regions:
-        print("No instances found in " + str(empty_regions) + " region(s).")
     for region in regions:
         instances = [inst for inst in all_instances if inst["region"] == region]
         if not instances:
@@ -74,40 +72,29 @@ def main(user_info, args):
 def probe_regions(user_info, regions, tag_filter=None):
     """Probe EC2 region(s) for instances, and return dicts of found instances.
     
-    Makes use of multithreading to probe all regions simultaneously.
+    Multithreads to probe all regions simultaneously.
 
     Args:
         user_info (dict): iam_id and iam_secret are needed.
         regions (list): List of EC2 regions to probe.
-        tag_filter (dict): Filter out instances that don't have tags matching
-            the filter. If None, filter not used.
+        tag_filter (dict): Passed to probe_region_thread
 
     Returns:
         list: dict(s): Found instance(s).
             "region": AWS region that an instance is in.
             "id": ID of instance.
             "tags": dict: Instance tag key-value pairs.
-        int: Number of regions with no instances matching the tag filter.
     """
 
-    results = []
-    region_probe_threads = []
+    threader = Threader()
     for region in regions:
-        region_probe_threads.append(
-            Thread(target=probe_region, 
-                args=(results, user_info, region, tag_filter)))
-        region_probe_threads[-1].start()
-    for thread in region_probe_threads:
-        thread.join()
+        threader.add_thread(probe_region, [user_info, region, tag_filter])
+    results = threader.join_threads()
 
-    empty_regions = 0
     all_instances = []
     for region_instances in results:
         region = region_instances["region"]
         region_instances = region_instances["instances"]
-        if not region_instances:
-            empty_regions += 1
-            continue
         for instance in region_instances:
             all_instances.append({
                 "region": region, 
@@ -115,21 +102,16 @@ def probe_regions(user_info, regions, tag_filter=None):
                 "tags": instance["tags"]
             })
 
-    return all_instances, empty_regions
+    return all_instances
 
 
 def probe_region(results, user_info, region, tag_filter=None):
-    """Probes a single region for instances. Returns result via results arg.
-
-    This function returns via an argument rather than a return statement, 
-    because it would be more complicated to set it up so that this threaded 
-    function could properly use a return statement.
+    """Probes a single region for instances. Threaded, so returns via results.
 
     Args:
         results (list): Found instances are returned via this variable.
         user_info (dict): iam_id and iam_secret are needed.
-        region (str): Probe regions listed in the filter. 
-            If None, probe all regions.
+        region (str): EC2 region to probe
         tag_filter (dict): Filter out instances that don't have tags matching
             the filter. If None, filter not used.
 
@@ -147,20 +129,22 @@ def probe_region(results, user_info, region, tag_filter=None):
         region_name=region
     ).describe_instances(Filters=tag_filter)["Reservations"]
 
+    if not response:
+        return
+
     region_instances = {
         "region": region, 
         "instances": []
     }
 
-    if response:
-        for instance in response:
-            instance = instance["Instances"][0]
-            region_instances["instances"].append({
-                "id": instance["InstanceId"], 
-                "tags": {
-                    tag["Key"]: tag["Value"] for tag in instance["Tags"]
-                }
-            })
+    for instance in response:
+        instance = instance["Instances"][0]
+        region_instances["instances"].append({
+            "id": instance["InstanceId"], 
+            "tags": {
+                tag["Key"]: tag["Value"] for tag in instance["Tags"]
+            }
+        })
 
     results.append(region_instances)
 

@@ -7,8 +7,8 @@ sys.dont_write_bytecode = True
 
 from commands import *
 from verify import verify_config
-from stuff import quit_out
 from stuff import send_bash
+from stuff import quit_out
 
 # import pprint
 # pp = pprint.PrettyPrinter(indent=2)
