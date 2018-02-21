@@ -2,7 +2,7 @@ import boto3
 
 from stuff import simulate_policy
 
-def main(user_info, args):
+def main(user_info, kwargs):
     """Forces the server and instance to stop.
     
     Send a StopInstances command to instance(s). Server(s) will save data.

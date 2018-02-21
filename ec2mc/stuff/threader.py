@@ -1,3 +1,4 @@
+from queue import Queue
 from threading import Thread
 
 class Threader(object):
@@ -9,16 +10,24 @@ class Threader(object):
     """
 
     def __init__(self):
+        self.thread_queue = Queue()
         self.threads = []
-        self.results = []
 
     def add_thread(self, func, args):
         """Add a function to be threaded."""
-        self.threads.append(Thread(target=func, args=(self.results, *args)))
+        self.threads.append(Thread(
+            target=lambda q, 
+            func_args: q.put(func(*func_args)), 
+            args=(self.thread_queue, args)))
         self.threads[-1].start()
 
-    def join_threads(self):
-        """Block for the threads' results."""
+    def get_results(self):
+        """Block threads until all are done, then return their results."""
         for thread in self.threads:
             thread.join()
-        return self.results
+
+        results = []
+        while not self.thread_queue.empty():
+            results.append(self.thread_queue.get())
+
+        return results

@@ -5,15 +5,15 @@ from stuff import manage_titles
 from stuff import simulate_policy
 from commands.check_server import add_documentation_args
 
-def main(user_info, args):
+def main(user_info, kwargs):
     """Start stopped instance(s) & update client's server list
 
     Args:
         user_info (dict): iam_id, iam_secret, and iam_arn are needed.
-        args (dict): See stuff.verify_instances:main for documentation.
+        kwargs (dict): See stuff.verify_instances:main for documentation.
     """
 
-    instances = verify_instances.main(user_info, args)
+    instances = verify_instances.main(user_info, kwargs)
 
     for instance in instances:
         print("")

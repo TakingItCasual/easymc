@@ -42,21 +42,14 @@ def main(args=None):
             {"cmd": "ssh_server", "obj": ssh_server}
         ]
 
-        args = argv_to_args(args, commands_list)
-        arg_cmd = args["command"]
+        kwargs = argv_to_kwargs(args, commands_list)
+        arg_cmd = kwargs["command"]
 
         if arg_cmd == "configure":
             verify_config.configure()
             quit_out.q()
 
         user_info = verify_config.main()
-
-        # For testing SSM...
-        #if False:
-        #    from verify import verify_instances
-        #    instance_id = verify_instances.main(user_info, args)[0]["id"]
-        #    send_bash.main(user_info, instance_id, ["ifconfig"])
-        #    quit_out.q()
 
         if not any(cmd["cmd"] == arg_cmd for cmd in commands_list):
             print("Error: \"" + arg_cmd + "\" is an invalid argument.")
@@ -65,14 +58,14 @@ def main(args=None):
         chosen_cmd = [cmd for cmd in commands_list if cmd["cmd"] == arg_cmd][0]
         quit_out.assert_empty(chosen_cmd["obj"].blocked_actions(user_info))
 
-        chosen_cmd["obj"].main(user_info, args)
+        chosen_cmd["obj"].main(user_info, kwargs)
 
         quit_out.q(["Script completed successfully."])
     except SystemExit:
         pass
 
 
-def argv_to_args(args, commands_list):
+def argv_to_kwargs(args, commands_list):
     """Seperating code relating to argparse to its own method.
 
     Returns:
@@ -98,11 +91,11 @@ def argv_to_args(args, commands_list):
         parser.print_help()
         quit_out.q()
 
-    args = vars(parser.parse_args(args))
-    if "tagkey" in args and args["tagkey"] and not args["tagvalues"]:
+    kwargs = vars(parser.parse_args(args))
+    if "tagkey" in kwargs and kwargs["tagkey"] and not kwargs["tagvalues"]:
         parser.error("--tagkey requires --tagvalue")
 
-    return args
+    return kwargs
 
 
 if __name__ == "__main__":

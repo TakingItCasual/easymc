@@ -1,16 +1,15 @@
-from threading import Thread
 import boto3
 
 from stuff import simulate_policy
 from stuff.threader import Threader
 from stuff import quit_out
 
-def main(user_info, args):
-    """Wrapper for probe_regions(). Prints found instances to the console.
+def main(user_info, kwargs):
+    """Wrapper for probe_regions(). Prints found instances to the CLI.
 
     Args:
         user_info (dict): iam_id, iam_secret, and iam_arn are needed.
-        args (dict):
+        kwargs (dict):
             "region": list: AWS region(s) to probe. If None, probe all.
             "tagkey": Instance tag key to filter. If None, don't filter.
             "tagvalue": list: Instance tag value(s) to filter (needs tagkey).
@@ -27,15 +26,15 @@ def main(user_info, args):
         "ec2:DescribeInstances"
     ]))
 
-    region_filter = args["regions"]
+    region_filter = kwargs["regions"]
     regions = get_regions(user_info, region_filter)
 
     tag_filter = []
-    if args["tagkey"] and args["tagvalues"]:
+    if kwargs["tagkey"] and kwargs["tagvalues"]:
         # Converts dict to what describe_instances' Filters takes.
         tag_filter.append({
-            "Name": "tag:"+args["tagkey"], 
-            "Values": args["tagvalues"]
+            "Name": "tag:"+kwargs["tagkey"], 
+            "Values": kwargs["tagvalues"]
         })
 
     print("")
@@ -77,7 +76,7 @@ def probe_regions(user_info, regions, tag_filter=None):
     Args:
         user_info (dict): iam_id and iam_secret are needed.
         regions (list): List of EC2 regions to probe.
-        tag_filter (dict): Passed to probe_region_thread
+        tag_filter (dict): Passed to probe_region
 
     Returns:
         list: dict(s): Found instance(s).
@@ -88,8 +87,8 @@ def probe_regions(user_info, regions, tag_filter=None):
 
     threader = Threader()
     for region in regions:
-        threader.add_thread(probe_region, [user_info, region, tag_filter])
-    results = threader.join_threads()
+        threader.add_thread(probe_region, (user_info, region, tag_filter))
+    results = threader.get_results()
 
     all_instances = []
     for region_instances in results:
@@ -105,18 +104,17 @@ def probe_regions(user_info, regions, tag_filter=None):
     return all_instances
 
 
-def probe_region(results, user_info, region, tag_filter=None):
-    """Probes a single region for instances. Threaded, so returns via results.
+def probe_region(user_info, region, tag_filter=None):
+    """Probes a single EC2 region for instances. Usually threaded.
 
     Args:
-        results (list): Found instances are returned via this variable.
         user_info (dict): iam_id and iam_secret are needed.
         region (str): EC2 region to probe
         tag_filter (dict): Filter out instances that don't have tags matching
             the filter. If None, filter not used.
 
-    Returns: (via the results arg)
-        list: dict(s):
+    Returns:
+        dict:
             "region": Probed EC2 region.
             "instances": list: dict(s): Found instance(s) matching tag filter.
                 "id": ID of instance.
@@ -128,9 +126,6 @@ def probe_region(results, user_info, region, tag_filter=None):
         aws_secret_access_key=user_info["iam_secret"], 
         region_name=region
     ).describe_instances(Filters=tag_filter)["Reservations"]
-
-    if not response:
-        return
 
     region_instances = {
         "region": region, 
@@ -146,7 +141,7 @@ def probe_region(results, user_info, region, tag_filter=None):
             }
         })
 
-    results.append(region_instances)
+    return region_instances
 
 
 def get_regions(user_info, region_filter=None):

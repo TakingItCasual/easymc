@@ -9,7 +9,7 @@ from stuff import simulate_policy
 from stuff import quit_out
 from commands.check_server import add_documentation_args
 
-def main(user_info, args):
+def main(user_info, kwargs):
     """SSH into an EC2 instance using a .pem private key
 
     The private key is searched for from the script's config folder. Currently 
@@ -20,7 +20,7 @@ def main(user_info, args):
     if os.name != "posix":
         quit_out.q(["Error: This command is only supported on posix systems."])
 
-    instance = verify_instances.main(user_info, args)
+    instance = verify_instances.main(user_info, kwargs)
 
     if len(instance) > 1:
         quit_out.q(["Error: Instance query returned multiple results.", 

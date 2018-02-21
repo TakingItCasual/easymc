@@ -2,7 +2,7 @@ import boto3
 
 from stuff import simulate_policy
 
-def main(user_info, args):
+def main(user_info, kwargs):
     """Updates server's mods via the internet.
     
     Download mods from their official download locations to instance(s).

@@ -2,7 +2,7 @@ import boto3
 
 from stuff import simulate_policy
 
-def main(user_info, args):
+def main(user_info, kwargs):
     """Downloads server's world folder as zip.
     
     Have the instance zip the world folder and send it to user via FTP.

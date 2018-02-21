@@ -2,7 +2,7 @@ import boto3
 
 from stuff import simulate_policy
 
-def main(user_info, args):
+def main(user_info, kwargs):
     """Creates and initializes a new instance.
 
     Create new instance and initialize it using scripts from the setup folder.
