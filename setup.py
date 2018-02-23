@@ -16,7 +16,7 @@ setup(
     author='TakingItCasual',
     author_email='takingitcasual+gh@gmail.com',
     url='https://github.com/TakingItCasual/ec2mc',
-    download_url='https://github.com/TakingItCasual/ec2mc/archive/0.1.0.tar.gz',
+    download_url='https://github.com/TakingItCasual/ec2mc/archive/v0.1.0.zip',
     platforms=['any'],
     license='MIT',
     classifiers=[

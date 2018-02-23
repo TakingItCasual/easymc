@@ -54,7 +54,7 @@ class SSHServer(abstract_command.CommandBase):
             "ssh", "-q", 
             "-o", "StrictHostKeyChecking=no", 
             "-o", "UserKnownHostsFile=/dev/null", 
-            "-i", find_private_key(), 
+            "-i", self.find_private_key(), 
             "ec2-user@"+instance_dns
         ])
         subprocess.run(ssh_cmd_str)
@@ -76,7 +76,7 @@ class SSHServer(abstract_command.CommandBase):
 
 
     def find_private_key(self):
-        """Returns private key file path from config, if only one exists."""
+        """Returns config's private key file path, if only one exists."""
         private_keys = []
         for file in os.listdir(const.CONFIG_FOLDER):
             if file.endswith(".pem"):

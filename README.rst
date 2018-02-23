@@ -1,8 +1,6 @@
 AWS EC2 instance manager for Minecraft servers
 ==============================================
 
-(Not yet uploaded to PyPi, pls ignore.)
-
 Requires a Python version of 3.6. Can be installed with pip:
 
 .. code-block:: bash

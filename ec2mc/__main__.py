@@ -10,8 +10,8 @@ from verify import verify_config
 from stuff import send_bash
 from stuff import quit_out
 
-# import pprint
-# pp = pprint.PrettyPrinter(indent=2)
+#import pprint
+#pp = pprint.PrettyPrinter(indent=2)
 
 def main(args=None):
     """The script's top level function. 
@@ -35,10 +35,10 @@ def main(args=None):
         commands_list = [
             start_server.StartServer(), 
             check_server.CheckServer(), 
-            stop_server.StopServer(), 
-            get_backup.GetBackup(), 
-            update_mods.UpdateMods(), 
-            create_server.CreateServer(), 
+            #stop_server.StopServer(), 
+            #get_backup.GetBackup(), 
+            #update_mods.UpdateMods(), 
+            #create_server.CreateServer(), 
             ssh_server.SSHServer()
         ]
 

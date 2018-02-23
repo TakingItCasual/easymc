@@ -80,7 +80,7 @@ def main(user_info, kwargs):
 def probe_regions(user_info, regions, tag_filter=None):
     """Probe EC2 region(s) for instances, and return dicts of found instances.
     
-    Multithreads to probe all regions simultaneously.
+    Uses multithreading to probe all regions simultaneously.
 
     Args:
         user_info (dict): iam_id and iam_secret are needed.
@@ -166,6 +166,6 @@ def get_regions(user_info, region_filter=None):
     # Script can't handle an empty region list, so the filter must be valid.
     if region_filter:
         if set(region_filter).issubset(set(region_list)):
-            return region_filter
+            return list(set(region_filter))
         quit_out.q(["Error: Invalid region(s) specified."])
     return region_list
