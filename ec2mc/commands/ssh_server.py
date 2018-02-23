@@ -3,11 +3,11 @@ import subprocess
 import shutil
 import boto3
 
-import const
-import abstract_command
-from verify import verify_instances
-from stuff import simulate_policy
-from stuff import quit_out
+from ec2mc import const
+from ec2mc import abstract_command
+from ec2mc.verify import verify_instances
+from ec2mc.stuff import simulate_policy
+from ec2mc.stuff import quit_out
 
 class SSHServer(abstract_command.CommandBase):
 

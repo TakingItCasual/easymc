@@ -5,11 +5,10 @@ Requires a Python version of 3.6. Can be installed with pip:
 
 .. code-block:: bash
 
-	$ python -m pip install ec2mc
+	$ pip install ec2mc
 
 A Python console script for managing Minecraft servers hosted on AWS EC2 instances.
-Currently the script can only start and check the status of instances, but it is coded with simple expansion as a goal.
-There was an attempt at validation and documentation.
+Currently the script can only start and check the status of instances, but I am attempting to make it modular, and include validation and documentation.
 
 IAM user credentials must be set before the script can be used:
 

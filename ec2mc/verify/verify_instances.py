@@ -1,8 +1,8 @@
 import boto3
 
-from stuff import simulate_policy
-from stuff.threader import Threader
-from stuff import quit_out
+from ec2mc.stuff import simulate_policy
+from ec2mc.stuff.threader import Threader
+from ec2mc.stuff import quit_out
 
 def main(user_info, kwargs):
     """Wrapper for probe_regions(). Prints found instances to the CLI.
@@ -52,7 +52,8 @@ def main(user_info, kwargs):
     all_instances = probe_regions(user_info, regions, tag_filter)
 
     for region in regions:
-        instances = [inst for inst in all_instances if inst["region"] == region]
+        instances = [instance for instance in all_instances 
+            if instance["region"] == region]
         if not instances:
             continue
         print(region + ": " + str(len(instances)) + " instance(s) found:")

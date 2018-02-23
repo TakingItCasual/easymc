@@ -1,9 +1,9 @@
 import boto3
 
-import abstract_command
-from verify import verify_instances
-from stuff import manage_titles
-from stuff import simulate_policy
+from ec2mc import abstract_command
+from ec2mc.verify import verify_instances
+from ec2mc.stuff import manage_titles
+from ec2mc.stuff import simulate_policy
 
 class StartServer(abstract_command.CommandBase):
 

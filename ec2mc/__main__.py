@@ -5,16 +5,16 @@ import argparse
 
 sys.dont_write_bytecode = True
 
-from commands import *
-from verify import verify_config
-from stuff import send_bash
-from stuff import quit_out
+from ec2mc.commands import *
+from ec2mc.verify import verify_config
+from ec2mc.stuff import send_bash
+from ec2mc.stuff import quit_out
 
 #import pprint
 #pp = pprint.PrettyPrinter(indent=2)
 
 def main(args=None):
-    """The script's top level function. 
+    """The script's entry point.
 
     The config is verified, the script arguments are parsed, and if all goes
     well, the script will interact with the specified AWS EC2 instance(s).
@@ -32,7 +32,7 @@ def main(args=None):
         except AssertionError:
             quit_out.q(["Error: Python version 3.6 or greater required."])
 
-        commands_list = [
+        commands = [
             start_server.StartServer(), 
             check_server.CheckServer(), 
             #stop_server.StopServer(), 
@@ -42,19 +42,19 @@ def main(args=None):
             ssh_server.SSHServer()
         ]
 
-        kwargs = argv_to_kwargs(args, commands_list)
+        kwargs = argv_to_kwargs(args, commands)
         arg_cmd = kwargs["command"]
 
         if arg_cmd == "configure":
             verify_config.configure()
             quit_out.q()
 
-        if not any(cmd.module_name() == arg_cmd for cmd in commands_list):
+        if not any(cmd.module_name() == arg_cmd for cmd in commands):
             print("Error: \"" + arg_cmd + "\" is an invalid argument.")
 
         user_info = verify_config.main()
 
-        chosen_cmd = [cmd for cmd in commands_list 
+        chosen_cmd = [cmd for cmd in commands 
             if cmd.module_name() == arg_cmd][0]
         quit_out.assert_empty(chosen_cmd.blocked_actions(user_info))
 
@@ -65,7 +65,7 @@ def main(args=None):
         pass
 
 
-def argv_to_kwargs(args, commands_list):
+def argv_to_kwargs(args, commands):
     """Initialize the script's argparse and its help.
 
     Returns:
@@ -83,8 +83,8 @@ def argv_to_kwargs(args, commands_list):
     cmd_args = parser.add_subparsers(metavar="<command>"+" "*6, dest="command")
 
     cmd_args.add_parser("configure", help=verify_config.configure.__doc__)
-    for cmd in commands_list:
-        cmd.add_documentation(cmd_args)
+    for command in commands:
+        command.add_documentation(cmd_args)
 
     if not args:
         parser.print_help()

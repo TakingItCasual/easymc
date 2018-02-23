@@ -1,6 +1,6 @@
 import boto3
 
-from stuff import quit_out
+from ec2mc.stuff import quit_out
 
 def blocked(user_info, *, actions=None, resources=None, context=None):
     """Tests whether IAM user is able to use AWS actions in actions.

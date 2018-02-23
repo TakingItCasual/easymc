@@ -3,9 +3,9 @@ import configparser
 import boto3
 from botocore.exceptions import ClientError
 
-import const
-from stuff import simulate_policy
-from stuff import quit_out
+from ec2mc import const
+from ec2mc.stuff import simulate_policy
+from ec2mc.stuff import quit_out
 
 def main():
     """Verifies existence of config file, and the values therein.

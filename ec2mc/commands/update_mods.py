@@ -1,7 +1,7 @@
 import boto3
 
-import abstract_command
-from stuff import simulate_policy
+from ec2mc import abstract_command
+from ec2mc.stuff import simulate_policy
 
 class UpdateMods(abstract_command.CommandBase):
 

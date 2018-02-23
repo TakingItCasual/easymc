@@ -16,7 +16,7 @@ setup(
     author='TakingItCasual',
     author_email='takingitcasual+gh@gmail.com',
     url='https://github.com/TakingItCasual/ec2mc',
-    download_url='https://github.com/TakingItCasual/ec2mc/archive/v0.1.0.zip',
+    download_url='https://github.com/TakingItCasual/ec2mc/archive/v0.1.0.tar.gz',
     platforms=['any'],
     license='MIT',
     classifiers=[
@@ -28,7 +28,7 @@ setup(
     ],
     keywords='mc minecraft server aws ec2 iam',
     packages=find_packages(),
-    python_requires='>=3.6',
+    python_requires='~=3.6',
     entry_points={
         'console_scripts': [
             'ec2mc=__main__:main',
