@@ -11,8 +11,8 @@ def main(user_info, kwargs):
         user_info (dict): iam_id, iam_secret, and iam_arn are needed.
         kwargs (dict):
             "region": list: AWS region(s) to probe. If None, probe all.
-            "tagkey": Instance tag key to filter. If None, don't filter.
-            "tagvalue": list: Instance tag value(s) to filter (needs tagkey).
+            "tagfilter": Instance tag key-value pair(s) to filter by. If None, 
+                don't filter. If only a key is given, filter by key.
 
     Returns:
         list: dict(s): Found instance(s).
@@ -30,12 +30,21 @@ def main(user_info, kwargs):
     regions = get_regions(user_info, region_filter)
 
     tag_filter = []
-    if kwargs["tagkey"] and kwargs["tagvalues"]:
-        # Converts dict to what describe_instances' Filters takes.
-        tag_filter.append({
-            "Name": "tag:"+kwargs["tagkey"], 
-            "Values": kwargs["tagvalues"]
-        })
+    if kwargs["tagfilter"]:
+        # Convert dict(s) list to what describe_instances' Filters expects.
+        for tag_kv_pair in kwargs["tagfilter"]:
+            # Filter instances based on the tag key-value pair(s).
+            if len(tag_kv_pair) > 1:
+                tag_filter.append({
+                    "Name": "tag:"+tag_kv_pair[0], 
+                    "Values": tag_kv_pair[1:]
+                })
+            # If filter tag value(s) not specified, filter by the tag key.
+            else:
+                tag_filter.append({
+                    "Name": "tag-key", 
+                    "Values": [tag_kv_pair[0]]
+                })
 
     print("")
     print("Probing " + str(len(regions)) + " AWS region(s) for instances...")

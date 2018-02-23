@@ -24,7 +24,7 @@ def blocked(user_info, *, actions=None, resources=None, context=None):
         resources = ["*"]
 
     if context is not None:
-        # Convert dict to what simulate_principal_policy's ContextEntries takes
+        # Convert dict to what ContextEntries expects.
         context_temp = []
         for context_key in context:
             context_temp.append({

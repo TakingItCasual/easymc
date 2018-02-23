@@ -1,5 +1,4 @@
 import os
-import stat
 import configparser
 import boto3
 from botocore.exceptions import ClientError

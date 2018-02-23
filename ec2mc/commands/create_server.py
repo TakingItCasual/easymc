@@ -1,30 +1,31 @@
 import boto3
 
+import abstract_command
 from stuff import simulate_policy
 
-def main(user_info, kwargs):
-    """Creates and initializes a new instance.
+class CreateServer(abstract_command.CommandBase):
 
-    Create new instance and initialize it using scripts from the setup folder.
-    """
-
-    pass
+    def main(self, user_info, kwargs):
+        """Creates and initializes a new instance."""
+        pass
 
 
-def add_documentation(argparse_obj, module_name):
-    cmd_arg = argparse_obj.add_parser(module_name, 
-        help=main.__doc__.splitlines()[0])
-    
+    def add_documentation(self, argparse_obj):
+        cmd_parser = super().add_documentation(argparse_obj)
 
-def blocked_actions(user_info):
-    """Returns list of denied AWS actions used in the above main()."""
-    blocked_actions = []
-    blocked_actions.extend(simulate_policy.blocked(user_info, actions=[
-        "ec2:DescribeInstances"
-    ]))
-    blocked_actions.extend(simulate_policy.blocked(user_info, actions=[
-        "ec2:RunInstances"
-    ], context={
-        "ec2:InstanceType": ["t2.small"]
-    }))
-    return blocked_actions
+
+    def blocked_actions(self, user_info):
+        blocked_actions = []
+        blocked_actions.extend(simulate_policy.blocked(user_info, actions=[
+            "ec2:DescribeInstances"
+        ]))
+        blocked_actions.extend(simulate_policy.blocked(user_info, actions=[
+            "ec2:RunInstances"
+        ], context={
+            "ec2:InstanceType": ["t2.small"]
+        }))
+        return blocked_actions
+
+
+    def module_name(self):
+        return super().module_name(__name__)

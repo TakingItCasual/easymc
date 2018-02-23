@@ -4,9 +4,6 @@ import nbtlib
 
 import const
 
-import pprint
-pp = pprint.PrettyPrinter(indent=2)
-
 def update_dns(aws_region, instance_id, servers_dat_path, new_dns):
     """Updates the MC client's server list with specified instance's DNS.
 
