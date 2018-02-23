@@ -5,5 +5,3 @@ for module in os.listdir(os.path.dirname(__file__)):
         continue
     elif module[-3:] == ".py":
         __all__.append(module[:-3])
-    elif "." not in module:
-        __all__.append(module)
