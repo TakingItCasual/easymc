@@ -1,5 +1,6 @@
 import boto3
 
+from ec2mc import const
 from ec2mc.stuff import simulate_policy
 from ec2mc.stuff.threader import Threader
 from ec2mc.stuff import quit_out
@@ -162,7 +163,7 @@ def get_regions(user_info, region_filter=None):
     for region in boto3.client("ec2", 
         aws_access_key_id=user_info["iam_id"], 
         aws_secret_access_key=user_info["iam_secret"],
-        region_name="us-east-1" # Why must listing regions require knowing one
+        region_name=const.DEFAULT_REGION
     ).describe_regions()["Regions"]:
         region_list.append(region["RegionName"])
 

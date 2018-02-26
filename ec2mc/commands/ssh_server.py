@@ -27,7 +27,7 @@ class SSHServer(abstract_command.CommandBase):
 
         if len(instance) > 1:
             quit_out.q(["Error: Instance query returned multiple results.", 
-                "  Narrow filter(s) so that only one instance is returned."])
+                "  Narrow filter(s) so that only one instance is found."])
         instance = instance[0]
 
         ec2_client = boto3.client("ec2", 

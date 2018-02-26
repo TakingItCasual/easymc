@@ -38,7 +38,7 @@ def main(args=None):
             #stop_server.StopServer(), 
             #get_backup.GetBackup(), 
             #update_mods.UpdateMods(), 
-            #create_server.CreateServer(), 
+            create_server.CreateServer(), 
             ssh_server.SSHServer()
         ]
 
