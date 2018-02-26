@@ -1,10 +1,8 @@
-import boto3
+from ec2mc.verify import verify_aws
 
 def main(user_info, instance_id, cmd_list):
-    ssm_client = boto3.client("ssm",
-        aws_access_key_id=user_info["iam_id"], 
-        aws_secret_access_key=user_info["iam_secret"]
-    )
+    """Send bash commands to an instance via SSM"""
+    ssm_client = verify_aws.ssm_client(user_info)
     response = ssm_client.send_command(
         InstanceIds=[
             instance_id

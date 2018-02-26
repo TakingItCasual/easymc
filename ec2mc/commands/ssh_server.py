@@ -1,10 +1,10 @@
 import os
 import subprocess
 import shutil
-import boto3
 
 from ec2mc import const
 from ec2mc import abstract_command
+from ec2mc.verify import verify_aws
 from ec2mc.verify import verify_instances
 from ec2mc.stuff import simulate_policy
 from ec2mc.stuff import quit_out
@@ -30,11 +30,7 @@ class SSHServer(abstract_command.CommandBase):
                 "  Narrow filter(s) so that only one instance is found."])
         instance = instance[0]
 
-        ec2_client = boto3.client("ec2", 
-            aws_access_key_id=user_info["iam_id"], 
-            aws_secret_access_key=user_info["iam_secret"], 
-            region_name=instance["region"]
-        )
+        ec2_client = verify_aws.ec2_client(user_info, instance["region"])
 
         response = ec2_client.describe_instances(
             InstanceIds=[instance["id"]]

@@ -1,6 +1,5 @@
-import boto3
-
 from ec2mc import abstract_command
+from ec2mc.verify import verify_aws
 from ec2mc.verify import verify_instances
 from ec2mc.stuff import manage_titles
 from ec2mc.stuff import simulate_policy
@@ -21,11 +20,7 @@ class StartServer(abstract_command.CommandBase):
             print("")
             print("Attempting to start instance " + instance["id"] + "...")
 
-            ec2_client = boto3.client("ec2", 
-                aws_access_key_id=user_info["iam_id"], 
-                aws_secret_access_key=user_info["iam_secret"], 
-                region_name=instance["region"]
-            )
+            ec2_client = verify_aws.ec2_client(user_info, instance["region"])
 
             instance_state = ec2_client.describe_instances(
                 InstanceIds=[instance["id"]]

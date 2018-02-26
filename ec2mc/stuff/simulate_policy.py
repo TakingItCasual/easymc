@@ -1,5 +1,4 @@
-import boto3
-
+from ec2mc.verify import verify_aws
 from ec2mc.stuff import quit_out
 
 def blocked(user_info, *, actions=None, resources=None, context=None):
@@ -36,10 +35,7 @@ def blocked(user_info, *, actions=None, resources=None, context=None):
     else:
         context = [{}]
 
-    results = boto3.client("iam", 
-        aws_access_key_id=user_info["iam_id"], 
-        aws_secret_access_key=user_info["iam_secret"]
-    ).simulate_principal_policy(
+    results = verify_aws.iam_client(user_info).simulate_principal_policy(
         PolicySourceArn=user_info["iam_arn"], 
         ActionNames=actions, 
         ResourceArns=resources, 

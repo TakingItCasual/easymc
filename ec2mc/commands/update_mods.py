@@ -1,5 +1,3 @@
-import boto3
-
 from ec2mc import abstract_command
 from ec2mc.stuff import simulate_policy
 

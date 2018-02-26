@@ -1,6 +1,4 @@
-import boto3
-
-from ec2mc import const
+from ec2mc.verify import verify_aws
 from ec2mc.stuff import simulate_policy
 from ec2mc.stuff.threader import Threader
 from ec2mc.stuff import quit_out
@@ -25,12 +23,11 @@ def main(user_info, kwargs):
     """
 
     quit_out.assert_empty(simulate_policy.blocked(user_info, actions=[
-        "ec2:DescribeRegions", 
         "ec2:DescribeInstances"
     ]))
 
     region_filter = kwargs["regions"]
-    regions = get_regions(user_info, region_filter)
+    regions = verify_aws.get_regions(user_info, region_filter)
 
     tag_filter = []
     if kwargs["tagfilter"]:
@@ -134,10 +131,8 @@ def probe_region(user_info, region, tag_filter=None):
                 "tags": Instance tags.
     """
 
-    response = boto3.client("ec2", 
-        aws_access_key_id=user_info["iam_id"], 
-        aws_secret_access_key=user_info["iam_secret"], 
-        region_name=region
+    response = verify_aws.ec2_client(
+        user_info, region
     ).describe_instances(Filters=tag_filter)["Reservations"]
 
     region_instances = {
@@ -155,21 +150,3 @@ def probe_region(user_info, region, tag_filter=None):
         })
 
     return region_instances
-
-
-def get_regions(user_info, region_filter=None):
-    """Returns list of EC2 regions, or region_filter if not empty and valid."""
-    region_list = []
-    for region in boto3.client("ec2", 
-        aws_access_key_id=user_info["iam_id"], 
-        aws_secret_access_key=user_info["iam_secret"],
-        region_name=const.DEFAULT_REGION
-    ).describe_regions()["Regions"]:
-        region_list.append(region["RegionName"])
-
-    # Script can't handle an empty region list, so the filter must be valid.
-    if region_filter:
-        if set(region_filter).issubset(set(region_list)):
-            return list(set(region_filter))
-        quit_out.q(["Error: Invalid region(s) specified."])
-    return region_list
