@@ -118,7 +118,7 @@ def configure():
     config_dict = configparser.ConfigParser()
     config_dict["default"] = {}
 
-    config_file = os.path.join(const.CONFIG_FOLDER, "config")
+    config_file = const.CONFIG_FOLDER + "config"
     if os.path.isfile(config_file):
         config_dict.read(config_file)
         if config_dict.has_option("default", "iam_id"):

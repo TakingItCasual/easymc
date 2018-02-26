@@ -24,10 +24,10 @@ Sample credentials (with minimal permissions) are the following:
 	AWS secret access key: N3zwOS1QanjGNgYO3uQ/ObN0Hjh0R3X27UW2abnq
 
 "File path for Minecraft's servers.dat" can be left empty.
-The previous IAM user credentials have been included to facilitate a basic understanding of what the script is doing.
-The instance turns itself off after 10 minutes, so feel free to start it.
+The preceding IAM user credentials have been included to facilitate a basic understanding of what the script does.
+The instance will turn itself off after 10 minutes of inactivity using crontab.
 
-Full commands to be used are the following:
+Full commands to be used are the following ("-r" is a region filter, "-t" is a tag filter):
 
 .. code-block:: bash
 

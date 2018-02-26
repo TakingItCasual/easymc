@@ -16,12 +16,13 @@ class SSHServer(abstract_command.CommandBase):
 
         The private key is searched for from the script's config folder. 
         Currently SSH is only supported with a .pem private key, and using 
-        multiple keys is not supported.
+        multiple keys is not supported. Only posix systems are supported.
         """
         
         if os.name != "posix":
             quit_out.q(["Error: ssh_server only supported on posix systems."])
 
+        private_key_file = self.find_private_key()
         instance = verify_instances.main(user_info, kwargs)
 
         if len(instance) > 1:
@@ -54,7 +55,7 @@ class SSHServer(abstract_command.CommandBase):
             "ssh", "-q", 
             "-o", "StrictHostKeyChecking=no", 
             "-o", "UserKnownHostsFile=/dev/null", 
-            "-i", self.find_private_key(), 
+            "-i", private_key_file, 
             "ec2-user@"+instance_dns
         ])
         subprocess.run(ssh_cmd_str)
@@ -86,4 +87,6 @@ class SSHServer(abstract_command.CommandBase):
             quit_out.q(["Error: Private key file not found in config."])
         elif len(private_keys) > 1:
             quit_out.q(["Error: Multiple private key files found in config."])
+
+        os.chmod(private_keys[0], const.PK_PERMS)
         return private_keys[0]

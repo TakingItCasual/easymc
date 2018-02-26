@@ -7,6 +7,8 @@ from ec2mc.stuff import quit_out
 def main(user_info, kwargs):
     """Wrapper for probe_regions(). Prints found instances to the CLI.
 
+    Quits out if no instances are found. This functionality is relied upon.
+
     Args:
         user_info (dict): iam_id, iam_secret, and iam_arn are needed.
         kwargs (dict):
