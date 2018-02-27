@@ -4,7 +4,7 @@ from ec2mc.stuff import simulate_policy
 class GetBackup(abstract_command.CommandBase):
 
     def main(self, user_info, kwargs):
-        """Downloads server's world folder as zip."""
+        """download server's world folder as a zip file"""
         pass
 
 

@@ -4,7 +4,7 @@ from ec2mc.stuff import simulate_policy
 class StopServer(abstract_command.CommandBase):
 
     def main(self, user_info, kwargs):
-        """Forces the server and instance to stop."""
+        """force the instance/server to stop"""
         pass
 
 

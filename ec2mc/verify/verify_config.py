@@ -2,7 +2,7 @@ import os
 import configparser
 from botocore.exceptions import ClientError
 
-from ec2mc import const
+from ec2mc import config
 from ec2mc.verify import verify_aws
 from ec2mc.stuff import simulate_policy
 from ec2mc.stuff import quit_out
@@ -28,7 +28,7 @@ def main():
 
     user_info = {}
 
-    config_file = const.CONFIG_FOLDER + "config"
+    config_file = config.CONFIG_DIR + "config"
     if not os.path.isfile(config_file):
         quit_out.q([
             "Configuration is not set. Set with \"ec2mc configure\".", 
@@ -101,49 +101,3 @@ def verify_user(config_dict):
         quit_out.q([e])
 
     return user_info
-
-
-def configure():
-    """Set IAM user's credentials and servers.dat file path"""
-    if not os.path.isdir(const.CONFIG_FOLDER):
-        os.mkdir(const.CONFIG_FOLDER)
-
-    iam_id_str = "None"
-    iam_secret_str = "None"
-    servers_dat_str = "None"
-
-    config_dict = configparser.ConfigParser()
-    config_dict["default"] = {}
-
-    config_file = const.CONFIG_FOLDER + "config"
-    if os.path.isfile(config_file):
-        config_dict.read(config_file)
-        if config_dict.has_option("default", "iam_id"):
-            iam_id_str = "*"*16 + config_dict["default"]["iam_id"][-4:]
-        if config_dict.has_option("default", "iam_secret"):
-            iam_secret_str = "*"*16 + config_dict["default"]["iam_secret"][-4:]
-        if config_dict.has_option("default", "servers_dat"):
-            servers_dat_str = config_dict["default"]["servers_dat"]
-
-    iam_id = input("AWS Access Key ID [" + iam_id_str + "]: ")
-    iam_secret = input("AWS Secret Access Key [" + iam_secret_str + "]: ")
-    servers_dat = input(
-        "File path for Minecraft's servers.dat [" + servers_dat_str + "]: ")
-
-    while (servers_dat and (
-        not os.path.isfile(servers_dat) or 
-        not servers_dat.endswith("servers.dat")
-        )):
-        servers_dat = input(
-            servers_dat + " is not valid. Try again or leave empty: ")
-
-    if iam_id:
-        config_dict["default"]["iam_id"] = iam_id
-    if iam_secret:
-        config_dict["default"]["iam_secret"] = iam_secret
-    if servers_dat:
-        config_dict["default"]["servers_dat"] = servers_dat
-
-    with open(config_file, "w") as output:
-        config_dict.write(output)
-    os.chmod(config_file, const.CONFIG_PERMS)

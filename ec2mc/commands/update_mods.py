@@ -4,7 +4,7 @@ from ec2mc.stuff import simulate_policy
 class UpdateMods(abstract_command.CommandBase):
 
     def main(self, user_info, kwargs):
-        """Updates server's mods via the internet."""
+        """updates server's mods via the internet"""
         pass
 
 

@@ -2,7 +2,7 @@ import os
 import subprocess
 import shutil
 
-from ec2mc import const
+from ec2mc import config
 from ec2mc import abstract_command
 from ec2mc.verify import verify_aws
 from ec2mc.verify import verify_instances
@@ -75,14 +75,14 @@ class SSHServer(abstract_command.CommandBase):
     def find_private_key(self):
         """Returns config's private key file path, if only one exists."""
         private_keys = []
-        for file in os.listdir(const.CONFIG_FOLDER):
+        for file in os.listdir(config.CONFIG_DIR):
             if file.endswith(".pem"):
-                private_keys.append(const.CONFIG_FOLDER + file)
+                private_keys.append(config.CONFIG_DIR + file)
 
         if not private_keys:
             quit_out.q(["Error: Private key file not found in config."])
         elif len(private_keys) > 1:
             quit_out.q(["Error: Multiple private key files found in config."])
 
-        os.chmod(private_keys[0], const.PK_PERMS)
+        os.chmod(private_keys[0], config.PK_PERMS)
         return private_keys[0]

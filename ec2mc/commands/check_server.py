@@ -7,7 +7,7 @@ from ec2mc.stuff import simulate_policy
 class CheckServer(abstract_command.CommandBase):
 
     def main(self, user_info, kwargs):
-        """Check instance status(es) & update client's server list
+        """check instance status(es) & update client's server list
 
         Args:
             user_info (dict): iam_id, iam_secret, and iam_arn are needed.

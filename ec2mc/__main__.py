@@ -33,6 +33,7 @@ def main(args=None):
             quit_out.q(["Error: Python version 3.6 or greater required."])
 
         commands = [
+            configure.Configure(), 
             start_server.StartServer(), 
             check_server.CheckServer(), 
             #stop_server.StopServer(), 
@@ -46,7 +47,9 @@ def main(args=None):
         arg_cmd = kwargs["command"]
 
         if arg_cmd == "configure":
-            verify_config.configure()
+            config_cmd = [cmd for cmd in commands 
+                if cmd.module_name() == arg_cmd][0]
+            config_cmd.main()
             quit_out.q()
 
         if not any(cmd.module_name() == arg_cmd for cmd in commands):
@@ -77,12 +80,11 @@ def argv_to_kwargs(args, commands):
 
     parser = argparse.ArgumentParser(usage="ec2mc [-h] <command> [<args>]", 
         description=("AWS EC2 instance manager for Minecraft servers. "
-            "Requires IAM credentials linked to an AWS account. Not all "
-            "commands are necessarily available, as some require specific "
-            "IAM permissions."))
+            "Requires IAM credentials linked to an AWS account. Most commands "
+            "require at least one IAM permission, which must be granted by "
+            "an IAM admin."))
     cmd_args = parser.add_subparsers(metavar="<command>"+" "*6, dest="command")
 
-    cmd_args.add_parser("configure", help=verify_config.configure.__doc__)
     for command in commands:
         command.add_documentation(cmd_args)
 

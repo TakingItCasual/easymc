@@ -7,7 +7,7 @@ from ec2mc.stuff import simulate_policy
 class StartServer(abstract_command.CommandBase):
 
     def main(self, user_info, kwargs):
-        """Start stopped instance(s) & update client's server list
+        """start stopped instance(s) & update client's server list
 
         Args:
             user_info (dict): iam_id, iam_secret, and iam_arn are needed.

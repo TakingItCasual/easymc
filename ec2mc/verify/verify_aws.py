@@ -1,11 +1,11 @@
 import boto3
 
-from ec2mc import const
+from ec2mc import config
 from ec2mc.stuff import simulate_policy
 from ec2mc.stuff import quit_out
 
-#import pprint
-#pp = pprint.PrettyPrinter(indent=2)
+import pprint
+pp = pprint.PrettyPrinter(indent=2)
 
 def main():
     """If AWS account isn't fully set up, set up what is needed.
@@ -18,7 +18,7 @@ def main():
     pass
 
 
-def security_group(user_info):
+def security_group(user_info, region):
     """Verify that AWS has the security group aws_setup_files.security_group.
 
     Args:
@@ -28,8 +28,18 @@ def security_group(user_info):
         str: ID for security group used for Minecraft instances
     """
 
-    #pp.pprint(ec2_client.describe_security_groups()["SecurityGroups"])
-    #quit_out.q(["blah"])
+    client = ec2_client(user_info, region)
+    security_groups = client.describe_security_groups()["SecurityGroups"]
+    security_group = [SG for SG in security_groups 
+        if config.SECURITY_GROUP_FILTER.lower() in SG["GroupName"].lower()]
+
+    if not security_group:
+        pass
+    elif len(security_group) > 1:
+        quit_out.q(["Error: Multiple security groups matching filter found."])
+
+    pp.pprint(security_group)
+    quit_out.q(["blah"])
 
     return ""
 
@@ -44,7 +54,7 @@ def get_regions(user_info, region_filter=None):
     for region in ec2_client(user_info).describe_regions()["Regions"]:
         region_list.append(region["RegionName"])
 
-    # Script can't handle an empty region list, so the filter must be valid.
+    # The returned list cannot be empty, so the filter must be valid.
     if region_filter:
         if set(region_filter).issubset(set(region_list)):
             return list(set(region_filter))
@@ -52,7 +62,7 @@ def get_regions(user_info, region_filter=None):
     return region_list
 
 
-def ec2_client(user_info, region=const.DEFAULT_REGION):
+def ec2_client(user_info, region=config.DEFAULT_REGION):
     """Create and return an EC2 client with IAM credentials and region"""
     return boto3.client("ec2", 
         aws_access_key_id=user_info["iam_id"], 

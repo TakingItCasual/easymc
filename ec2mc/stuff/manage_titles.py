@@ -2,7 +2,7 @@ import os
 import json
 import nbtlib
 
-from ec2mc import const
+from ec2mc import config
 
 def update_dns(aws_region, instance_id, servers_dat_path, new_dns):
     """Updates the MC client's server list with specified instance's DNS.
@@ -35,7 +35,7 @@ def update_dns(aws_region, instance_id, servers_dat_path, new_dns):
 
 def verify_titles_json():
     """Verifies that server_titles.json adheres to basic_struct"""
-    titles_file = const.CONFIG_FOLDER + "server_titles.json"
+    titles_file = config.CONFIG_DIR + "server_titles.json"
     basic_struct = {"instances": []}
 
     if os.path.isfile(titles_file):
@@ -53,7 +53,7 @@ def verify_titles_json():
 
 
 def save_titles_json(input_dict):
-    titles_file = const.CONFIG_FOLDER + "server_titles.json"
+    titles_file = config.CONFIG_DIR + "server_titles.json"
     with open(titles_file, "w", encoding="utf-8") as out_file:
         json.dump(input_dict, out_file, ensure_ascii=False)    
 

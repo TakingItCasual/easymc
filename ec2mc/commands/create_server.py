@@ -1,6 +1,6 @@
 from botocore.exceptions import ClientError
 
-from ec2mc import const
+from ec2mc import config
 from ec2mc import abstract_command
 from ec2mc.verify import verify_aws
 from ec2mc.stuff import simulate_policy
@@ -12,7 +12,7 @@ pp = pprint.PrettyPrinter(indent=2)
 class CreateServer(abstract_command.CommandBase):
 
     def main(self, user_info, kwargs):
-        """Creates and initializes a new instance.
+        """create and initialize a new Minecraft instance/server
 
         Args:
             user_info (dict): iam_id, iam_secret, and iam_arn are needed.
@@ -24,18 +24,18 @@ class CreateServer(abstract_command.CommandBase):
 
         # Verify the specified region
         region = verify_aws.get_regions(user_info, [kwargs["region"]])[0]
-        availability_zone = region+"a"
+        self.availability_zone = region+"a"
 
-        security_group = verify_aws.security_group(user_info)
+        self.security_group = verify_aws.security_group(user_info, region)
 
-        ec2_client = verify_aws.ec2_client(user_info, region)
+        self.ec2_client = verify_aws.ec2_client(user_info, region)
 
         try:
-            reservation = ec2_client.run_instances(
+            reservation = self.ec2_client.run_instances(
                 DryRun=True, 
                 MinCount=1, MaxCount=1, 
-                ImageId=const.AWS_LINUX_AMI, 
-                Placement={"AvailabilityZone": availability_zone}, 
+                ImageId=config.AWS_LINUX_AMI, 
+                Placement={"AvailabilityZone": self.availability_zone}, 
                 InstanceType=kwargs["type"], 
                 TagSpecifications=[{
                     "ResourceType": "instance", 
@@ -44,7 +44,7 @@ class CreateServer(abstract_command.CommandBase):
                         "Value": kwargs["name"]
                     }]
                 }], 
-                SecurityGroupIds=[security_group], 
+                SecurityGroupIds=[self.security_group], 
                 #block_device_mappings = [bdm]
             )
         except ClientError as e:
