@@ -3,7 +3,7 @@ from ec2mc.stuff import simulate_policy
 
 class StopServer(abstract_command.CommandBase):
 
-    def main(self, user_info, kwargs):
+    def main(self, kwargs):
         """force the instance/server to stop"""
         pass
 
@@ -12,8 +12,8 @@ class StopServer(abstract_command.CommandBase):
         cmd_parser = super().add_documentation(argparse_obj)
 
 
-    def blocked_actions(self, user_info):
-        return simulate_policy.blocked(user_info, actions=[
+    def blocked_actions(self):
+        return simulate_policy.blocked(actions=[
             "ec2:DescribeInstances", 
             "ec2:StopInstances"
         ])

@@ -18,17 +18,21 @@ def main():
     pass
 
 
-def security_group(user_info, region):
+def security_group(region):
     """Verify that AWS has the security group aws_setup_files.security_group.
 
     Args:
-        user_info (dict): iam_id and iam_secret are needed.
+        region (str): EC2 region to check/create security group in
 
     Returns:
         str: ID for security group used for Minecraft instances
     """
 
-    client = ec2_client(user_info, region)
+    quit_out.assert_empty(simulate_policy.blocked(actions=[
+        "ec2:DescribeSecurityGroups"
+    ]))
+
+    client = ec2_client(region)
     security_groups = client.describe_security_groups()["SecurityGroups"]
     security_group = [SG for SG in security_groups 
         if config.SECURITY_GROUP_FILTER.lower() in SG["GroupName"].lower()]
@@ -38,20 +42,17 @@ def security_group(user_info, region):
     elif len(security_group) > 1:
         quit_out.q(["Error: Multiple security groups matching filter found."])
 
-    pp.pprint(security_group)
-    quit_out.q(["blah"])
-
-    return ""
+    return security_group[0]["GroupId"]
 
 
-def get_regions(user_info, region_filter=None):
+def get_regions(region_filter=None):
     """Returns list of EC2 regions, or region_filter if not empty and valid."""
-    quit_out.assert_empty(simulate_policy.blocked(user_info, actions=[
+    quit_out.assert_empty(simulate_policy.blocked(actions=[
         "ec2:DescribeRegions"
     ]))
 
     region_list = []
-    for region in ec2_client(user_info).describe_regions()["Regions"]:
+    for region in ec2_client().describe_regions()["Regions"]:
         region_list.append(region["RegionName"])
 
     # The returned list cannot be empty, so the filter must be valid.
@@ -62,24 +63,24 @@ def get_regions(user_info, region_filter=None):
     return region_list
 
 
-def ec2_client(user_info, region=config.DEFAULT_REGION):
+def ec2_client(region=config.DEFAULT_REGION):
     """Create and return an EC2 client with IAM credentials and region"""
     return boto3.client("ec2", 
-        aws_access_key_id=user_info["iam_id"], 
-        aws_secret_access_key=user_info["iam_secret"], 
+        aws_access_key_id=config.IAM_ID, 
+        aws_secret_access_key=config.IAM_SECRET, 
         region_name=region
     )
 
-def iam_client(user_info):
+def iam_client():
     """Create and return an IAM client with IAM credentials"""
     return boto3.client("iam", 
-        aws_access_key_id=user_info["iam_id"], 
-        aws_secret_access_key=user_info["iam_secret"]
+        aws_access_key_id=config.IAM_ID, 
+        aws_secret_access_key=config.IAM_SECRET
     )
 
-def ssm_client(user_info):
+def ssm_client():
     """Create and return an SSM client with IAM credentials"""
     return boto3.client("ssm", 
-        aws_access_key_id=user_info["iam_id"], 
-        aws_secret_access_key=user_info["iam_secret"]
+        aws_access_key_id=config.IAM_ID, 
+        aws_secret_access_key=config.IAM_SECRET
     )

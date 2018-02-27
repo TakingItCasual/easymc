@@ -1,11 +1,11 @@
+from ec2mc import config
 from ec2mc.verify import verify_aws
 from ec2mc.stuff import quit_out
 
-def blocked(user_info, *, actions=None, resources=None, context=None):
+def blocked(*, actions=None, resources=None, context=None):
     """Tests whether IAM user is able to use AWS actions in actions.
 
     Args:
-        user_info (dict): iam_id, iam_secret, and iam_arn are needed.
         actions (list): AWS action(s) to verify the IAM user can use.
         resources (list): Check if action(s) can be used on specific resources. 
             If None, action(s) must be usable on all resources.
@@ -35,8 +35,8 @@ def blocked(user_info, *, actions=None, resources=None, context=None):
     else:
         context = [{}]
 
-    results = verify_aws.iam_client(user_info).simulate_principal_policy(
-        PolicySourceArn=user_info["iam_arn"], 
+    results = verify_aws.iam_client().simulate_principal_policy(
+        PolicySourceArn=config.IAM_ARN, 
         ActionNames=actions, 
         ResourceArns=resources, 
         ContextEntries=context

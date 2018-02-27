@@ -1,8 +1,8 @@
 from ec2mc.verify import verify_aws
 
-def main(user_info, instance_id, cmd_list):
+def main(instance_id, cmd_list):
     """Send bash commands to an instance via SSM"""
-    ssm_client = verify_aws.ssm_client(user_info)
+    ssm_client = verify_aws.ssm_client()
     response = ssm_client.send_command(
         InstanceIds=[
             instance_id

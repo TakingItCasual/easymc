@@ -11,7 +11,7 @@ from ec2mc.stuff import quit_out
 
 class SSHServer(abstract_command.CommandBase):
 
-    def main(self, user_info, kwargs):
+    def main(self, kwargs):
         """SSH into an EC2 instance using a .pem private key
 
         The private key is searched for from the script's config folder. 
@@ -23,14 +23,14 @@ class SSHServer(abstract_command.CommandBase):
             quit_out.q(["Error: ssh_server only supported on posix systems."])
 
         private_key_file = self.find_private_key()
-        instance = verify_instances.main(user_info, kwargs)
+        instance = verify_instances.main(kwargs)
 
         if len(instance) > 1:
             quit_out.q(["Error: Instance query returned multiple results.", 
                 "  Narrow filter(s) so that only one instance is found."])
         instance = instance[0]
 
-        ec2_client = verify_aws.ec2_client(user_info, instance["region"])
+        ec2_client = verify_aws.ec2_client(instance["region"])
 
         response = ec2_client.describe_instances(
             InstanceIds=[instance["id"]]
@@ -62,8 +62,8 @@ class SSHServer(abstract_command.CommandBase):
         abstract_command.args_to_filter_instances(cmd_parser)
 
 
-    def blocked_actions(self, user_info):
-        return simulate_policy.blocked(user_info, actions=[
+    def blocked_actions(self):
+        return simulate_policy.blocked(actions=[
             "ec2:DescribeInstances"
         ])
 

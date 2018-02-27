@@ -23,7 +23,7 @@ class CommandBase(ABC):
 
 
     @abstractmethod
-    def blocked_actions(self, user_info):
+    def blocked_actions(self):
         """Returns list of denied IAM actions needed for the child's main."""
         pass
 
@@ -41,7 +41,7 @@ def args_to_filter_instances(cmd_parser):
         help=("AWS EC2 region(s) to probe for instances. If not set, all "
             "regions will be probed."))
     cmd_parser.add_argument(
-        "-t", dest="tagfilter", action="append", nargs="+", metavar="", 
+        "-t", dest="tagfilter", nargs="+", action="append", metavar="", 
         help=("Instance tag filter. First value is the tag key, with "
             "proceeding value(s) as the tag value(s). If not set, no filter "
             "will be applied. If tag value(s) not specified, only the tag key "

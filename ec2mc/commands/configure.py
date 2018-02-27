@@ -61,7 +61,7 @@ class Configure(abstract_command.CommandBase):
         cmd_parser = super().add_documentation(argparse_obj)
 
 
-    def blocked_actions(self, user_info):
+    def blocked_actions(self):
         return []
 
 

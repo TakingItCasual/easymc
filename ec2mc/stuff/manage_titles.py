@@ -4,7 +4,7 @@ import nbtlib
 
 from ec2mc import config
 
-def update_dns(aws_region, instance_id, servers_dat_path, new_dns):
+def update_dns(aws_region, instance_id, new_dns):
     """Updates the MC client's server list with specified instance's DNS.
 
     Args:
@@ -30,7 +30,7 @@ def update_dns(aws_region, instance_id, servers_dat_path, new_dns):
         })
         save_titles_json(titles_dict)
 
-    update_servers_dat(servers_dat_path, title, new_dns)
+    update_servers_dat(config.SERVERS_DAT, title, new_dns)
 
 
 def verify_titles_json():

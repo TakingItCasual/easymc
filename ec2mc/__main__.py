@@ -43,25 +43,29 @@ def main(args=None):
             ssh_server.SSHServer()
         ]
 
+        # Use argparse to turn sys.argv into a dict of arguments
         kwargs = argv_to_kwargs(args, commands)
         arg_cmd = kwargs["command"]
 
+        # If the "configure" command was used, skip verifying the configuration
         if arg_cmd == "configure":
             config_cmd = [cmd for cmd in commands 
                 if cmd.module_name() == arg_cmd][0]
             config_cmd.main()
             quit_out.q()
 
-        if not any(cmd.module_name() == arg_cmd for cmd in commands):
-            print("Error: \"" + arg_cmd + "\" is an invalid argument.")
+        # Load and verify the config (primarily for the IAM credentials)
+        verify_config.main()
 
-        user_info = verify_config.main()
-
+        # Get the command class object from the commands list
         chosen_cmd = [cmd for cmd in commands 
             if cmd.module_name() == arg_cmd][0]
-        quit_out.assert_empty(chosen_cmd.blocked_actions(user_info))
 
-        chosen_cmd.main(user_info, kwargs)
+        # Verify that the IAM user has needed permissions to use the command
+        quit_out.assert_empty(chosen_cmd.blocked_actions())
+
+        # Use the command
+        chosen_cmd.main(kwargs)
 
         quit_out.q(["Script completed without errors."])
     except SystemExit:

@@ -3,13 +3,12 @@ from ec2mc.stuff import simulate_policy
 from ec2mc.stuff.threader import Threader
 from ec2mc.stuff import quit_out
 
-def main(user_info, kwargs):
+def main(kwargs):
     """Wrapper for probe_regions(). Prints found instances to the CLI.
 
     Quits out if no instances are found. This functionality is relied upon.
 
     Args:
-        user_info (dict): iam_id, iam_secret, and iam_arn are needed.
         kwargs (dict):
             "region": list: AWS region(s) to probe. If None, probe all.
             "tagfilter": Instance tag key-value pair(s) to filter by. If None, 
@@ -22,12 +21,12 @@ def main(user_info, kwargs):
             "tags": dict: Instance tag key-value pairs.
     """
 
-    quit_out.assert_empty(simulate_policy.blocked(user_info, actions=[
+    quit_out.assert_empty(simulate_policy.blocked(actions=[
         "ec2:DescribeInstances"
     ]))
 
     region_filter = kwargs["regions"]
-    regions = verify_aws.get_regions(user_info, region_filter)
+    regions = verify_aws.get_regions(region_filter)
 
     tag_filter = []
     if kwargs["tagfilter"]:
@@ -49,7 +48,7 @@ def main(user_info, kwargs):
     print("")
     print("Probing " + str(len(regions)) + " AWS region(s) for instances...")
 
-    all_instances = probe_regions(user_info, regions, tag_filter)
+    all_instances = probe_regions(regions, tag_filter)
 
     for region in regions:
         instances = [instance for instance in all_instances 
@@ -78,13 +77,12 @@ def main(user_info, kwargs):
     return all_instances
 
 
-def probe_regions(user_info, regions, tag_filter=None):
+def probe_regions(regions, tag_filter=None):
     """Probe EC2 region(s) for instances, and return dicts of found instances.
     
     Uses multithreading to probe all regions simultaneously.
 
     Args:
-        user_info (dict): iam_id and iam_secret are needed.
         regions (list): List of EC2 regions to probe.
         tag_filter (dict): Passed to probe_region
 
@@ -97,7 +95,7 @@ def probe_regions(user_info, regions, tag_filter=None):
 
     threader = Threader()
     for region in regions:
-        threader.add_thread(probe_region, (user_info, region, tag_filter))
+        threader.add_thread(probe_region, (region, tag_filter))
     results = threader.get_results()
 
     all_instances = []
@@ -114,11 +112,10 @@ def probe_regions(user_info, regions, tag_filter=None):
     return all_instances
 
 
-def probe_region(user_info, region, tag_filter=None):
+def probe_region(region, tag_filter=None):
     """Probes a single EC2 region for instances. Usually threaded.
 
     Args:
-        user_info (dict): iam_id and iam_secret are needed.
         region (str): EC2 region to probe
         tag_filter (dict): Filter out instances that don't have tags matching
             the filter. If None, filter not used.
@@ -132,7 +129,7 @@ def probe_region(user_info, region, tag_filter=None):
     """
 
     response = verify_aws.ec2_client(
-        user_info, region
+        region
     ).describe_instances(Filters=tag_filter)["Reservations"]
 
     region_instances = {
