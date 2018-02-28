@@ -27,17 +27,13 @@ class CreateServer(abstract_command.CommandBase):
 
         self.ec2_client = verify_aws.ec2_client(region)
 
-        self.vpc_stuff = self.ec2_client.describe_network_interfaces(
+        vpc_stuff = self.ec2_client.describe_network_interfaces(
         )["NetworkInterfaces"]
-        if not self.vpc_stuff:
+        if not vpc_stuff:
             quit_out.q(["Error: Default VPC not found."])
-        elif len(self.vpc_stuff) > 1:
+        elif len(vpc_stuff) > 1:
             quit_out.q(["Error: Multiple VPCs found. Please apply a filter."])
-        self.vpc_stuff = self.vpc_stuff[0]
-
-        self.availability_zone = self.vpc_stuff["AvailabilityZone"]
-
-        pp.pprint(self.vpc_stuff)
+        self.availability_zone = vpc_stuff[0]["AvailabilityZone"]
 
         self.instance_type = kwargs["type"]
 
@@ -52,15 +48,18 @@ class CreateServer(abstract_command.CommandBase):
                     "Value": tag_value
                 })
 
-        self.security_group = verify_aws.security_group(region)
+        self.security_group_id = verify_aws.security_group(region)
 
         try:
             reservation = self.create_instance(dry_run=True)
         except ClientError as e:
             if e.response["Error"]["Code"] == "UnauthorizedOperation":
+                print("")
                 pp.pprint(verify_aws.decode_error_msg(e.response))
-                quit_out.q(["Error: Missing action/context permission(s).", 
-                    "  Instance type too large maybe?"])
+                quit_out.q(["Error: Missing IAM action/resource/context "
+                    "permission(s).", 
+                    "  The above JSON is the decoded error message.", 
+                    "  Maybe the specified instance type was too large?"])
             elif not e.response["Error"]["Code"] == "DryRunOperation":
                 quit_out.q([e])
 
@@ -82,10 +81,13 @@ class CreateServer(abstract_command.CommandBase):
         blocked_actions = []
         blocked_actions.extend(simulate_policy.blocked(actions=[
             "ec2:DescribeInstances", 
+            "ec2:DescribeNetworkInterfaces", 
             "ec2:CreateTags"
         ]))
         blocked_actions.extend(simulate_policy.blocked(actions=[
             "ec2:RunInstances"
+        ], resources=[
+            "arn:aws:ec2:*:*:instance/*"
         ], context={
             "ec2:InstanceType": ["t2.nano"]
         }))
@@ -107,9 +109,5 @@ class CreateServer(abstract_command.CommandBase):
                 "ResourceType": "instance", 
                 "Tags": self.tags
             }], 
-            SecurityGroupIds=[self.security_group], 
-            #NetworkInterfaces=[{
-            #    "DeviceIndex": 0, 
-            #    "NetworkInterfaceId": self.vpc_stuff["NetworkInterfaceId"]
-            #}]
+            SecurityGroupIds=[self.security_group_id]
         )

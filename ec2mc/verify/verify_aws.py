@@ -93,8 +93,20 @@ def ssm_client():
 
 def decode_error_msg(error_response):
     """decodes AWS encoded error messages (why are they encoded though?)"""
+    encoded_message_indication = "Encoded authorization failure message: "
+
+    if encoded_message_indication not in error_response["Error"]["Message"]:
+        return {
+            "Warning": "Error message wasn't encoded.", 
+            "ErrorMessage": error_response["Error"]["Message"]
+        }
+
+    quit_out.assert_empty(simulate_policy.blocked(actions=[
+        "sts:DecodeAuthorizationMessage"
+    ]))
+
     encoded_error_str = error_response["Error"]["Message"].split(
-        "Encoded authorization failure message: ",1)[1]
+        encoded_message_indication,1)[1]
 
     return json.loads(boto3.client("sts", 
         aws_access_key_id=config.IAM_ID, 
