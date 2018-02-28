@@ -44,5 +44,5 @@ def args_to_filter_instances(cmd_parser):
         "-t", dest="tagfilter", nargs="+", action="append", metavar="", 
         help=("Instance tag filter. First value is the tag key, with "
             "proceeding value(s) as the tag value(s). If not set, no filter "
-            "will be applied. If tag value(s) not specified, only the tag key "
-            "will be filtered for."))
+            "will be applied. If tag value(s) not specified, only the tag "
+            "key will be filtered for."))

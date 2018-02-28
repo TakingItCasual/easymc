@@ -1,9 +1,12 @@
+from botocore.exceptions import WaiterError
+
 from ec2mc import config
 from ec2mc import abstract_command
 from ec2mc.verify import verify_aws
 from ec2mc.verify import verify_instances
 from ec2mc.stuff import manage_titles
 from ec2mc.stuff import simulate_policy
+from ec2mc.stuff import quit_out
 
 class StartServer(abstract_command.CommandBase):
 
@@ -34,10 +37,17 @@ class StartServer(abstract_command.CommandBase):
             if instance_state == "stopped":
                 print("  Starting instance...")
                 ec2_client.start_instances(InstanceIds=[instance["id"]])
-                ec2_client.get_waiter('instance_running').wait(
-                    InstanceIds=[instance["id"]], WaiterConfig={
-                        "Delay": 5, "MaxAttempts": 12
-                    })
+
+                try:
+                    ec2_client.get_waiter('instance_running').wait(
+                        InstanceIds=[instance["id"]], WaiterConfig={
+                            "Delay": 5, "MaxAttempts": 12
+                        })
+                except WaiterError:
+                    quit_out.q([
+                        "Error: Instance should be running after 1 minute.", 
+                        "  Check server's state after a few minutes."])
+
                 print("  Instance started. The server will be available soon.")
             elif instance_state == "running":
                 print("  Instance is already running. Just join the server.")

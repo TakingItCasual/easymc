@@ -47,7 +47,7 @@ def main(args=None):
         kwargs = argv_to_kwargs(args, commands)
         arg_cmd = kwargs["command"]
 
-        # If the "configure" command was used, skip verifying the configuration
+        # If the "configure" command was used, skip verifying configuration
         if arg_cmd == "configure":
             config_cmd = [cmd for cmd in commands 
                 if cmd.module_name() == arg_cmd][0]
@@ -84,9 +84,9 @@ def argv_to_kwargs(args, commands):
 
     parser = argparse.ArgumentParser(usage="ec2mc [-h] <command> [<args>]", 
         description=("AWS EC2 instance manager for Minecraft servers. "
-            "Requires IAM credentials linked to an AWS account. Most commands "
-            "require at least one IAM permission, which must be granted by "
-            "an IAM admin."))
+            "Requires IAM credentials linked to an AWS account. Most "
+            "commands require at least one IAM permission, which must be "
+            "granted by an IAM admin."))
     cmd_args = parser.add_subparsers(metavar="<command>"+" "*6, dest="command")
 
     for command in commands:

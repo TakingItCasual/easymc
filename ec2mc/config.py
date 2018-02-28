@@ -32,5 +32,3 @@ DEFAULT_REGION = "us-east-1"
 EC2_OS_AMI = "ami-5652ce39"
 # EC2 security groups are searched for a GroupName with the following.
 SECURITY_GROUP_FILTER = "minecraft"
-# If a region has more than just the default VPC, specify name tag filter here.
-VPC_NAME_FILTER = None

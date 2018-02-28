@@ -11,9 +11,9 @@ pp = pprint.PrettyPrinter(indent=2)
 def main():
     """if AWS account isn't fully set up, set up what is needed
 
-    Before EC2 instances can be created and used with this script, IAM groups, 
-    IAM users, IAM group permissions, and EC2 security groups must be 
-    intialized.
+    Before EC2 instances can be created and used with this script, IAM 
+    groups, IAM users, IAM group permissions, and EC2 security groups must 
+    be intialized.
     """
     
     pass

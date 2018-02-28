@@ -51,7 +51,7 @@ class CreateServer(abstract_command.CommandBase):
         self.security_group_id = verify_aws.security_group(region)
 
         try:
-            reservation = self.create_instance(dry_run=True)
+            self.create_instance(dry_run=True)
         except ClientError as e:
             if e.response["Error"]["Code"] == "UnauthorizedOperation":
                 print("")

@@ -128,8 +128,7 @@ def probe_region(region, tag_filter=None):
                 "tags": Instance tags.
     """
 
-    response = verify_aws.ec2_client(
-        region
+    response = verify_aws.ec2_client(region
     ).describe_instances(Filters=tag_filter)["Reservations"]
 
     region_instances = {

@@ -36,7 +36,7 @@ class Configure(abstract_command.CommandBase):
         iam_secret = input(
             "AWS Secret Access Key [" + iam_secret_str + "]: ")
         servers_dat = input(
-            "File path for Minecraft's servers.dat [" + servers_dat_str + "]: ")
+            "MC client's servers.dat file path [" + servers_dat_str + "]: ")
 
         while (servers_dat and (
             not os.path.isfile(servers_dat) or 

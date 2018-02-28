@@ -7,9 +7,9 @@ def blocked(*, actions=None, resources=None, context=None):
 
     Args:
         actions (list): AWS action(s) to verify the IAM user can use.
-        resources (list): Check if action(s) can be used on specific resources. 
-            If None, action(s) must be usable on all resources.
-        context (dict): Check if actions can be used with specific contexts. 
+        resources (list): Check if action(s) can be used on resource(s). 
+            If None, action(s) must be usable on all resources ("*").
+        context (dict): Check if action(s) can be used with context(s). 
             If None, it is expected that no context restrictions were set.
 
     Returns:
