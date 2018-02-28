@@ -27,7 +27,7 @@ Sample credentials (with minimal permissions) are the following:
 The preceding IAM user credentials have been included to facilitate a basic understanding of what the script does.
 The instance will turn itself off after 10 minutes of inactivity using crontab.
 
-Full commands to be used are the following ("-r" is a region filter, "-t" is a tag filter):
+Full commands to be used are the following ("-r" is the region filter, "-t" is a tag filter):
 
 .. code-block:: bash
 

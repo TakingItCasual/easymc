@@ -1,3 +1,4 @@
+import json
 import boto3
 
 from ec2mc import config
@@ -8,7 +9,7 @@ import pprint
 pp = pprint.PrettyPrinter(indent=2)
 
 def main():
-    """If AWS account isn't fully set up, set up what is needed.
+    """if AWS account isn't fully set up, set up what is needed
 
     Before EC2 instances can be created and used with this script, IAM groups, 
     IAM users, IAM group permissions, and EC2 security groups must be 
@@ -19,7 +20,7 @@ def main():
 
 
 def security_group(region):
-    """Verify that AWS has the security group aws_setup_files.security_group.
+    """verify that AWS has the security group aws_setup_files.security_group
 
     Args:
         region (str): EC2 region to check/create security group in
@@ -46,7 +47,7 @@ def security_group(region):
 
 
 def get_regions(region_filter=None):
-    """Returns list of EC2 regions, or region_filter if not empty and valid."""
+    """returns list of EC2 regions, or region_filter if not empty and valid"""
     quit_out.assert_empty(simulate_policy.blocked(actions=[
         "ec2:DescribeRegions"
     ]))
@@ -63,8 +64,13 @@ def get_regions(region_filter=None):
     return region_list
 
 
+def get_all_keys():
+    """get instance tags from all instances in all regions"""
+    pass
+
+
 def ec2_client(region=config.DEFAULT_REGION):
-    """Create and return an EC2 client with IAM credentials and region"""
+    """create and return an EC2 client with IAM credentials and region"""
     return boto3.client("ec2", 
         aws_access_key_id=config.IAM_ID, 
         aws_secret_access_key=config.IAM_SECRET, 
@@ -72,15 +78,27 @@ def ec2_client(region=config.DEFAULT_REGION):
     )
 
 def iam_client():
-    """Create and return an IAM client with IAM credentials"""
+    """create and return an IAM client with IAM credentials"""
     return boto3.client("iam", 
         aws_access_key_id=config.IAM_ID, 
         aws_secret_access_key=config.IAM_SECRET
     )
 
 def ssm_client():
-    """Create and return an SSM client with IAM credentials"""
+    """create and return an SSM client with IAM credentials"""
     return boto3.client("ssm", 
         aws_access_key_id=config.IAM_ID, 
         aws_secret_access_key=config.IAM_SECRET
     )
+
+def decode_error_msg(error_response):
+    """decodes AWS encoded error messages (why are they encoded though?)"""
+    encoded_error_str = error_response["Error"]["Message"].split(
+        "Encoded authorization failure message: ",1)[1]
+
+    return json.loads(boto3.client("sts", 
+        aws_access_key_id=config.IAM_ID, 
+        aws_secret_access_key=config.IAM_SECRET
+    ).decode_authorization_message(
+        EncodedMessage=encoded_error_str
+    )["DecodedMessage"])

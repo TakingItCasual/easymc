@@ -19,11 +19,25 @@ class CreateServer(abstract_command.CommandBase):
                 "region": EC2 region to create instance in
                 "name": Tag value for instance tag key "Name"
                 "type": EC2 instance type to create
+                "tags": list: Instance tag key-value pair(s)
         """
 
         # Verify the specified region
         region = verify_aws.get_regions([kwargs["region"]])[0]
-        self.availability_zone = region+"a"
+
+        self.ec2_client = verify_aws.ec2_client(region)
+
+        self.vpc_stuff = self.ec2_client.describe_network_interfaces(
+        )["NetworkInterfaces"]
+        if not self.vpc_stuff:
+            quit_out.q(["Error: Default VPC not found."])
+        elif len(self.vpc_stuff) > 1:
+            quit_out.q(["Error: Multiple VPCs found. Please apply a filter."])
+        self.vpc_stuff = self.vpc_stuff[0]
+
+        self.availability_zone = self.vpc_stuff["AvailabilityZone"]
+
+        pp.pprint(self.vpc_stuff)
 
         self.instance_type = kwargs["type"]
 
@@ -32,20 +46,22 @@ class CreateServer(abstract_command.CommandBase):
             "Value": kwargs["name"]
         }]
         if kwargs["tags"]:
-            for tag in kwargs["tags"]:
+            for tag_key, tag_value in kwargs["tags"]:
                 self.tags.append({
-                    "Key": tag[0], 
-                    "Value": tag[1]
+                    "Key": tag_key, 
+                    "Value": tag_value
                 })
 
         self.security_group = verify_aws.security_group(region)
 
-        self.ec2_client = verify_aws.ec2_client(region)
-
         try:
             reservation = self.create_instance(dry_run=True)
         except ClientError as e:
-            if not e.response["Error"]["Code"] == "DryRunOperation":
+            if e.response["Error"]["Code"] == "UnauthorizedOperation":
+                pp.pprint(verify_aws.decode_error_msg(e.response))
+                quit_out.q(["Error: Missing action/context permission(s).", 
+                    "  Instance type too large maybe?"])
+            elif not e.response["Error"]["Code"] == "DryRunOperation":
                 quit_out.q([e])
 
 
@@ -66,12 +82,12 @@ class CreateServer(abstract_command.CommandBase):
         blocked_actions = []
         blocked_actions.extend(simulate_policy.blocked(actions=[
             "ec2:DescribeInstances", 
-            "ec2:DescribeSecurityGroups"
+            "ec2:CreateTags"
         ]))
         blocked_actions.extend(simulate_policy.blocked(actions=[
             "ec2:RunInstances"
         ], context={
-            "ec2:InstanceType": ["t2.micro"]
+            "ec2:InstanceType": ["t2.nano"]
         }))
         return blocked_actions
 
@@ -91,5 +107,9 @@ class CreateServer(abstract_command.CommandBase):
                 "ResourceType": "instance", 
                 "Tags": self.tags
             }], 
-            SecurityGroupIds=[self.security_group]
+            SecurityGroupIds=[self.security_group], 
+            #NetworkInterfaces=[{
+            #    "DeviceIndex": 0, 
+            #    "NetworkInterfaceId": self.vpc_stuff["NetworkInterfaceId"]
+            #}]
         )
