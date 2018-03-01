@@ -1,4 +1,5 @@
 import os
+import shutil
 import configparser
 from botocore.exceptions import ClientError
 
@@ -8,27 +9,41 @@ from ec2mc.stuff import simulate_policy
 from ec2mc.stuff import quit_out
 
 def main():
-    """Verifies existence of config file, and the values therein.
+    """verifies existence of config file, and the values therein
 
-    The config file should have an iam_id (AWS access key ID), iam_secret (AWS 
-    Secret Access Key), and optionally servers_dat (file path for servers.dat). 
-    IAM_ID, IAM_SECRET, IAM_ARN, IAM_NAME, and (optionally) SERVERS_DAT from 
-    ec2mc.config will be modified by this function.
+    The config file is expected within config.CONFIG_DIR
 
-    The config file is expected under .ec2mc/ under the user's home directory.
+    Copies ec2mc.aws_setup_src to config.AWS_SETUP_DIR
+
+    The config file should have an iam_id (AWS access key ID), iam_secret 
+    (AWS Secret Access Key), and optionally servers_dat (file path for 
+    servers.dat). IAM_ID, IAM_SECRET, IAM_ARN, IAM_NAME, and (optionally) 
+    SERVERS_DAT from ec2mc.config will be modified by this function.
 
     server_titles.json is verified/managed separately by manage_titles.py.
     """
 
+    # If config directory doesn't already exist, create it.
+    if not os.path.isdir(config.CONFIG_DIR):
+        os.mkdir(config.CONFIG_DIR)
+
+    # If config.AWS_SETUP_DIR doesn't exist, copy from ec2mc.aws_setup_src
+    if not os.path.isdir(config.AWS_SETUP_DIR):
+        aws_setup_src = os.path.abspath(
+            os.path.join(__file__, os.pardir, os.pardir, "aws_setup_src"))
+        shutil.copytree(aws_setup_src, (config.AWS_SETUP_DIR))
+
+    # Read the config. Quit out if it doesn't exist.
     config_file = config.CONFIG_DIR + "config"
     if not os.path.isfile(config_file):
         quit_out.q([
             "Configuration is not set. Set with \"ec2mc configure\".", 
-            "IAM credentials must be set to access EC2 instances."
+            "  IAM credentials must be set to access EC2 instances."
         ])
     config_dict = configparser.ConfigParser()
     config_dict.read(config_file)
 
+    # Verify IAM user credentials that should be in the config.
     verify_user(config_dict)
 
     if config_dict.has_option("default", "servers_dat"):
@@ -45,7 +60,7 @@ def main():
 
 
 def verify_user(config_dict):
-    """Get IAM user credentials from config and verify them.
+    """get IAM user credentials from config and verify them
 
     IAM_ID, IAM_SECRET, IAM_ARN, and IAM_NAME from ec2mc.config will be 
     modified by this function.

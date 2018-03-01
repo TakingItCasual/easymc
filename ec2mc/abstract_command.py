@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 
 class CommandBase(ABC):
-    """Template for all of the available script commands to follow."""
+    """Template for all available ec2mc commands to follow."""
 
     def __init__(self):
         super().__init__()

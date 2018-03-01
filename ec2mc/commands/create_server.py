@@ -19,7 +19,7 @@ class CreateServer(abstract_command.CommandBase):
                 "region": EC2 region to create instance in
                 "name": Tag value for instance tag key "Name"
                 "type": EC2 instance type to create
-                "tags": list: Instance tag key-value pair(s)
+                "tags": list: Additional instance tag key-value pair(s)
         """
 
         # Verify the specified region
@@ -27,6 +27,7 @@ class CreateServer(abstract_command.CommandBase):
 
         self.ec2_client = verify_aws.ec2_client(region)
 
+        # TODO: Figure out what to filter
         vpc_stuff = self.ec2_client.describe_network_interfaces(
         )["NetworkInterfaces"]
         if not vpc_stuff:
@@ -56,7 +57,7 @@ class CreateServer(abstract_command.CommandBase):
             if e.response["Error"]["Code"] == "UnauthorizedOperation":
                 print("")
                 pp.pprint(verify_aws.decode_error_msg(e.response))
-                quit_out.q(["Error: Missing IAM action/resource/context "
+                quit_out.q(["Error: Missing action/resource/context IAM "
                     "permission(s).", 
                     "  The above JSON is the decoded error message.", 
                     "  Maybe the specified instance type was too large?"])

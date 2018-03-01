@@ -14,13 +14,13 @@ from ec2mc.stuff import quit_out
 #pp = pprint.PrettyPrinter(indent=2)
 
 def main(args=None):
-    """The script's entry point.
+    """ec2mc's entry point.
 
-    The config is verified, the script arguments are parsed, and if all goes
-    well, the script will interact with the specified AWS EC2 instance(s).
+    The config is verified, the CLI arguments are parsed, and if all goes
+    well, ec2mc will interact with the specified AWS EC2 instance(s).
 
     Args:
-        args (list): The command line arguments passed to the script.
+        args (list): The command line arguments passed to ec2mc
     """
 
     try:
@@ -32,7 +32,9 @@ def main(args=None):
         except AssertionError:
             quit_out.q(["Error: Python version 3.6 or greater required."])
 
+        # Available commands from the ec2mc.commands directory
         commands = [
+            aws_setup.AWSSetup(), 
             configure.Configure(), 
             start_server.StartServer(), 
             check_server.CheckServer(), 
@@ -47,7 +49,7 @@ def main(args=None):
         kwargs = argv_to_kwargs(args, commands)
         arg_cmd = kwargs["command"]
 
-        # If the "configure" command was used, skip verifying configuration
+        # If the "configure" command was used, skip configuration verification
         if arg_cmd == "configure":
             config_cmd = [cmd for cmd in commands 
                 if cmd.module_name() == arg_cmd][0]
@@ -67,19 +69,19 @@ def main(args=None):
         # Use the command
         chosen_cmd.main(kwargs)
 
-        quit_out.q(["Script completed without errors."])
+        quit_out.q(["ec2mc completed without errors."])
     except SystemExit:
         pass
 
 
 def argv_to_kwargs(args, commands):
-    """Initialize the script's argparse and its help.
+    """Initialize ec2mc's argparse and its help.
 
     Returns:
         dict: Parsed arguments
             "command": First positional argument
             Other key-value pairs vary depending on the command. See the 
-            command's add_documentation function to see its args.
+            command's add_documentation method to see its args.
     """
 
     parser = argparse.ArgumentParser(usage="ec2mc [-h] <command> [<args>]", 

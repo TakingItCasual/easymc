@@ -12,19 +12,21 @@ from ec2mc.stuff import quit_out
 class SSHServer(abstract_command.CommandBase):
 
     def main(self, kwargs):
-        """SSH into an EC2 instance using a .pem private key
+        """SSH into an EC2 instance using its .pem private key
 
-        The private key is searched for from the script's config folder. 
+        The private key is expected to exist within config.CONFIG_DIR
+
         Currently SSH is only supported with a .pem private key, and using 
         multiple keys is not supported. Only posix systems are supported.
         """
         
         if os.name != "posix":
-            quit_out.q(["Error: ssh_server only supported on posix systems."])
+            quit_out.q(["Error: ssh_server only supported on posix systems.", 
+                "  Google around for methods of SSHing with your OS."])
 
         private_key_file = self.find_private_key()
-        instance = verify_instances.main(kwargs)
 
+        instance = verify_instances.main(kwargs)
         if len(instance) > 1:
             quit_out.q(["Error: Instance query returned multiple results.", 
                 "  Narrow filter(s) so that only one instance is found."])

@@ -34,6 +34,12 @@ setup(
             'ec2mc=ec2mc.__main__:main',
         ],
     },
+    package_data={
+        'ec2mc': [
+            'aws_setup_src/*.json',
+            'aws_setup_src/IAM_Policies/*.json'
+        ]
+    },
     install_requires=[
         'boto3',
         'nbtlib'

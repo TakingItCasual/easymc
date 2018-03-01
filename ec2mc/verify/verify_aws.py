@@ -9,18 +9,12 @@ import pprint
 pp = pprint.PrettyPrinter(indent=2)
 
 def main():
-    """if AWS account isn't fully set up, set up what is needed
-
-    Before EC2 instances can be created and used with this script, IAM 
-    groups, IAM users, IAM group permissions, and EC2 security groups must 
-    be intialized.
-    """
-    
+    """verify that AWS account setup matches config.AWS_SETUP_DIR"""
     pass
 
 
 def security_group(region):
-    """verify that AWS has the security group aws_setup_files.security_group
+    """verify that AWS has the security group aws_setup.security_group
 
     Args:
         region (str): EC2 region to check/create security group in
@@ -33,13 +27,15 @@ def security_group(region):
         "ec2:DescribeSecurityGroups"
     ]))
 
+    # TODO: Filter based on SG in config.AWS_SETUP_DIR
+
     client = ec2_client(region)
     security_groups = client.describe_security_groups()["SecurityGroups"]
     security_group = [SG for SG in security_groups 
         if config.SECURITY_GROUP_FILTER.lower() in SG["GroupName"].lower()]
 
     if not security_group:
-        pass
+        quit_out.q(["Error: No security groups matching aws_setup found."])
     elif len(security_group) > 1:
         quit_out.q(["Error: Multiple security groups matching filter found."])
 
@@ -90,6 +86,7 @@ def ssm_client():
         aws_access_key_id=config.IAM_ID, 
         aws_secret_access_key=config.IAM_SECRET
     )
+
 
 def decode_error_msg(error_response):
     """decodes AWS encoded error messages (why are they encoded though?)"""

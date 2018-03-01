@@ -1,12 +1,14 @@
-"""Script constants. Variables set as None are set *once* elsewhere.
+"""ec2mc constants. Variables initialized as None are set *once* elsewhere.
 
-Needing to pass the IAM credentials everywhere was getting annoying.
+Needing to pass the IAM credentials everywhere was becoming a PITA.
 """
 
 import os
 
-# Location where the script finds/creates its configuration file(s).
+# Location where ec2mc finds/creates its configuration file(s).
 CONFIG_DIR = os.path.join(os.path.expanduser("~"), ".ec2mc", "")
+# Location where ec2mc finds the AWS setup files to upload to AWS.
+AWS_SETUP_DIR = os.path.join((CONFIG_DIR + "aws_setup"), "")
 
 # IAM user data needed for AWS programmatic access.
 # Set in ec2mc.verify.verify_config:verify_user
