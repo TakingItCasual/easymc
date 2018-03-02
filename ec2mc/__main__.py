@@ -14,7 +14,7 @@ from ec2mc.stuff import quit_out
 #pp = pprint.PrettyPrinter(indent=2)
 
 def main(args=None):
-    """ec2mc's entry point.
+    """ec2mc's entry point
 
     The config is verified, the CLI arguments are parsed, and if all goes
     well, ec2mc will interact with the specified AWS EC2 instance(s).
@@ -34,14 +34,14 @@ def main(args=None):
 
         # Available commands from the ec2mc.commands directory
         commands = [
-            aws_setup.AWSSetup(), 
-            configure.Configure(), 
-            start_server.StartServer(), 
-            check_server.CheckServer(), 
-            #stop_server.StopServer(), 
-            #get_backup.GetBackup(), 
-            #update_mods.UpdateMods(), 
-            create_server.CreateServer(), 
+            aws_setup.AWSSetup(),
+            configure.Configure(),
+            start_server.StartServer(),
+            check_server.CheckServer(),
+            #stop_server.StopServer(),
+            #get_backup.GetBackup(),
+            #update_mods.UpdateMods(),
+            create_server.CreateServer(),
             ssh_server.SSHServer()
         ]
 
@@ -75,7 +75,7 @@ def main(args=None):
 
 
 def argv_to_kwargs(args, commands):
-    """Initialize ec2mc's argparse and its help.
+    """ínitialize ec2mc's argparse and its help
 
     Returns:
         dict: Parsed arguments
@@ -84,7 +84,7 @@ def argv_to_kwargs(args, commands):
             command's add_documentation method to see its args.
     """
 
-    parser = argparse.ArgumentParser(usage="ec2mc [-h] <command> [<args>]", 
+    parser = argparse.ArgumentParser(usage="ec2mc [-h] <command> [<args>]",
         description=("AWS EC2 instance manager for Minecraft servers. "
             "Requires IAM credentials linked to an AWS account. Most "
             "commands require at least one IAM permission, which must be "

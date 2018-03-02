@@ -37,7 +37,7 @@ def main():
     config_file = config.CONFIG_DIR + "config"
     if not os.path.isfile(config_file):
         quit_out.q([
-            "Configuration is not set. Set with \"ec2mc configure\".", 
+            "Configuration is not set. Set with \"ec2mc configure\".",
             "  IAM credentials must be set to access EC2 instances."
         ])
     config_dict = configparser.ConfigParser()

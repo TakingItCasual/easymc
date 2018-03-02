@@ -37,7 +37,7 @@ setup(
     package_data={
         'ec2mc': [
             'aws_setup_src/*.json',
-            'aws_setup_src/IAM_Policies/*.json'
+            'aws_setup_src/iam_policies/*.json'
         ]
     },
     install_requires=[

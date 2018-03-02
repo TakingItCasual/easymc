@@ -4,7 +4,7 @@ from ec2mc.stuff import simulate_policy
 class UpdateMods(abstract_command.CommandBase):
 
     def main(self, kwargs):
-        """updates server's mods via the internet"""
+        """update server's mods via the internet"""
         pass
 
 
@@ -14,7 +14,7 @@ class UpdateMods(abstract_command.CommandBase):
 
     def blocked_actions(self):
         return simulate_policy.blocked(actions=[
-            "ec2:DescribeInstances", 
+            "ec2:DescribeInstances",
             "ssm:SendCommand"
         ])
 

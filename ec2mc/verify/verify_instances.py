@@ -4,7 +4,7 @@ from ec2mc.stuff.threader import Threader
 from ec2mc.stuff import quit_out
 
 def main(kwargs):
-    """Wrapper for probe_regions(). Prints found instances to the CLI.
+    """wrapper for probe_regions() which prints found instances to the CLI
 
     Quits out if no instances are found. This functionality is relied upon.
 
@@ -35,13 +35,13 @@ def main(kwargs):
             # Filter instances based on the tag key-value pair(s).
             if len(tag_kv_pair) > 1:
                 tag_filter.append({
-                    "Name": "tag:"+tag_kv_pair[0], 
+                    "Name": "tag:"+tag_kv_pair[0],
                     "Values": tag_kv_pair[1:]
                 })
             # If filter tag value(s) not specified, filter by the tag key.
             else:
                 tag_filter.append({
-                    "Name": "tag-key", 
+                    "Name": "tag-key",
                     "Values": [tag_kv_pair[0]]
                 })
 
@@ -63,14 +63,14 @@ def main(kwargs):
 
     if not all_instances:
         if region_filter and not tag_filter:
-            quit_out.q(["Error: No instances found from specified region(s).", 
+            quit_out.q(["Error: No instances found from specified region(s).",
                 "  Try removing the region filter."])
         if not region_filter and tag_filter:
-            quit_out.q(["Error: No instances with specified tag(s) found.", 
+            quit_out.q(["Error: No instances with specified tag(s) found.",
                 "  Try removing the tag filter."])
         if region_filter and tag_filter:
             quit_out.q([("Error: No instances with specified tag(s) "
-                "found from specified region(s)."), 
+                "found from specified region(s)."),
                 "  Try removing the region filter and/or the tag filter."])
         quit_out.q(["Error: No instances found."])
 
@@ -78,7 +78,7 @@ def main(kwargs):
 
 
 def probe_regions(regions, tag_filter=None):
-    """Probe EC2 region(s) for instances, and return dicts of found instances.
+    """probe EC2 region(s) for instances, and return dict(s) of instance(s)
     
     Uses multithreading to probe all regions simultaneously.
 
@@ -104,8 +104,8 @@ def probe_regions(regions, tag_filter=None):
         region_instances = region_instances["instances"]
         for instance in region_instances:
             all_instances.append({
-                "region": region, 
-                "id": instance["id"], 
+                "region": region,
+                "id": instance["id"],
                 "tags": instance["tags"]
             })
 
@@ -113,7 +113,7 @@ def probe_regions(regions, tag_filter=None):
 
 
 def probe_region(region, tag_filter=None):
-    """Probes a single EC2 region for instances. Usually threaded.
+    """probe a single EC2 region for instances (usually threaded)
 
     Args:
         region (str): EC2 region to probe
@@ -132,14 +132,14 @@ def probe_region(region, tag_filter=None):
     ).describe_instances(Filters=tag_filter)["Reservations"]
 
     region_instances = {
-        "region": region, 
+        "region": region,
         "instances": []
     }
 
     for instance in response:
         instance = instance["Instances"][0]
         region_instances["instances"].append({
-            "id": instance["InstanceId"], 
+            "id": instance["InstanceId"],
             "tags": {
                 tag["Key"]: tag["Value"] for tag in instance["Tags"]
             }

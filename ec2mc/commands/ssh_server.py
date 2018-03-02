@@ -21,14 +21,14 @@ class SSHServer(abstract_command.CommandBase):
         """
         
         if os.name != "posix":
-            quit_out.q(["Error: ssh_server only supported on posix systems.", 
+            quit_out.q(["Error: ssh_server only supported on posix systems.",
                 "  Google around for methods of SSHing with your OS."])
 
         private_key_file = self.find_private_key()
 
         instance = verify_instances.main(kwargs)
         if len(instance) > 1:
-            quit_out.q(["Error: Instance query returned multiple results.", 
+            quit_out.q(["Error: Instance query returned multiple results.",
                 "  Narrow filter(s) so that only one instance is found."])
         instance = instance[0]
 
@@ -50,10 +50,10 @@ class SSHServer(abstract_command.CommandBase):
         print("")
         print("Attempting to SSH into instance...")
         ssh_cmd_str = ([
-            "ssh", "-q", 
-            "-o", "StrictHostKeyChecking=no", 
-            "-o", "UserKnownHostsFile=/dev/null", 
-            "-i", private_key_file, 
+            "ssh", "-q",
+            "-o", "StrictHostKeyChecking=no",
+            "-o", "UserKnownHostsFile=/dev/null",
+            "-i", private_key_file,
             "ec2-user@"+instance_dns
         ])
         subprocess.run(ssh_cmd_str)
@@ -75,7 +75,7 @@ class SSHServer(abstract_command.CommandBase):
 
 
     def find_private_key(self):
-        """Returns config's private key file path, if only one exists."""
+        """return config's private key file path, if only one exists"""
         private_keys = []
         for file in os.listdir(config.CONFIG_DIR):
             if file.endswith(".pem"):

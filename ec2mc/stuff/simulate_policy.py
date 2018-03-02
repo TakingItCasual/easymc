@@ -3,7 +3,7 @@ from ec2mc.verify import verify_aws
 from ec2mc.stuff import quit_out
 
 def blocked(*, actions=None, resources=None, context=None):
-    """Tests whether IAM user is able to use AWS actions in actions.
+    """test whether IAM user is able to use specified AWS action(s)
 
     Args:
         actions (list): AWS action(s) to verify the IAM user can use.
@@ -27,8 +27,8 @@ def blocked(*, actions=None, resources=None, context=None):
         context_temp = []
         for context_key in context:
             context_temp.append({
-                "ContextKeyName": context_key, 
-                "ContextKeyValues": context[context_key], 
+                "ContextKeyName": context_key,
+                "ContextKeyValues": context[context_key],
                 "ContextKeyType": "string"
             })
         context = context_temp
@@ -36,9 +36,9 @@ def blocked(*, actions=None, resources=None, context=None):
         context = [{}]
 
     results = verify_aws.iam_client().simulate_principal_policy(
-        PolicySourceArn=config.IAM_ARN, 
-        ActionNames=actions, 
-        ResourceArns=resources, 
+        PolicySourceArn=config.IAM_ARN,
+        ActionNames=actions,
+        ResourceArns=resources,
         ContextEntries=context
     )["EvaluationResults"]
 

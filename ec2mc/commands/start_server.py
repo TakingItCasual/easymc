@@ -45,7 +45,7 @@ class StartServer(abstract_command.CommandBase):
                         })
                 except WaiterError:
                     quit_out.q([
-                        "Error: Instance should be running after 1 minute.", 
+                        "Error: Instance should be running after 1 minute.",
                         "  Check server's state after a few minutes."])
 
                 print("  Instance started. The server will be available soon.")
@@ -69,7 +69,7 @@ class StartServer(abstract_command.CommandBase):
 
     def blocked_actions(self):
         return simulate_policy.blocked(actions=[
-            "ec2:DescribeInstances", 
+            "ec2:DescribeInstances",
             "ec2:StartInstances"
         ])
 

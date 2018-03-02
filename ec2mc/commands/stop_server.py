@@ -14,7 +14,7 @@ class StopServer(abstract_command.CommandBase):
 
     def blocked_actions(self):
         return simulate_policy.blocked(actions=[
-            "ec2:DescribeInstances", 
+            "ec2:DescribeInstances",
             "ec2:StopInstances"
         ])
 

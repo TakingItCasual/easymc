@@ -1,6 +1,6 @@
-"""ec2mc constants. Variables initialized as None are set *once* elsewhere.
+"""ec2mc constants
 
-Needing to pass the IAM credentials everywhere was becoming a PITA.
+Variables initialized as None are set *once* elsewhere.
 """
 
 import os

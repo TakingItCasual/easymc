@@ -1,9 +1,9 @@
 from ec2mc.verify import verify_aws
 
 def main(instance_id, cmd_list):
-    """Send bash commands to an instance via SSM"""
+    """send bash command(s) to an instance via SSM"""
     quit_out.assert_empty(simulate_policy.blocked(actions=[
-        "ssm:SendCommand", 
+        "ssm:SendCommand",
         "ssm:GetCommandInvocation"
     ]))
     
