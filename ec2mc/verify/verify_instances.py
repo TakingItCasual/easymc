@@ -1,4 +1,4 @@
-from ec2mc.verify import verify_aws
+from ec2mc.stuff import aws
 from ec2mc.stuff import simulate_policy
 from ec2mc.stuff.threader import Threader
 from ec2mc.stuff import quit_out
@@ -26,7 +26,7 @@ def main(kwargs):
     ]))
 
     region_filter = kwargs["regions"]
-    regions = verify_aws.get_regions(region_filter)
+    regions = aws.get_regions(region_filter)
 
     tag_filter = []
     if kwargs["tagfilter"]:
@@ -128,7 +128,7 @@ def probe_region(region, tag_filter=None):
                 "tags": Instance tags.
     """
 
-    response = verify_aws.ec2_client(region
+    response = aws.ec2_client(region
     ).describe_instances(Filters=tag_filter)["Reservations"]
 
     region_instances = {

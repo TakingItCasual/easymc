@@ -4,8 +4,8 @@ import shutil
 
 from ec2mc import config
 from ec2mc import abstract_command
-from ec2mc.verify import verify_aws
 from ec2mc.verify import verify_instances
+from ec2mc.stuff import aws
 from ec2mc.stuff import simulate_policy
 from ec2mc.stuff import quit_out
 
@@ -32,7 +32,7 @@ class SSHServer(abstract_command.CommandBase):
                 "  Narrow filter(s) so that only one instance is found."])
         instance = instance[0]
 
-        ec2_client = verify_aws.ec2_client(instance["region"])
+        ec2_client = aws.ec2_client(instance["region"])
 
         response = ec2_client.describe_instances(
             InstanceIds=[instance["id"]]
@@ -59,21 +59,6 @@ class SSHServer(abstract_command.CommandBase):
         subprocess.run(ssh_cmd_str)
 
 
-    def add_documentation(self, argparse_obj):
-        cmd_parser = super().add_documentation(argparse_obj)
-        abstract_command.args_to_filter_instances(cmd_parser)
-
-
-    def blocked_actions(self):
-        return simulate_policy.blocked(actions=[
-            "ec2:DescribeInstances"
-        ])
-
-
-    def module_name(self):
-        return super().module_name(__name__)
-
-
     def find_private_key(self):
         """return config's private key file path, if only one exists"""
         private_keys = []
@@ -88,3 +73,18 @@ class SSHServer(abstract_command.CommandBase):
 
         os.chmod(private_keys[0], config.PK_PERMS)
         return private_keys[0]
+
+
+    def add_documentation(self, argparse_obj):
+        cmd_parser = super().add_documentation(argparse_obj)
+        abstract_command.args_to_filter_instances(cmd_parser)
+
+
+    def blocked_actions(self):
+        return simulate_policy.blocked(actions=[
+            "ec2:DescribeInstances"
+        ])
+
+
+    def module_name(self):
+        return super().module_name(__name__)

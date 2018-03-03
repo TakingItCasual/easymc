@@ -2,8 +2,8 @@ from botocore.exceptions import WaiterError
 
 from ec2mc import config
 from ec2mc import abstract_command
-from ec2mc.verify import verify_aws
 from ec2mc.verify import verify_instances
+from ec2mc.stuff import aws
 from ec2mc.stuff import manage_titles
 from ec2mc.stuff import simulate_policy
 from ec2mc.stuff import quit_out
@@ -23,7 +23,7 @@ class StartServer(abstract_command.CommandBase):
             print("")
             print("Attempting to start instance " + instance["id"] + "...")
 
-            ec2_client = verify_aws.ec2_client(instance["region"])
+            ec2_client = aws.ec2_client(instance["region"])
 
             instance_state = ec2_client.describe_instances(
                 InstanceIds=[instance["id"]]

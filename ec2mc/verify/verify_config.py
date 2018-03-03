@@ -4,7 +4,7 @@ import configparser
 from botocore.exceptions import ClientError
 
 from ec2mc import config
-from ec2mc.verify import verify_aws
+from ec2mc.stuff import aws
 from ec2mc.stuff import simulate_policy
 from ec2mc.stuff import quit_out
 
@@ -79,7 +79,7 @@ def verify_user(config_dict):
 
     # Test access to iam:GetUser, as SimulatePrincipalPolicy can't be used yet.
     try:
-        iam_user = verify_aws.iam_client().get_user()["User"]
+        iam_user = aws.iam_client().get_user()["User"]
     except ClientError as e:
         if e.response["Error"]["Code"] == "InvalidClientTokenId":
             quit_out.q(["Error: IAM ID is invalid."])

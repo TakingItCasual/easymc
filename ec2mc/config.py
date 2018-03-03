@@ -32,5 +32,8 @@ DEFAULT_REGION = "us-east-1"
 # AWS Linux AMI (used to decide the instance OS on creation).
 # TODO: Update to AWS Linux 2 LTS when it comes out
 EC2_OS_AMI = "ami-5652ce39"
+# Used during instance creation for setting instance's storage space.
+# I don't know if there's any connection to the AMI so I'll just leave it here.
+DEVICE_NAME = "/dev/xvda"
 # EC2 security groups are searched for a GroupName with the following.
 SECURITY_GROUP_FILTER = "minecraft"

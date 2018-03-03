@@ -1,7 +1,7 @@
 from ec2mc import config
 from ec2mc import abstract_command
-from ec2mc.verify import verify_aws
 from ec2mc.verify import verify_instances
+from ec2mc.stuff import aws
 from ec2mc.stuff import manage_titles
 from ec2mc.stuff import simulate_policy
 
@@ -20,7 +20,7 @@ class CheckServer(abstract_command.CommandBase):
             print("")
             print("Checking instance " + instance["id"] + "...")
 
-            ec2_client = verify_aws.ec2_client(instance["region"])
+            ec2_client = aws.ec2_client(instance["region"])
 
             response = ec2_client.describe_instances(
                 InstanceIds=[instance["id"]]

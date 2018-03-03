@@ -3,6 +3,7 @@ from botocore.exceptions import ClientError
 from ec2mc import config
 from ec2mc import abstract_command
 from ec2mc.verify import verify_aws
+from ec2mc.stuff import aws
 from ec2mc.stuff import simulate_policy
 from ec2mc.stuff import quit_out
 
@@ -24,8 +25,8 @@ class CreateServer(abstract_command.CommandBase):
         """
 
         # Verify the specified region
-        verify_aws.get_regions([kwargs["region"]])[0]
-        self.ec2_client = verify_aws.ec2_client(kwargs["region"])
+        aws.get_regions([kwargs["region"]])[0]
+        self.ec2_client = aws.ec2_client(kwargs["region"])
 
         self.init_run_instance_args(kwargs)
 
@@ -35,7 +36,7 @@ class CreateServer(abstract_command.CommandBase):
         except ClientError as e:
             if e.response["Error"]["Code"] == "UnauthorizedOperation":
                 print("")
-                pp.pprint(verify_aws.decode_error_msg(e.response))
+                pp.pprint(aws.decode_error_msg(e.response))
                 quit_out.q(["Error: Missing action/resource/context IAM "
                     "permission(s).",
                     "  The above JSON is the decoded error message.",
@@ -70,6 +71,8 @@ class CreateServer(abstract_command.CommandBase):
 
         self.instance_type = kwargs["type"]
 
+        self.storage_amount = kwargs["size"]
+
         self.tags = [{
             "Key": "Name",
             "Value": kwargs["name"]
@@ -90,12 +93,19 @@ class CreateServer(abstract_command.CommandBase):
         Args:
             dry_run (bool): If true, only test if IAM user is allowed to
         """
+        # TODO: Figure out how to limit EBS volume size with the IAM policy
         return self.ec2_client.run_instances(
             DryRun=dry_run,
             MinCount=1, MaxCount=1,
             ImageId=config.EC2_OS_AMI,
             Placement={"AvailabilityZone": self.availability_zone},
             InstanceType=self.instance_type,
+            BlockDeviceMappings=[{
+                "DeviceName": config.DEVICE_NAME,
+                "Ebs": {
+                    "VolumeSize": self.storage_amount
+                }
+            }],
             TagSpecifications=[{
                 "ResourceType": "instance",
                 "Tags": self.tags
@@ -112,6 +122,8 @@ class CreateServer(abstract_command.CommandBase):
             "name", help="instance Name tag value")
         cmd_parser.add_argument(
             "type", help="instance type (larger is more expensive)")
+        cmd_parser.add_argument(
+            "size", help="instance storage amount (in GiB)", type=int)
         cmd_parser.add_argument(
             "-c", "--confirm", action="store_true",
             help="confirm instance creation")

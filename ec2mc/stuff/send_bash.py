@@ -1,4 +1,4 @@
-from ec2mc.verify import verify_aws
+from ec2mc.stuff import aws
 
 def main(instance_id, cmd_list):
     """send bash command(s) to an instance via SSM"""
@@ -7,7 +7,7 @@ def main(instance_id, cmd_list):
         "ssm:GetCommandInvocation"
     ]))
     
-    ssm_client = verify_aws.ssm_client()
+    ssm_client = aws.ssm_client()
     command_id = ssm_client.send_command(
         InstanceIds=[
             instance_id

@@ -1,5 +1,5 @@
 from ec2mc import config
-from ec2mc.verify import verify_aws
+from ec2mc.stuff import aws
 from ec2mc.stuff import quit_out
 
 def blocked(*, actions=None, resources=None, context=None):
@@ -35,7 +35,7 @@ def blocked(*, actions=None, resources=None, context=None):
     else:
         context = [{}]
 
-    results = verify_aws.iam_client().simulate_principal_policy(
+    results = aws.iam_client().simulate_principal_policy(
         PolicySourceArn=config.IAM_ARN,
         ActionNames=actions,
         ResourceArns=resources,
