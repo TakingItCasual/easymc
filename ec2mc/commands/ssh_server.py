@@ -3,13 +3,13 @@ import subprocess
 import shutil
 
 from ec2mc import config
-from ec2mc import abstract_command
+from ec2mc import command_template
 from ec2mc.verify import verify_instances
 from ec2mc.stuff import aws
 from ec2mc.stuff import simulate_policy
 from ec2mc.stuff import quit_out
 
-class SSHServer(abstract_command.CommandBase):
+class SSHServer(command_template.BaseClass):
 
     def main(self, kwargs):
         """SSH into an EC2 instance using its .pem private key
@@ -19,7 +19,7 @@ class SSHServer(abstract_command.CommandBase):
         Currently SSH is only supported with a .pem private key, and using 
         multiple keys is not supported. Only posix systems are supported.
         """
-        
+
         if os.name != "posix":
             quit_out.q(["Error: ssh_server only supported on posix systems.",
                 "  Google around for methods of SSHing with your OS."])
@@ -77,7 +77,7 @@ class SSHServer(abstract_command.CommandBase):
 
     def add_documentation(self, argparse_obj):
         cmd_parser = super().add_documentation(argparse_obj)
-        abstract_command.args_to_filter_instances(cmd_parser)
+        command_template.args_to_filter_instances(cmd_parser)
 
 
     def blocked_actions(self):

@@ -1,7 +1,7 @@
-from ec2mc import abstract_command
+from ec2mc import command_template
 from ec2mc.stuff import simulate_policy
 
-class GetBackup(abstract_command.CommandBase):
+class GetBackup(command_template.BaseClass):
 
     def main(self, kwargs):
         """download server's world folder as a zip file"""

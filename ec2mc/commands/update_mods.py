@@ -1,7 +1,7 @@
-from ec2mc import abstract_command
+from ec2mc import command_template
 from ec2mc.stuff import simulate_policy
 
-class UpdateMods(abstract_command.CommandBase):
+class UpdateMods(command_template.BaseClass):
 
     def main(self, kwargs):
         """update server's mods via the internet"""

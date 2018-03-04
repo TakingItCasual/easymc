@@ -42,6 +42,7 @@ setup(
     },
     install_requires=[
         'boto3',
-        'nbtlib'
+        'nbtlib',
+        'deepdiff'
     ]
 )

@@ -2,9 +2,9 @@ import os
 import configparser
 
 from ec2mc import config
-from ec2mc import abstract_command
+from ec2mc import command_template
 
-class Configure(abstract_command.CommandBase):
+class Configure(command_template.BaseClass):
 
     def main(self):
         """set IAM user's credentials and servers.dat file path"""

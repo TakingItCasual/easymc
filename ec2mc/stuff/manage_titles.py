@@ -66,7 +66,7 @@ def update_servers_dat(servers_dat_path, server_title, new_dns):
         server_title (str): Name of the server within client's server list.
         new_dns (str): Instance's new DNS to update client's server list with.
     """
-    
+
     servers_dat_file = nbtlib.nbt.load(servers_dat_path, gzipped=False)
 
     for server_list_entry in servers_dat_file.root["servers"]:

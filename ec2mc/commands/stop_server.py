@@ -1,7 +1,7 @@
-from ec2mc import abstract_command
+from ec2mc import command_template
 from ec2mc.stuff import simulate_policy
 
-class StopServer(abstract_command.CommandBase):
+class StopServer(command_template.BaseClass):
 
     def main(self, kwargs):
         """force the instance/server to stop"""

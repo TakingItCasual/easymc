@@ -1,14 +1,14 @@
 from botocore.exceptions import WaiterError
 
 from ec2mc import config
-from ec2mc import abstract_command
+from ec2mc import command_template
 from ec2mc.verify import verify_instances
 from ec2mc.stuff import aws
 from ec2mc.stuff import manage_titles
 from ec2mc.stuff import simulate_policy
 from ec2mc.stuff import quit_out
 
-class StartServer(abstract_command.CommandBase):
+class StartServer(command_template.BaseClass):
 
     def main(self, kwargs):
         """start stopped instance(s) & update client's server list
@@ -64,7 +64,7 @@ class StartServer(abstract_command.CommandBase):
 
     def add_documentation(self, argparse_obj):
         cmd_parser = super().add_documentation(argparse_obj)
-        abstract_command.args_to_filter_instances(cmd_parser)
+        command_template.args_to_filter_instances(cmd_parser)
 
 
     def blocked_actions(self):

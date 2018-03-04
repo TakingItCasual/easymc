@@ -1,11 +1,11 @@
 from ec2mc import config
-from ec2mc import abstract_command
+from ec2mc import command_template
 from ec2mc.verify import verify_instances
 from ec2mc.stuff import aws
 from ec2mc.stuff import manage_titles
 from ec2mc.stuff import simulate_policy
 
-class CheckServer(abstract_command.CommandBase):
+class CheckServer(command_template.BaseClass):
 
     def main(self, kwargs):
         """check instance status(es) & update client's server list
@@ -39,7 +39,7 @@ class CheckServer(abstract_command.CommandBase):
 
     def add_documentation(self, argparse_obj):
         cmd_parser = super().add_documentation(argparse_obj)
-        abstract_command.args_to_filter_instances(cmd_parser)
+        command_template.args_to_filter_instances(cmd_parser)
 
 
     def blocked_actions(self):

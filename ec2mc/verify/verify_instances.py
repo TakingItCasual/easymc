@@ -79,7 +79,7 @@ def main(kwargs):
 
 def probe_regions(regions, tag_filter=None):
     """probe EC2 region(s) for instances, and return dict(s) of instance(s)
-    
+
     Uses multithreading to probe all regions simultaneously.
 
     Args:

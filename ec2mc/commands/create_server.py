@@ -1,7 +1,7 @@
 from botocore.exceptions import ClientError
 
 from ec2mc import config
-from ec2mc import abstract_command
+from ec2mc import command_template
 from ec2mc.verify import verify_aws
 from ec2mc.stuff import aws
 from ec2mc.stuff import simulate_policy
@@ -10,7 +10,7 @@ from ec2mc.stuff import quit_out
 import pprint
 pp = pprint.PrettyPrinter(indent=2)
 
-class CreateServer(abstract_command.CommandBase):
+class CreateServer(command_template.BaseClass):
 
     def main(self, kwargs):
         """create and initialize a new Minecraft instance/server

@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-class CommandBase(ABC):
+class BaseClass(ABC):
     """template for all available ec2mc commands to follow"""
 
     def __init__(self):

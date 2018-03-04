@@ -31,7 +31,7 @@ def main():
     if not os.path.isdir(config.AWS_SETUP_DIR):
         aws_setup_src = os.path.abspath(
             os.path.join(__file__, os.pardir, os.pardir, "aws_setup_src"))
-        shutil.copytree(aws_setup_src, (config.AWS_SETUP_DIR))
+        shutil.copytree(aws_setup_src, config.AWS_SETUP_DIR)
 
     # Read the config. Quit out if it doesn't exist.
     config_file = config.CONFIG_DIR + "config"

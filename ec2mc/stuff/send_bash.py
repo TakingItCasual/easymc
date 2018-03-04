@@ -6,7 +6,7 @@ def main(instance_id, cmd_list):
         "ssm:SendCommand",
         "ssm:GetCommandInvocation"
     ]))
-    
+
     ssm_client = aws.ssm_client()
     command_id = ssm_client.send_command(
         InstanceIds=[
