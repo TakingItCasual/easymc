@@ -2,7 +2,7 @@ import os
 
 from ec2mc import config
 from ec2mc import command_template
-from ec2mc.uploads import *
+from ec2mc.update import *
 from ec2mc.stuff import simulate_policy
 from ec2mc.stuff import quit_out
 

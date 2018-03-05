@@ -3,14 +3,14 @@ import json
 from deepdiff import DeepDiff
 
 from ec2mc import config
-from ec2mc import upload_template
+from ec2mc import update_template
 from ec2mc.stuff import aws
 from ec2mc.stuff import quit_out
 
 #import pprint
 #pp = pprint.PrettyPrinter(indent=2)
 
-class IAMPolicy(upload_template.BaseClass):
+class IAMPolicy(update_template.BaseClass):
 
     def verify(self, upload_confirmed):
         """determine which policies need creating/updating, and which don't

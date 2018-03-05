@@ -40,12 +40,14 @@ class CreateServer(command_template.BaseClass):
                 quit_out.q(["Error: Missing action/resource/context IAM "
                     "permission(s).",
                     "  The above JSON is the decoded error message.",
-                    "  Maybe the specified instance type was too large?"])
+                    "  Maybe specified instance storage/type was too large?"])
             elif not e.response["Error"]["Code"] == "DryRunOperation":
                 quit_out.q([e])
 
         # Actual instance creation occurs after this confirmation.
         if not kwargs["confirm"]:
+            print("")
+            print("Specified instance creation args verified as permitted.")
             quit_out.q(["Please append the -c argument to confirm."])
 
 
