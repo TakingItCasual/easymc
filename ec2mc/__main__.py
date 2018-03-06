@@ -89,7 +89,7 @@ def argv_to_kwargs(args, commands):
             "Requires IAM credentials linked to an AWS account. Most "
             "commands require at least one IAM permission, which must be "
             "granted by an IAM admin."))
-    cmd_args = parser.add_subparsers(metavar="<command>"+" "*6, dest="command")
+    cmd_args = parser.add_subparsers(metavar="{command}"+" "*6, dest="command")
 
     for command in commands:
         command.add_documentation(cmd_args)

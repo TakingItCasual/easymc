@@ -10,9 +10,9 @@ from ec2mc.stuff import quit_out
 #import pprint
 #pp = pprint.PrettyPrinter(indent=2)
 
-class IAMPolicy(update_template.BaseClass):
+class IAMSetup(update_template.BaseClass):
 
-    def verify(self, upload_confirmed):
+    def verify_component(self, action):
         """determine which policies need creating/updating, and which don't
 
         Args:
@@ -73,7 +73,7 @@ class IAMPolicy(update_template.BaseClass):
                 self.policy_dict["ToUpdate"].remove(local_policy)
                 self.policy_dict["UpToDate"].append(local_policy)
 
-        if not upload_confirmed:
+        if action == "check":
             print("")
             for policy in self.policy_dict["ToCreate"]:
                 print("IAM policy " + policy + " to be created.")
@@ -83,7 +83,7 @@ class IAMPolicy(update_template.BaseClass):
                 print("IAM policy " + policy + " is up-to-date.")
 
 
-    def upload(self):
+    def upload_component(self):
         """create policies on AWS that don't exist, update policies that do"""
 
         print("")
@@ -131,6 +131,10 @@ class IAMPolicy(update_template.BaseClass):
 
         for local_policy in self.policy_dict["UpToDate"]:
             print("IAM policy " + local_policy + " is already up-to-date.")
+
+
+    def delete_component(self):
+        pass
 
 
     def delete_old_policy_versions(self, policy_arn):
