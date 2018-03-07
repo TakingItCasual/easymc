@@ -34,15 +34,15 @@ def main(args=None):
 
         # Available commands from the ec2mc.commands directory
         commands = [
-            aws_setup.AWSSetup(),
             configure.Configure(),
+            aws_setup.AWSSetup(),
+            create_server.CreateServer(),
             start_server.StartServer(),
             check_server.CheckServer(),
+            ssh_server.SSHServer(),
             #stop_server.StopServer(),
             #get_backup.GetBackup(),
-            #update_mods.UpdateMods(),
-            create_server.CreateServer(),
-            ssh_server.SSHServer()
+            #update_mods.UpdateMods()
         ]
 
         # Use argparse to turn sys.argv into a dict of arguments
@@ -84,11 +84,11 @@ def argv_to_kwargs(args, commands):
             command's add_documentation method to see its args.
     """
 
-    parser = argparse.ArgumentParser(usage="ec2mc [-h] <command> [<args>]",
+    parser = argparse.ArgumentParser(
         description=("AWS EC2 instance manager for Minecraft servers. "
-            "Requires IAM credentials linked to an AWS account. Most "
-            "commands require at least one IAM permission, which must be "
-            "granted by an IAM admin."))
+            "Requires IAM credentials associated with an AWS account. "
+            "Depending on your access level some commands may not be "
+            "available due to missing IAM permissions."))
     cmd_args = parser.add_subparsers(metavar="{command}"+" "*6, dest="command")
 
     for command in commands:

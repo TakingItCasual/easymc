@@ -27,7 +27,7 @@ setup(
         'Programming Language :: Python :: 3.6'
     ],
     keywords='mc minecraft server aws ec2 iam',
-    packages=find_packages(),
+    packages=find_packages(exclude=['docs']),
     python_requires='~=3.6',
     entry_points={
         'console_scripts': [

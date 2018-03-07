@@ -44,15 +44,13 @@ class AWSSetup(command_template.BaseClass):
     def add_documentation(self, argparse_obj):
         cmd_parser = super().add_documentation(argparse_obj)
         actions = cmd_parser.add_subparsers(metavar="{action}", dest="action")
+        actions.required = True
         action_args = actions.add_parser(
-            "check", usage="ec2mc " + self.module_name() + " check [-h]",
-            help="check differences between local and AWS config")
+            "check", help="check differences between local and AWS config")
         action_args = actions.add_parser(
-            "upload", usage="ec2mc " + self.module_name() + " upload [-h]",
-            help="configure AWS with ~/.ec2mc/aws_setup")
+            "upload", help="configure AWS with ~/.ec2mc/aws_setup")
         action_args = actions.add_parser(
-            "delete", usage="ec2mc " + self.module_name() + " delete [-h]",
-            help="delete ec2mc configuration from AWS")
+            "delete", help="delete ec2mc configuration from AWS")
 
 
     def blocked_actions(self):

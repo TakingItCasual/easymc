@@ -64,7 +64,7 @@ class StartServer(command_template.BaseClass):
 
     def add_documentation(self, argparse_obj):
         cmd_parser = super().add_documentation(argparse_obj)
-        command_template.args_to_filter_instances(cmd_parser)
+        verify_instances.argparse_args(cmd_parser)
 
 
     def blocked_actions(self):
