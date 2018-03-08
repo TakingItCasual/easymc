@@ -51,8 +51,8 @@ def main(args=None):
 
         # If the "configure" command was used, skip configuration verification
         if arg_cmd == "configure":
-            config_cmd = [cmd for cmd in commands 
-                if cmd.module_name() == arg_cmd][0]
+            config_cmd = next(cmd for cmd in commands
+                if cmd.module_name() == arg_cmd)
             config_cmd.main()
             quit_out.q()
 
@@ -60,8 +60,8 @@ def main(args=None):
         verify_config.main()
 
         # Get the command class object from the commands list
-        chosen_cmd = [cmd for cmd in commands 
-            if cmd.module_name() == arg_cmd][0]
+        chosen_cmd = next(cmd for cmd in commands
+            if cmd.module_name() == arg_cmd)
 
         # Verify that the IAM user has needed permissions to use the command
         quit_out.assert_empty(chosen_cmd.blocked_actions())

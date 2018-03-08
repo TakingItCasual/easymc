@@ -1,6 +1,8 @@
 AWS EC2 instance manager for Minecraft servers
 ==============================================
 
+|PyPI Version| |Python Version|
+
 Requires a Python version of 3.6. Can be installed with pip:
 
 .. code-block:: bash
@@ -27,12 +29,18 @@ Sample credentials (with minimal permissions) are the following:
 The preceding IAM user credentials have been included to facilitate a basic understanding of what the script does.
 The instance will turn itself off after 10 minutes of inactivity using crontab.
 
-Full commands to be used are the following ("-r" is the region filter, "-t" is a tag filter):
+Full commands to be used are the following ("-r" is the region filter, "-n" is a tag filter):
 
 .. code-block:: bash
 
-	$ ec2mc check_server -r eu-central-1 -t Name chisels-and-bits-1
-	$ ec2mc start_server -r eu-central-1 -t Name chisels-and-bits-1
+	$ ec2mc check_server -r eu-central-1 -n chisels-and-bits-1
+	$ ec2mc start_server -r eu-central-1 -n chisels-and-bits-1
 
 To see how the script updates the Minecraft client's server list, install Minecraft and add the MC client's servers.dat path to the config with "ec2mc configure".
 The script can't handle a non-existent/empty server list (yet?), so please add an entry to the Minecraft client's server list before using the script (gibberish is fine, as long as an entry exists).
+
+.. |PyPI Version| image:: https://github.com/TakingItCasual/ec2mc/raw/master/docs/images/pypi-v0.1.1-orange.svg
+   :target: https://pypi.org/project/ec2mc/
+
+.. |Python Version| image:: https://github.com/TakingItCasual/ec2mc/raw/master/docs/images/python-3.6-blue.svg
+   :target: https://pypi.org/project/ec2mc/

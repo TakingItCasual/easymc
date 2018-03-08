@@ -44,6 +44,11 @@ def main(kwargs):
                     "Name": "tag-key",
                     "Values": [tag_kv_pair[0]]
                 })
+    if kwargs["namefilter"]:
+        tag_filter.append({
+            "Name": "tag:Name",
+            "Values": kwargs["namefilter"]
+        })
 
     print("")
     print("Probing " + str(len(regions)) + " AWS region(s) for instances...")
@@ -160,3 +165,6 @@ def argparse_args(cmd_parser):
             "proceeding value(s) as the tag value(s). If not set, no filter "
             "will be applied. If tag value(s) not specified, only the tag "
             "key will be filtered for."))
+    cmd_parser.add_argument(
+        "-n", dest="namefilter", nargs="+", metavar="",
+        help="Instance tag value filter for the tag key \"Name\".")

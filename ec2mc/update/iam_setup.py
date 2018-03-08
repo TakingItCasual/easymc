@@ -58,8 +58,8 @@ class IAMSetup(update_template.BaseClass):
             with open(self.policy_dir + local_policy + ".json") as f:
                 local_policy_document = json.loads(f.read())
 
-            aws_policy_desc = [aws_policy for aws_policy in policies_on_aws 
-                if aws_policy["PolicyName"] == local_policy][0]
+            aws_policy_desc = next(aws_policy for aws_policy in policies_on_aws
+                if aws_policy["PolicyName"] == local_policy)
             aws_policy_document = self.iam_client.get_policy_version(
                 PolicyArn=aws_policy_desc["Arn"],
                 VersionId=aws_policy_desc["DefaultVersionId"]
@@ -92,10 +92,9 @@ class IAMSetup(update_template.BaseClass):
 
             with open(self.policy_dir + local_policy + ".json") as f:
                 local_policy_document = json.loads(f.read())
-            policy_description = [
+            policy_description = next(
                 policy["Description"] for policy in self.iam_setup["Policies"]
-                    if policy["Name"] == local_policy
-            ][0]
+                    if policy["Name"] == local_policy)
 
             self.iam_client.create_policy(
                 PolicyName=local_policy,
@@ -116,8 +115,8 @@ class IAMSetup(update_template.BaseClass):
             with open(self.policy_dir + local_policy + ".json") as f:
                 local_policy_document = json.loads(f.read())
 
-            aws_policy_desc = [aws_policy for aws_policy in policies_on_aws 
-                if aws_policy["PolicyName"] == local_policy][0]
+            aws_policy_desc = next(aws_policy for aws_policy in policies_on_aws
+                if aws_policy["PolicyName"] == local_policy)
 
             # Delete beforehand to avoid error of 5 versions already existing
             self.delete_old_policy_versions(aws_policy_desc["Arn"])
