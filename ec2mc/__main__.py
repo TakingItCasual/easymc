@@ -36,11 +36,8 @@ def main(args=None):
         commands = [
             configure.Configure(),
             aws_setup.AWSSetup(),
+            server.Server(),
             create_server.CreateServer(),
-            start_server.StartServer(),
-            check_server.CheckServer(),
-            ssh_server.SSHServer(),
-            #stop_server.StopServer(),
             #get_backup.GetBackup(),
             #update_mods.UpdateMods()
         ]
@@ -64,7 +61,7 @@ def main(args=None):
             if cmd.module_name() == arg_cmd)
 
         # Verify that the IAM user has needed permissions to use the command
-        quit_out.assert_empty(chosen_cmd.blocked_actions())
+        quit_out.assert_empty(chosen_cmd.blocked_actions(kwargs))
 
         # Use the command
         chosen_cmd.main(kwargs)
@@ -90,6 +87,7 @@ def argv_to_kwargs(args, commands):
             "Depending on your access level some commands may not be "
             "available due to missing IAM permissions."))
     cmd_args = parser.add_subparsers(metavar="{command}"+" "*6, dest="command")
+    cmd_args.required = True
 
     for command in commands:
         command.add_documentation(cmd_args)

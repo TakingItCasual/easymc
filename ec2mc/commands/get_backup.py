@@ -12,7 +12,7 @@ class GetBackup(command_template.BaseClass):
         cmd_parser = super().add_documentation(argparse_obj)
 
 
-    def blocked_actions(self):
+    def blocked_actions(self, _):
         return simulate_policy.blocked(actions=[
             "ec2:DescribeInstances",
             "ssm:SendCommand"

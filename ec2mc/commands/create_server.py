@@ -134,7 +134,7 @@ class CreateServer(command_template.BaseClass):
             help="instance tag key and tag value to attach to instance")
 
 
-    def blocked_actions(self):
+    def blocked_actions(self, _):
         blocked_actions = []
         blocked_actions.extend(simulate_policy.blocked(actions=[
             "ec2:DescribeInstances",

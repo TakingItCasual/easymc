@@ -3,7 +3,10 @@ AWS EC2 instance manager for Minecraft servers
 
 |PyPI Version| |Python Version|
 
-Requires a Python version of 3.6. Can be installed with pip:
+(This README refers to the latest GitHub version.
+See the PyPi README for information relevant to an installation via pip.)
+Requires a Python version of 3.6.
+Can be installed with pip:
 
 .. code-block:: bash
 
@@ -33,8 +36,8 @@ Full commands to be used are the following ("-r" is the region filter, "-n" is a
 
 .. code-block:: bash
 
-	$ ec2mc check_server -r eu-central-1 -n chisels-and-bits-1
-	$ ec2mc start_server -r eu-central-1 -n chisels-and-bits-1
+	$ ec2mc server check -r eu-central-1 -n chisels-and-bits-1
+	$ ec2mc server start -r eu-central-1 -n chisels-and-bits-1
 
 To see how the script updates the Minecraft client's server list, install Minecraft and add the MC client's servers.dat path to the config with "ec2mc configure".
 The script can't handle a non-existent/empty server list (yet?), so please add an entry to the Minecraft client's server list before using the script (gibberish is fine, as long as an entry exists).

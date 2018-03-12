@@ -2,7 +2,7 @@ import os
 
 from ec2mc import config
 from ec2mc import command_template
-from ec2mc.update import *
+from ec2mc.commands.aws_setup_sub import *
 from ec2mc.stuff import simulate_policy
 from ec2mc.stuff import quit_out
 
@@ -45,15 +45,15 @@ class AWSSetup(command_template.BaseClass):
         cmd_parser = super().add_documentation(argparse_obj)
         actions = cmd_parser.add_subparsers(metavar="{action}", dest="action")
         actions.required = True
-        action_args = actions.add_parser(
+        actions.add_parser(
             "check", help="check differences between local and AWS config")
-        action_args = actions.add_parser(
+        actions.add_parser(
             "upload", help="configure AWS with ~/.ec2mc/aws_setup")
-        action_args = actions.add_parser(
+        actions.add_parser(
             "delete", help="delete ec2mc configuration from AWS")
 
 
-    def blocked_actions(self):
+    def blocked_actions(self, kwargs):
         return simulate_policy.blocked(actions=[
             "iam:ListPolicies",
             "iam:ListPolicyVersions",

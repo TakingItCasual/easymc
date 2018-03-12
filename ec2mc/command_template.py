@@ -8,7 +8,7 @@ class BaseClass(ABC):
 
 
     @abstractmethod
-    def main(self):
+    def main(self, kwargs):
         """overridden by child class to describe command's functionality"""
         pass
 
@@ -22,7 +22,7 @@ class BaseClass(ABC):
 
 
     @abstractmethod
-    def blocked_actions(self):
+    def blocked_actions(self, kwargs):
         """return list of denied IAM actions needed for the child's main"""
         pass
 
@@ -36,3 +36,8 @@ class BaseClass(ABC):
                 return super().module_name(__name__)
         """
         return name.rsplit('.', 1)[-1]
+
+
+    def docstring(self):
+        """return main's docstring's first line for use in argparse"""
+        return self.main.__doc__.splitlines()[0]
