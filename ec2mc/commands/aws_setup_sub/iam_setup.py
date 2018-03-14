@@ -5,6 +5,7 @@ from deepdiff import DeepDiff
 from ec2mc import config
 from ec2mc import update_template
 from ec2mc.stuff import aws
+from ec2mc.stuff import simulate_policy
 from ec2mc.stuff import quit_out
 
 #import pprint
@@ -183,3 +184,20 @@ class IAMSetup(update_template.BaseClass):
             print("Warning: Unused policy(s) found from iam_policies dir.")
 
         return setup_policy_list
+
+
+    def blocked_actions(self, kwargs):
+        actions_to_simulate = [
+            "iam:ListPolicies",
+            "iam:ListPolicyVersions",
+            "iam:GetPolicyVersion"
+        ]
+        if kwargs["action"] == "upload":
+            actions_to_simulate.extend([
+                "iam:CreatePolicy",
+                "iam:CreatePolicyVersion",
+                "iam:DeletePolicyVersion"
+            ])
+        elif kwargs["action"] == "delete":
+            pass
+        return simulate_policy.blocked(actions=actions_to_simulate)

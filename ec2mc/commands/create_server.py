@@ -135,20 +135,20 @@ class CreateServer(command_template.BaseClass):
 
 
     def blocked_actions(self, _):
-        blocked_actions = []
-        blocked_actions.extend(simulate_policy.blocked(actions=[
+        denied_actions = []
+        denied_actions.extend(simulate_policy.blocked(actions=[
             "ec2:DescribeInstances",
             "ec2:DescribeNetworkInterfaces",
             "ec2:CreateTags"
         ]))
-        blocked_actions.extend(simulate_policy.blocked(actions=[
+        denied_actions.extend(simulate_policy.blocked(actions=[
             "ec2:RunInstances"
         ], resources=[
             "arn:aws:ec2:*:*:instance/*"
         ], context={
             "ec2:InstanceType": ["t2.nano"]
         }))
-        return blocked_actions
+        return denied_actions
 
 
     def module_name(self):

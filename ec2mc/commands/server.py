@@ -34,10 +34,8 @@ class Server(command_template.BaseClass):
         cmd_parser = super().add_documentation(argparse_obj)
         actions = cmd_parser.add_subparsers(metavar="{action}", dest="action")
         actions.required = True
-        for action in self.sub_commands:
-            action_parser = actions.add_parser(
-                action.module_name(), help=action.docstring())
-            verify_instances.argparse_args(action_parser)
+        for sub_command in self.sub_commands:
+            sub_command.add_documentation(actions)
 
 
     def blocked_actions(self, kwargs):

@@ -23,3 +23,9 @@ class BaseClass(ABC):
     def delete_component(self):
         """remove component from AWS if it exists"""
         pass
+
+
+    @abstractmethod
+    def blocked_actions(self, kwargs):
+        """check that IAM user is allowed to perform actions on component"""
+        pass

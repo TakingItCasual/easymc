@@ -3,7 +3,6 @@ import os
 from ec2mc import config
 from ec2mc import command_template
 from ec2mc.commands.aws_setup_sub import *
-from ec2mc.stuff import simulate_policy
 from ec2mc.stuff import quit_out
 
 class AWSSetup(command_template.BaseClass):
@@ -54,14 +53,10 @@ class AWSSetup(command_template.BaseClass):
 
 
     def blocked_actions(self, kwargs):
-        return simulate_policy.blocked(actions=[
-            "iam:ListPolicies",
-            "iam:ListPolicyVersions",
-            "iam:GetPolicyVersion",
-            "iam:CreatePolicy",
-            "iam:CreatePolicyVersion",
-            "iam:DeletePolicyVersion"
-        ])
+        denied_actions = []
+        for component in self.aws_components:
+            denied_actions.extend(component.blocked_actions(kwargs))
+        return denied_actions
 
 
     def module_name(self):
