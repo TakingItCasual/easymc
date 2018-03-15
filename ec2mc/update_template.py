@@ -28,4 +28,9 @@ class BaseClass(ABC):
     @abstractmethod
     def blocked_actions(self, kwargs):
         """check that IAM user is allowed to perform actions on component"""
-        pass
+        needed_actions = self.check_actions
+        if kwargs["action"] == "upload":
+            needed_actions.extend(self.upload_actions)
+        elif kwargs["action"] == "delete":
+            needed_actions.extend(self.delete_actions)
+        return needed_actions

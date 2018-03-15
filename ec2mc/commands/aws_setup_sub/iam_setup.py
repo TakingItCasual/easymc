@@ -187,17 +187,15 @@ class IAMSetup(update_template.BaseClass):
 
 
     def blocked_actions(self, kwargs):
-        actions_to_simulate = [
+        self.check_actions = [
             "iam:ListPolicies",
             "iam:ListPolicyVersions",
             "iam:GetPolicyVersion"
         ]
-        if kwargs["action"] == "upload":
-            actions_to_simulate.extend([
-                "iam:CreatePolicy",
-                "iam:CreatePolicyVersion",
-                "iam:DeletePolicyVersion"
-            ])
-        elif kwargs["action"] == "delete":
-            pass
-        return simulate_policy.blocked(actions=actions_to_simulate)
+        self.upload_actions = [
+            "iam:CreatePolicy",
+            "iam:CreatePolicyVersion",
+            "iam:DeletePolicyVersion"
+        ]
+        self.delete_actions = []
+        return simulate_policy.blocked(actions=super().blocked_actions(kwargs))
