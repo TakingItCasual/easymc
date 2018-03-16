@@ -30,14 +30,14 @@ def main(args=None):
         try:
             assert(sys.version_info >= (3,6))
         except AssertionError:
-            quit_out.q(["Error: Python version 3.6 or greater required."])
+            quit_out.err(["Python version 3.6 or greater required."])
 
         # Available commands from the ec2mc.commands directory
         commands = [
             configure.Configure(),
-            aws_setup.AWSSetup(),
+            #aws_setup.AWSSetup(),
             server.Server(),
-            create_server.CreateServer(),
+            #create_server.CreateServer(),
             #get_backup.GetBackup(),
             #update_mods.UpdateMods()
         ]

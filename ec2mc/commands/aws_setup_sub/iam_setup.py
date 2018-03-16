@@ -28,7 +28,7 @@ class IAMSetup(update_template.BaseClass):
         # Verify that iam_setup.json exists, and read it to a dict
         iam_setup_file = config.AWS_SETUP_DIR + "iam_setup.json"
         if not os.path.isfile(iam_setup_file):
-            quit_out.q(["Error: iam_setup.json not found from config."])
+            quit_out.err(["iam_setup.json not found from config."])
         with open(iam_setup_file) as f:
             self.iam_setup = json.loads(f.read())
 
@@ -172,8 +172,8 @@ class IAMSetup(update_template.BaseClass):
 
         # Quit if iam_setup.json describes policies not found in iam_policies
         if not set(setup_policy_list).issubset(set(iam_policy_files)):
-            quit_out.q([
-                "Error: Following policy(s) not found from iam_policies dir:",
+            quit_out.err([
+                "Following policy(s) not found from iam_policies dir:",
                 *[(policy + ".json") for policy in setup_policy_list
                     if policy not in iam_policy_files]
             ])

@@ -37,7 +37,7 @@ class CreateServer(command_template.BaseClass):
             if e.response["Error"]["Code"] == "UnauthorizedOperation":
                 print("")
                 pp.pprint(aws.decode_error_msg(e.response))
-                quit_out.q(["Error: Missing action/resource/context IAM "
+                quit_out.err(["Missing action/resource/context IAM "
                     "permission(s).",
                     "  The above JSON is the decoded error message.",
                     "  Maybe specified instance storage/type was too large?"])
@@ -66,9 +66,9 @@ class CreateServer(command_template.BaseClass):
         vpc_stuff = self.ec2_client.describe_network_interfaces(
         )["NetworkInterfaces"]
         if not vpc_stuff:
-            quit_out.q(["Error: Default VPC not found."])
+            quit_out.err(["Default VPC not found."])
         elif len(vpc_stuff) > 1:
-            quit_out.q(["Error: Multiple VPCs found."])
+            quit_out.err(["Multiple VPCs found."])
         self.availability_zone = vpc_stuff[0]["AvailabilityZone"]
 
         self.instance_type = kwargs["type"]

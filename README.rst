@@ -3,8 +3,6 @@ AWS EC2 instance manager for Minecraft servers
 
 |PyPI Version| |Python Version|
 
-(This README refers to the latest GitHub version.
-See the PyPi README for information relevant to an installation via pip.)
 Requires a Python version of 3.6.
 Can be installed with pip:
 
@@ -12,8 +10,9 @@ Can be installed with pip:
 
 	$ pip install ec2mc
 
-A Python console script for managing Minecraft servers hosted on AWS EC2 instances.
-Currently the script can only start and check the status of instances, but I am attempting to make it modular, and include validation and documentation.
+A Python console script for managing Minecraft servers hosted on AWS EC2 instances (cloud computing).
+The script is still in alpha, and currently only supports starting and checking instances that already exist.
+Commands to start instances and initialize an AWS account are planned.
 
 IAM user credentials must be set before the script can be used:
 
@@ -42,7 +41,7 @@ Full commands to be used are the following ("-r" is the region filter, "-n" is a
 To see how the script updates the Minecraft client's server list, install Minecraft and add the MC client's servers.dat path to the config with "ec2mc configure".
 The script can't handle a non-existent/empty server list (yet?), so please add an entry to the Minecraft client's server list before using the script (gibberish is fine, as long as an entry exists).
 
-.. |PyPI Version| image:: https://raw.githubusercontent.com/TakingItCasual/ec2mc/master/docs/images/pypi-v0.1.1-orange.svg?sanitize=true
+.. |PyPI Version| image:: https://raw.githubusercontent.com/TakingItCasual/ec2mc/master/docs/images/pypi-v0.1.2-orange.svg?sanitize=true
    :target: https://pypi.org/project/ec2mc/
 
 .. |Python Version| image:: https://raw.githubusercontent.com/TakingItCasual/ec2mc/master/docs/images/python-3.6-blue.svg?sanitize=true

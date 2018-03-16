@@ -68,16 +68,16 @@ def main(kwargs):
 
     if not all_instances:
         if region_filter and not tag_filter:
-            quit_out.q(["Error: No instances found from specified region(s).",
+            quit_out.err(["No instances found from specified region(s).",
                 "  Try removing the region filter."])
         if not region_filter and tag_filter:
-            quit_out.q(["Error: No instances with specified tag(s) found.",
+            quit_out.err(["No instances with specified tag(s) found.",
                 "  Try removing the tag filter."])
         if region_filter and tag_filter:
-            quit_out.q([("Error: No instances with specified tag(s) "
+            quit_out.err([("No instances with specified tag(s) "
                 "found from specified region(s)."),
                 "  Try removing the region filter and/or the tag filter."])
-        quit_out.q(["Error: No instances found."])
+        quit_out.err(["No instances found."])
 
     return all_instances
 

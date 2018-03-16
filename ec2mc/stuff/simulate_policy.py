@@ -17,7 +17,7 @@ def blocked(*, actions=None, resources=None, context=None):
     """
 
     if actions is None:
-        quit_out.q(["Error: Actions list required for simulate_policy"])
+        quit_out.err(["Actions list required for simulate_policy"])
 
     if resources is None:
         resources = ["*"]

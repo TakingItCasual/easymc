@@ -44,8 +44,8 @@ class StartServer(command_template.BaseClass):
                             "Delay": 5, "MaxAttempts": 12
                         })
                 except WaiterError:
-                    quit_out.q([
-                        "Error: Instance should be running after 1 minute.",
+                    quit_out.err([
+                        "Instance should be running after 1 minute.",
                         "  Check server's state after a few minutes."])
 
                 print("  Instance started. The server will be available soon.")

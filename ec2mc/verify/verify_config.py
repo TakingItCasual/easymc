@@ -71,8 +71,8 @@ def verify_user(config_dict):
 
     if not (config_dict.has_option("default", "iam_id") and 
             config_dict.has_option("default", "iam_secret")):
-        quit_out.q([
-            "Error: Configuration incomplete. Set with \"ec2mc configure\"."])
+        quit_out.err([
+            "Configuration incomplete. Set with \"ec2mc configure\"."])
 
     config.IAM_ID = config_dict["default"]["iam_id"]
     config.IAM_SECRET = config_dict["default"]["iam_secret"]
@@ -82,9 +82,9 @@ def verify_user(config_dict):
         iam_user = aws.iam_client().get_user()["User"]
     except ClientError as e:
         if e.response["Error"]["Code"] == "InvalidClientTokenId":
-            quit_out.q(["Error: IAM ID is invalid."])
+            quit_out.err(["IAM ID is invalid."])
         elif e.response["Error"]["Code"] == "SignatureDoesNotMatch":
-            quit_out.q(["Error: IAM ID is valid, but its secret is invalid."])
+            quit_out.err(["IAM ID is valid, but its secret is invalid."])
         elif e.response["Error"]["Code"] == "AccessDenied":
             quit_out.assert_empty(["iam:GetUser"])
         quit_out.q([e])

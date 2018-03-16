@@ -21,7 +21,7 @@ def get_regions(region_filter=None):
     if region_filter:
         if set(region_filter).issubset(set(region_list)):
             return list(set(region_filter))
-        quit_out.q(["Error: Invalid region(s) specified."])
+        quit_out.err(["Invalid region(s) specified."])
     return region_list
 
 

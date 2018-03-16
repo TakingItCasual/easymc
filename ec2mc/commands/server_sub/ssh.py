@@ -21,14 +21,14 @@ class SSHServer(command_template.BaseClass):
         """
 
         if os.name != "posix":
-            quit_out.q(["Error: ssh_server only supported on posix systems.",
+            quit_out.err(["ssh_server only supported on posix systems.",
                 "  Google around for methods of SSHing with your OS."])
 
         private_key_file = self.find_private_key()
 
         instance = verify_instances.main(kwargs)
         if len(instance) > 1:
-            quit_out.q(["Error: Instance query returned multiple results.",
+            quit_out.err(["Instance query returned multiple results.",
                 "  Narrow filter(s) so that only one instance is found."])
         instance = instance[0]
 
@@ -41,11 +41,11 @@ class SSHServer(command_template.BaseClass):
         instance_dns = response["PublicDnsName"]
 
         if instance_state != "running":
-            quit_out.q(["Error: Cannot SSH into instance that isn't running."])
+            quit_out.err(["Cannot SSH into instance that isn't running."])
 
         # Detects if the system has the "ssh" command.
         if not shutil.which("ssh"):
-            quit_out.q(["Error: SSH executable not found. Please install it."])
+            quit_out.err(["SSH executable not found. Please install it."])
 
         print("")
         print("Attempting to SSH into instance...")
@@ -67,9 +67,9 @@ class SSHServer(command_template.BaseClass):
                 private_keys.append(config.CONFIG_DIR + file)
 
         if not private_keys:
-            quit_out.q(["Error: Private key file not found in config."])
+            quit_out.err(["Private key file not found in config."])
         elif len(private_keys) > 1:
-            quit_out.q(["Error: Multiple private key files found in config."])
+            quit_out.err(["Multiple private key files found in config."])
 
         os.chmod(private_keys[0], config.PK_PERMS)
         return private_keys[0]

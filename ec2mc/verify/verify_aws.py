@@ -33,9 +33,9 @@ def security_group(region):
         if config.SECURITY_GROUP_FILTER.lower() in SG["GroupName"].lower()]
 
     if not security_group:
-        quit_out.q(["Error: No security groups matching aws_setup found."])
+        quit_out.err(["No security groups matching aws_setup found."])
     elif len(security_group) > 1:
-        quit_out.q(["Error: Multiple security groups matching filter found."])
+        quit_out.err(["Multiple security groups matching filter found."])
 
     return security_group[0]["GroupId"]
 

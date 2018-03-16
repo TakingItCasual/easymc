@@ -23,7 +23,7 @@ class AWSSetup(command_template.BaseClass):
         """
 
         if not os.path.isdir(config.AWS_SETUP_DIR):
-            quit_out.q(["Error: aws_setup directory not found from config.",
+            quit_out.err(["aws_setup directory not found from config.",
                 "  (This should not be possible. Try again.)"])
 
         for component in self.aws_components:
