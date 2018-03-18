@@ -26,11 +26,11 @@ class IAMSetup(update_template.BaseClass):
             (config.AWS_SETUP_DIR + "iam_policies"), "")
 
         # Verify that iam_setup.json exists, and read it to a dict
-        iam_setup_file = config.AWS_SETUP_DIR + "iam_setup.json"
+        iam_setup_file = config.AWS_SETUP_DIR + "aws_setup.json"
         if not os.path.isfile(iam_setup_file):
             quit_out.err(["iam_setup.json not found from config."])
         with open(iam_setup_file) as f:
-            self.iam_setup = json.loads(f.read())
+            self.iam_setup = json.loads(f.read())["IAM"]
 
         # Policies already attached to the AWS account
         policies_on_aws = self.iam_client.list_policies(

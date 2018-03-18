@@ -49,14 +49,14 @@ class SSHServer(command_template.BaseClass):
 
         print("")
         print("Attempting to SSH into instance...")
-        ssh_cmd_str = ([
+        ssh_cmd_args = [
             "ssh", "-q",
             "-o", "StrictHostKeyChecking=no",
             "-o", "UserKnownHostsFile=/dev/null",
             "-i", private_key_file,
             "ec2-user@"+instance_dns
-        ])
-        subprocess.run(ssh_cmd_str)
+        ]
+        subprocess.run(ssh_cmd_args)
 
 
     def find_private_key(self):

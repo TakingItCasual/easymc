@@ -3,14 +3,6 @@ from ec2mc.stuff import aws
 from ec2mc.stuff import simulate_policy
 from ec2mc.stuff import quit_out
 
-import pprint
-pp = pprint.PrettyPrinter(indent=2)
-
-def main():
-    """verify that AWS account setup matches config.AWS_SETUP_DIR"""
-    pass
-
-
 def security_group(region):
     """verify that AWS has the security group defined in config.AWS_SETUP_DIR
 
@@ -38,8 +30,3 @@ def security_group(region):
         quit_out.err(["Multiple security groups matching filter found."])
 
     return security_group[0]["GroupId"]
-
-
-def get_all_keys():
-    """get instance tags from all instances in all regions"""
-    pass

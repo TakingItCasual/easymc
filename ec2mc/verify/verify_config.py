@@ -1,5 +1,4 @@
 import os
-import shutil
 import configparser
 from botocore.exceptions import ClientError
 
@@ -13,8 +12,6 @@ def main():
 
     The config file is expected within config.CONFIG_DIR
 
-    Copies ec2mc.aws_setup_src to config.AWS_SETUP_DIR
-
     The config file should have an iam_id (AWS access key ID), iam_secret 
     (AWS Secret Access Key), and optionally servers_dat (file path for 
     servers.dat). IAM_ID, IAM_SECRET, IAM_ARN, IAM_NAME, and (optionally) 
@@ -26,12 +23,6 @@ def main():
     # If config directory doesn't already exist, create it.
     if not os.path.isdir(config.CONFIG_DIR):
         os.mkdir(config.CONFIG_DIR)
-
-    # If config.AWS_SETUP_DIR doesn't exist, copy from ec2mc.aws_setup_src
-    if not os.path.isdir(config.AWS_SETUP_DIR):
-        aws_setup_src = os.path.abspath(
-            os.path.join(__file__, os.pardir, os.pardir, "aws_setup_src"))
-        shutil.copytree(aws_setup_src, config.AWS_SETUP_DIR)
 
     # Read the config. Quit out if it doesn't exist.
     config_file = config.CONFIG_DIR + "config"
