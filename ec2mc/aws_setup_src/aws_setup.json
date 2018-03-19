@@ -1,8 +1,8 @@
 {
-    "Version": 1,
+    "Version": 0,
     "Protect": false,
+    "Namespace": "ec2mc",
     "IAM": {
-        "Root": "/ec2mc/",
         "Policies": [
             {
                 "Name": "admin_permissions",

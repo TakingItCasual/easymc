@@ -36,7 +36,7 @@ class IAMSetup(update_template.BaseClass):
         policies_on_aws = self.iam_client.list_policies(
             Scope="Local",
             OnlyAttached=False,
-            PathPrefix=self.iam_setup["Root"]
+            PathPrefix="/"+config.NAMESPACE+"/"
         )["Policies"]
 
         self.policy_dict = {
@@ -99,7 +99,7 @@ class IAMSetup(update_template.BaseClass):
 
             self.iam_client.create_policy(
                 PolicyName=local_policy,
-                Path=self.iam_setup["Root"],
+                Path="/"+config.NAMESPACE+"/",
                 PolicyDocument=json.dumps(local_policy_document),
                 Description=policy_description
             )
@@ -109,7 +109,7 @@ class IAMSetup(update_template.BaseClass):
         policies_on_aws = self.iam_client.list_policies(
             Scope="Local",
             OnlyAttached=False,
-            PathPrefix=self.iam_setup["Root"]
+            PathPrefix="/"+config.NAMESPACE+"/"
         )["Policies"]
         for local_policy in self.policy_dict["ToUpdate"]:
 
