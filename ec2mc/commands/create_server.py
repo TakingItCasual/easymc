@@ -2,7 +2,6 @@ from botocore.exceptions import ClientError
 
 from ec2mc import config
 from ec2mc import command_template
-from ec2mc.verify import verify_aws
 from ec2mc.stuff import aws
 from ec2mc.stuff import simulate_policy
 from ec2mc.stuff import quit_out
@@ -86,7 +85,7 @@ class CreateServer(command_template.BaseClass):
                     "Value": tag_value
                 })
 
-        self.security_group_id = verify_aws.security_group(kwargs["region"])
+        self.security_group_id = aws.security_group_id(kwargs["region"])
 
 
     def create_instance(self, *, dry_run=True):

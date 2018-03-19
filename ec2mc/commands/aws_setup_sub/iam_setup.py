@@ -26,17 +26,17 @@ class IAMSetup(update_template.BaseClass):
             (config.AWS_SETUP_DIR + "iam_policies"), "")
 
         # Verify that iam_setup.json exists, and read it to a dict
-        iam_setup_file = config.AWS_SETUP_DIR + "iam_setup.json"
+        iam_setup_file = config.AWS_SETUP_DIR + "aws_setup.json"
         if not os.path.isfile(iam_setup_file):
             quit_out.err(["iam_setup.json not found from config."])
         with open(iam_setup_file) as f:
-            self.iam_setup = json.loads(f.read())
+            self.iam_setup = json.loads(f.read())["IAM"]
 
         # Policies already attached to the AWS account
         policies_on_aws = self.iam_client.list_policies(
             Scope="Local",
             OnlyAttached=False,
-            PathPrefix=self.iam_setup["Root"]
+            PathPrefix="/"+config.NAMESPACE+"/"
         )["Policies"]
 
         self.policy_dict = {
@@ -99,7 +99,7 @@ class IAMSetup(update_template.BaseClass):
 
             self.iam_client.create_policy(
                 PolicyName=local_policy,
-                Path=self.iam_setup["Root"],
+                Path="/"+config.NAMESPACE+"/",
                 PolicyDocument=json.dumps(local_policy_document),
                 Description=policy_description
             )
@@ -109,7 +109,7 @@ class IAMSetup(update_template.BaseClass):
         policies_on_aws = self.iam_client.list_policies(
             Scope="Local",
             OnlyAttached=False,
-            PathPrefix=self.iam_setup["Root"]
+            PathPrefix="/"+config.NAMESPACE+"/"
         )["Policies"]
         for local_policy in self.policy_dict["ToUpdate"]:
 

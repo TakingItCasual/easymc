@@ -21,6 +21,10 @@ IAM_NAME = None
 # (Optionally) set in ec2mc.verify.verify_config:main
 SERVERS_DAT = None
 
+# The name/group-name/path/etc. given to components uploaded to AWS.
+# Set in ec2mc.verify.verify_aws_setup:main
+NAMESPACE = None
+
 # Limit configuration RW access to owner of file(s).
 CONFIG_PERMS = 0o600
 # Private key files must be read-only, and only readable by the user.

@@ -7,6 +7,7 @@ sys.dont_write_bytecode = True
 
 from ec2mc.commands import *
 from ec2mc.verify import verify_config
+from ec2mc.verify import verify_aws_setup
 from ec2mc.stuff import send_bash
 from ec2mc.stuff import quit_out
 
@@ -35,9 +36,9 @@ def main(args=None):
         # Available commands from the ec2mc.commands directory
         commands = [
             configure.Configure(),
-            #aws_setup.AWSSetup(),
+            aws_setup.AWSSetup(),
             server.Server(),
-            #create_server.CreateServer(),
+            create_server.CreateServer(),
             #get_backup.GetBackup(),
             #update_mods.UpdateMods()
         ]
@@ -55,6 +56,9 @@ def main(args=None):
 
         # Load and verify the config (primarily for the IAM credentials)
         verify_config.main()
+
+        # Verify that aws_setup is in the config
+        verify_aws_setup.main()
 
         # Get the command class object from the commands list
         chosen_cmd = next(cmd for cmd in commands

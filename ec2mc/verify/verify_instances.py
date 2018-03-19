@@ -32,7 +32,7 @@ def main(kwargs):
     if kwargs["tagfilter"]:
         # Convert dict(s) list to what describe_instances' Filters expects.
         for tag_kv_pair in kwargs["tagfilter"]:
-            # Filter instances based on the tag key-value pair(s).
+            # Filter instances based on tag key-value(s) pair.
             if len(tag_kv_pair) > 1:
                 tag_filter.append({
                     "Name": "tag:"+tag_kv_pair[0],
@@ -133,6 +133,9 @@ def probe_region(region, tag_filter=None):
                 "tags": Instance tags.
     """
 
+    if tag_filter is None:
+        tag_filter = []
+
     response = aws.ec2_client(region
     ).describe_instances(Filters=tag_filter)["Reservations"]
 
@@ -151,6 +154,15 @@ def probe_region(region, tag_filter=None):
         })
 
     return region_instances
+
+
+def get_all_tags():
+    """get instance tags from all instances in all regions"""
+    tags = []
+    all_instances = probe_regions(aws.get_regions())
+    for instance in all_instances:
+        tags.append(instance["tags"])
+    return tags
 
 
 def argparse_args(cmd_parser):

@@ -1,0 +1,32 @@
+{
+    "Version": 0,
+    "Protect": false,
+    "Namespace": "ec2mc",
+    "IAM": {
+        "Policies": [
+            {
+                "Name": "admin_permissions",
+                "Description": "Admin privileges for ec2mc script user."
+            },
+            {
+                "Name": "basic_permissions",
+                "Description": "Basic privileges for ec2mc script user."
+            }
+        ],
+        "Groups": [
+            {
+                "Name": "admin_users",
+                "Policies": [
+                    "admin_permissions",
+                    "basic_permissions"
+                ]
+            },
+            {
+                "Name": "basic_users",
+                "Policies": [
+                    "basic_permissions"
+                ]
+            }
+        ]
+    }
+}

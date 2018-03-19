@@ -1,5 +1,3 @@
-import os
-
 from ec2mc import config
 from ec2mc import command_template
 from ec2mc.commands.aws_setup_sub import *
@@ -17,14 +15,12 @@ class AWSSetup(command_template.BaseClass):
     def main(self, kwargs):
         """(re)upload AWS setup files located in ~/.ec2mc/ to AWS
 
+        Copies ec2mc.aws_setup_src to config.AWS_SETUP_DIR
+
         Args:
             kwargs (dict):
-                "confirm" (bool): Whether to actually upload aws_setup
+                "action": Whether to check, upload, or delete setup on AWS
         """
-
-        if not os.path.isdir(config.AWS_SETUP_DIR):
-            quit_out.err(["aws_setup directory not found from config.",
-                "  (This should not be possible. Try again.)"])
 
         for component in self.aws_components:
             component.verify_component(kwargs["action"])

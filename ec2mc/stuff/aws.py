@@ -71,3 +71,35 @@ def decode_error_msg(error_response):
     ).decode_authorization_message(
         EncodedMessage=encoded_error_str
     )["DecodedMessage"])
+
+
+def security_group_id(region, sg_name=config.SECURITY_GROUP_FILTER):
+    """get ID of security group with correct GroupName from AWS
+
+    Args:
+        region (str): EC2 region to search security group from
+        sg_name (str): 
+
+    Returns:
+        str: ID for security group used for Minecraft instances
+    """
+
+    quit_out.assert_empty(simulate_policy.blocked(actions=[
+        "ec2:DescribeSecurityGroups"
+    ]))
+
+    # TODO: Filter based on SG in config.AWS_SETUP_DIR
+
+    security_groups = ec2_client(
+        region).describe_security_groups()["SecurityGroups"]
+    security_group = [SG for SG in security_groups 
+        if sg_name.lower() in SG["GroupName"].lower()]
+
+    if not security_group:
+        quit_out.err(["No security groups matching aws_setup found."])
+    elif len(security_group) > 1:
+        quit_out.err(["Multiple security groups matching filter found."])
+
+    print(security_group[0])
+
+    return security_group[0]["GroupId"]
