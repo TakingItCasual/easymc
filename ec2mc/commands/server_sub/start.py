@@ -32,7 +32,7 @@ class StartServer(command_template.BaseClass):
             if instance_state != "running" and instance_state != "stopped":
                 print("  Instance is currently " + instance_state + ".")
                 print("  Cannot start an instance from a transitional state.")
-                return;
+                continue
 
             if instance_state == "stopped":
                 print("  Starting instance...")

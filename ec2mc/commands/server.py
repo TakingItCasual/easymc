@@ -14,7 +14,7 @@ class Server(command_template.BaseClass):
             check.CheckServer(),
             start.StartServer(),
             ssh.SSHServer(),
-            #stop.StopServer()
+            stop.StopServer()
         ]
 
 
