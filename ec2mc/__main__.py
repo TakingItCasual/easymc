@@ -38,9 +38,7 @@ def main(args=None):
             configure.Configure(),
             aws_setup.AWSSetup(),
             server.Server(),
-            create_server.CreateServer(),
-            #get_backup.GetBackup(),
-            #update_mods.UpdateMods()
+            create_server.CreateServer()
         ]
 
         # Use argparse to turn sys.argv into a dict of arguments
@@ -82,7 +80,7 @@ def argv_to_kwargs(args, commands):
         dict: Parsed arguments
             "command": First positional argument
             Other key-value pairs vary depending on the command. See the 
-            command's add_documentation method to see its args.
+                command's add_documentation method to see its args.
     """
 
     parser = argparse.ArgumentParser(

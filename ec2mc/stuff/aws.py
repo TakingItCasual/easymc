@@ -100,6 +100,4 @@ def security_group_id(region, sg_name=config.SECURITY_GROUP_FILTER):
     elif len(security_group) > 1:
         quit_out.err(["Multiple security groups matching filter found."])
 
-    print(security_group[0])
-
     return security_group[0]["GroupId"]

@@ -11,7 +11,7 @@ class CheckServer(command_template.BaseClass):
         """check instance status(es) & update client's server list
 
         Args:
-            kwargs (dict): See stuff.verify_instances:main for documentation
+            kwargs (dict): See verify.verify_instances:argparse_args
         """
 
         instances = verify_instances.main(kwargs)

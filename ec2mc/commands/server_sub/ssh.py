@@ -18,6 +18,9 @@ class SSHServer(command_template.BaseClass):
 
         Currently SSH is only supported with a .pem private key, and using 
         multiple keys is not supported. Only posix systems are supported.
+
+        Args:
+            kwargs (dict): See verify.verify_instances:argparse_args
         """
 
         if os.name != "posix":

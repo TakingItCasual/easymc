@@ -8,7 +8,12 @@ from ec2mc.stuff import simulate_policy
 class StopServer(command_template.BaseClass):
 
     def main(self, kwargs):
-        """force instance(s) to stop, regardless of online players"""
+        """force instance(s) to stop, regardless of online players
+
+        Args:
+            kwargs (dict): See verify.verify_instances:argparse_args
+        """
+
         instances = verify_instances.main(kwargs)
 
         for instance in instances:
@@ -34,9 +39,9 @@ class StopServer(command_template.BaseClass):
                         "Delay": 5, "MaxAttempts": 12
                     })
             except WaiterError:
-                quit_out.err([
-                    "Instance should be stopped after 1 minute.",
-                    "  Check server's state after a few minutes."])
+                print("  Instance not stopped after waiting 1 minute.")
+                print("    Check the instance's state in a minute.")
+                continue
 
             print("  Instance stopped.")
 

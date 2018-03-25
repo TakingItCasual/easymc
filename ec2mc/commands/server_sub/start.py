@@ -14,7 +14,7 @@ class StartServer(command_template.BaseClass):
         """start stopped instance(s) & update client's server list
 
         Args:
-            kwargs (dict): See stuff.verify_instances:main for documentation
+            kwargs (dict): See verify.verify_instances:argparse_args
         """
 
         instances = verify_instances.main(kwargs)
@@ -44,9 +44,9 @@ class StartServer(command_template.BaseClass):
                             "Delay": 5, "MaxAttempts": 12
                         })
                 except WaiterError:
-                    quit_out.err([
-                        "Instance should be running after 1 minute.",
-                        "  Check server's state after a few minutes."])
+                    print("  Instance not running after waiting 1 minute.")
+                    print("    Check the instance's state in a minute.")
+                    continue
 
                 print("  Instance started. The server will be available soon.")
             elif instance_state == "running":

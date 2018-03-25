@@ -8,8 +8,8 @@ from ec2mc.stuff import aws
 from ec2mc.stuff import simulate_policy
 from ec2mc.stuff import quit_out
 
-#import pprint
-#pp = pprint.PrettyPrinter(indent=2)
+import pprint
+pp = pprint.PrettyPrinter(indent=2)
 
 class IAMSetup(update_template.BaseClass):
 

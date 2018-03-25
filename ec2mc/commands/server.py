@@ -15,6 +15,8 @@ class Server(command_template.BaseClass):
             start.StartServer(),
             ssh.SSHServer(),
             stop.StopServer()
+            #get_backup.GetBackup(),
+            #update_mods.UpdateMods()
         ]
 
 
