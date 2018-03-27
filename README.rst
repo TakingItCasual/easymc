@@ -12,7 +12,7 @@ Can be installed with pip:
 
 A Python console script for managing Minecraft servers hosted on AWS EC2 instances (cloud computing).
 The script is still in alpha, and currently only supports starting and checking instances that already exist.
-Commands to start instances and initialize an AWS account are planned.
+Commands to create instances and initialize an AWS account are planned.
 
 IAM user credentials must be set before the script can be used:
 

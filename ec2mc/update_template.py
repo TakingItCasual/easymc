@@ -14,6 +14,12 @@ class BaseClass(ABC):
 
 
     @abstractmethod
+    def notify_state(self):
+        """print the component's status relative to AWS"""
+        pass
+
+
+    @abstractmethod
     def upload_component(self):
         """create component on AWS if it doesn't exist, update if it exists"""
         pass

@@ -24,7 +24,7 @@ class SSHServer(command_template.BaseClass):
         """
 
         if os.name != "posix":
-            quit_out.err(["ssh_server only supported on posix systems.",
+            quit_out.err(["ssh command only supported on posix systems.",
                 "  Google around for methods of SSHing with your OS."])
 
         private_key_file = self.find_private_key()

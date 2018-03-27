@@ -8,22 +8,20 @@ from ec2mc.stuff import aws
 from ec2mc.stuff import simulate_policy
 from ec2mc.stuff import quit_out
 
-import pprint
-pp = pprint.PrettyPrinter(indent=2)
+#import pprint
+#pp = pprint.PrettyPrinter(indent=2)
 
 class IAMSetup(update_template.BaseClass):
 
-    def verify_component(self, action):
-        """determine which policies need creating/updating, and which don't
-
-        Args:
-            upload_confirmed (bool): Whether aws_setup will be uploaded
-        """
+    def verify_component(self):
+        """determine which policies need creating/updating, and which don't"""
 
         self.iam_client = aws.iam_client()
 
         self.policy_dir = os.path.join(
             (config.AWS_SETUP_DIR + "iam_policies"), "")
+
+        self.path_prefix = "/" + config.NAMESPACE + "/"
 
         # Verify that iam_setup.json exists, and read it to a dict
         iam_setup_file = config.AWS_SETUP_DIR + "aws_setup.json"
@@ -36,7 +34,7 @@ class IAMSetup(update_template.BaseClass):
         policies_on_aws = self.iam_client.list_policies(
             Scope="Local",
             OnlyAttached=False,
-            PathPrefix="/"+config.NAMESPACE+"/"
+            PathPrefix=self.path_prefix
         )["Policies"]
 
         self.policy_dict = {
@@ -74,14 +72,15 @@ class IAMSetup(update_template.BaseClass):
                 self.policy_dict["ToUpdate"].remove(local_policy)
                 self.policy_dict["UpToDate"].append(local_policy)
 
-        if action == "check":
-            print("")
-            for policy in self.policy_dict["ToCreate"]:
-                print("IAM policy " + policy + " to be created.")
-            for policy in self.policy_dict["ToUpdate"]:
-                print("IAM policy " + policy + " to be updated.")
-            for policy in self.policy_dict["UpToDate"]:
-                print("IAM policy " + policy + " is up-to-date.")
+
+    def notify_state(self):
+        print("")
+        for policy in self.policy_dict["ToCreate"]:
+            print("IAM policy " + policy + " to be created.")
+        for policy in self.policy_dict["ToUpdate"]:
+            print("IAM policy " + policy + " to be updated.")
+        for policy in self.policy_dict["UpToDate"]:
+            print("IAM policy " + policy + " is up-to-date.")
 
 
     def upload_component(self):
@@ -99,7 +98,7 @@ class IAMSetup(update_template.BaseClass):
 
             self.iam_client.create_policy(
                 PolicyName=local_policy,
-                Path="/"+config.NAMESPACE+"/",
+                Path=self.path_prefix,
                 PolicyDocument=json.dumps(local_policy_document),
                 Description=policy_description
             )
@@ -109,7 +108,7 @@ class IAMSetup(update_template.BaseClass):
         policies_on_aws = self.iam_client.list_policies(
             Scope="Local",
             OnlyAttached=False,
-            PathPrefix="/"+config.NAMESPACE+"/"
+            PathPrefix=self.path_prefix
         )["Policies"]
         for local_policy in self.policy_dict["ToUpdate"]:
 
@@ -134,7 +133,8 @@ class IAMSetup(update_template.BaseClass):
 
 
     def delete_component(self):
-        pass
+        print("")
+        print("Functionality not yet implemented.")
 
 
     def delete_old_policy_versions(self, policy_arn):
@@ -168,6 +168,7 @@ class IAMSetup(update_template.BaseClass):
         # Actual policies located aws_setup/iam_policies/
         iam_policy_files = [
             json_file[:-5] for json_file in os.listdir(policy_dir)
+                if json_file.endswith(".json")
         ]
 
         # Quit if iam_setup.json describes policies not found in iam_policies

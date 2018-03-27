@@ -23,10 +23,11 @@ class AWSSetup(command_template.BaseClass):
         """
 
         for component in self.aws_components:
-            component.verify_component(kwargs["action"])
+            component.verify_component()
 
-        # Actual uploading occurs after this confirmation.
         if kwargs["action"] == "check":
+            for component in self.aws_components:
+                component.notify_state()
             quit_out.q(["Change \"check\" to \"upload\" to upload setup."])
         elif kwargs["action"] == "upload":
             for component in self.aws_components:
