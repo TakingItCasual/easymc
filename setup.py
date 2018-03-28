@@ -3,6 +3,9 @@ from setuptools import setup, find_packages
 from codecs import open
 from os import path
 
+# aws_setup.json version: 0
+version = "0.1.3"
+
 here = path.abspath(path.dirname(__file__))
 
 with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
@@ -10,13 +13,13 @@ with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
 
 setup(
     name='ec2mc',
-    version='0.1.3',
+    version=version,
     description='AWS EC2 instance manager for Minecraft servers',
     long_description=long_description,
     author='TakingItCasual',
     author_email='takingitcasual+gh@gmail.com',
     url='https://github.com/TakingItCasual/ec2mc',
-    download_url='https://github.com/TakingItCasual/ec2mc/archive/v0.1.3.tar.gz',
+    download_url='https://github.com/TakingItCasual/ec2mc/archive/v'+version+'.tar.gz',
     platforms=['any'],
     license='MIT',
     classifiers=[

@@ -8,7 +8,7 @@ class AWSSetup(command_template.BaseClass):
     def __init__(self):
         super().__init__()
         self.aws_components = [
-            iam_setup.IAMSetup()
+            iam_policy_setup.IAMPolicySetup()
         ]
 
 

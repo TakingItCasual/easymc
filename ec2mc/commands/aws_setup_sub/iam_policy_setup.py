@@ -8,10 +8,10 @@ from ec2mc.stuff import aws
 from ec2mc.stuff import simulate_policy
 from ec2mc.stuff import quit_out
 
-#import pprint
-#pp = pprint.PrettyPrinter(indent=2)
+import pprint
+pp = pprint.PrettyPrinter(indent=2)
 
-class IAMSetup(update_template.BaseClass):
+class IAMPolicySetup(update_template.BaseClass):
 
     def verify_component(self):
         """determine which policies need creating/updating, and which don't"""
@@ -133,8 +133,44 @@ class IAMSetup(update_template.BaseClass):
 
 
     def delete_component(self):
+        """remove attachments, delete old versions, then delete policies"""
+
         print("")
-        print("Functionality not yet implemented.")
+
+        policies_on_aws = self.iam_client.list_policies(
+            Scope="Local",
+            OnlyAttached=False,
+            PathPrefix=self.path_prefix
+        )["Policies"]
+
+        if not policies_on_aws:
+            print("No IAM policies on AWS to delete.")
+
+        for aws_policy in policies_on_aws:
+            attachments = self.iam_client.list_entities_for_policy(
+                PolicyArn=aws_policy["Arn"])
+
+            # ec2mc only attaches policies to groups, but just to be safe
+            for attached_group in attachments["PolicyGroups"]:
+                self.iam_client.detach_group_policy(
+                    GroupName=attached_group["GroupName"],
+                    PolicyArn=aws_policy["Arn"]
+                )
+            for attached_group in attachments["PolicyRoles"]:
+                self.iam_client.detach_role_policy(
+                    RoleName=attached_group["RoleName"],
+                    PolicyArn=aws_policy["Arn"]
+                )
+            for attached_group in attachments["PolicyUsers"]:
+                self.iam_client.detach_user_policy(
+                    UserName=attached_group["UserName"],
+                    PolicyArn=aws_policy["Arn"]
+                )
+
+            self.delete_old_policy_versions(aws_policy["Arn"])
+            self.iam_client.delete_policy(PolicyArn=aws_policy["Arn"])
+
+            print("IAM policy " + aws_policy["PolicyName"] + " deleted.")
 
 
     def delete_old_policy_versions(self, policy_arn):
@@ -198,5 +234,12 @@ class IAMSetup(update_template.BaseClass):
             "iam:CreatePolicyVersion",
             "iam:DeletePolicyVersion"
         ]
-        self.delete_actions = []
+        self.delete_actions = [
+            "iam:ListEntitiesForPolicy",
+            "iam:DetachGroupPolicy",
+            "iam:DetachRolePolicy",
+            "iam:DetachUserPolicy",
+            "iam:DeletePolicyVersion",
+            "iam:DeletePolicy"
+        ]
         return simulate_policy.blocked(actions=super().blocked_actions(kwargs))
