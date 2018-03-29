@@ -14,20 +14,20 @@ class BaseClass(ABC):
 
 
     @abstractmethod
-    def notify_state(self):
+    def notify_state(self, component_info):
         """print the component's status relative to AWS"""
         pass
 
 
     @abstractmethod
-    def upload_component(self):
-        """create component on AWS if it doesn't exist, update if it exists"""
+    def upload_component(self, component_info):
+        """create component on AWS if not present, update if present"""
         pass
 
 
     @abstractmethod
-    def delete_component(self):
-        """remove component from AWS if it exists"""
+    def delete_component(self, component_info):
+        """remove component from AWS if present"""
         pass
 
 

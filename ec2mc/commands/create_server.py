@@ -94,7 +94,7 @@ class CreateServer(command_template.BaseClass):
         Args:
             dry_run (bool): If true, only test if IAM user is allowed to
         """
-        # TODO: Figure out how to limit EBS volume size with the IAM policy
+
         return self.ec2_client.run_instances(
             DryRun=dry_run,
             MinCount=1, MaxCount=1,

@@ -8,19 +8,21 @@ from ec2mc.stuff import aws
 from ec2mc.stuff import simulate_policy
 from ec2mc.stuff import quit_out
 
-import pprint
-pp = pprint.PrettyPrinter(indent=2)
-
 class IAMPolicySetup(update_template.BaseClass):
 
     def verify_component(self):
-        """determine which policies need creating/updating, and which don't"""
+        """determine which policies need creating/updating, and which don't
+
+        Returns:
+            policy_dict (dict):
+                "ToCreate": Policies that do not (yet) exist on AWS
+                "ToUpdate": Policies on AWS, but not the same as local versions
+                "UpToDate": Policies on AWS and up-to-date with local versions
+        """
 
         self.iam_client = aws.iam_client()
-
         self.policy_dir = os.path.join(
             (config.AWS_SETUP_DIR + "iam_policies"), "")
-
         self.path_prefix = "/" + config.NAMESPACE + "/"
 
         # Verify that iam_setup.json exists, and read it to a dict
@@ -37,22 +39,22 @@ class IAMPolicySetup(update_template.BaseClass):
             PathPrefix=self.path_prefix
         )["Policies"]
 
-        self.policy_dict = {
+        policy_dict = {
             "ToCreate": self.verify_iam_setup_json(self.policy_dir),
             "ToUpdate": [],
             "UpToDate": []
         }
 
         # Check if policy(s) described by iam_setup.json already on AWS
-        for local_policy in self.policy_dict["ToCreate"][:]:
+        for local_policy in policy_dict["ToCreate"][:]:
             for aws_policy in policies_on_aws:
                 if local_policy == aws_policy["PolicyName"]:
                     # Policy already exists on AWS, so next check if to update
-                    self.policy_dict["ToCreate"].remove(local_policy)
-                    self.policy_dict["ToUpdate"].append(local_policy)
+                    policy_dict["ToCreate"].remove(local_policy)
+                    policy_dict["ToUpdate"].append(local_policy)
 
         # Check if policy(s) on AWS need to be updated
-        for local_policy in self.policy_dict["ToUpdate"][:]:
+        for local_policy in policy_dict["ToUpdate"][:]:
 
             with open(self.policy_dir + local_policy + ".json") as f:
                 local_policy_document = json.loads(f.read())
@@ -69,26 +71,32 @@ class IAMPolicySetup(update_template.BaseClass):
 
             if not policy_differences:
                 # Local policy and AWS policy match, so no need to update
-                self.policy_dict["ToUpdate"].remove(local_policy)
-                self.policy_dict["UpToDate"].append(local_policy)
+                policy_dict["ToUpdate"].remove(local_policy)
+                policy_dict["UpToDate"].append(local_policy)
+
+        return policy_dict
 
 
-    def notify_state(self):
+    def notify_state(self, policy_dict):
         print("")
-        for policy in self.policy_dict["ToCreate"]:
+        for policy in policy_dict["ToCreate"]:
             print("IAM policy " + policy + " to be created.")
-        for policy in self.policy_dict["ToUpdate"]:
+        for policy in policy_dict["ToUpdate"]:
             print("IAM policy " + policy + " to be updated.")
-        for policy in self.policy_dict["UpToDate"]:
+        for policy in policy_dict["UpToDate"]:
             print("IAM policy " + policy + " is up-to-date.")
 
 
-    def upload_component(self):
-        """create policies on AWS that don't exist, update policies that do"""
+    def upload_component(self, policy_dict):
+        """create policies on AWS that don't exist, update policies that do
+
+        Args:
+            policy_dict (dict): See what verify_component returns
+        """
 
         print("")
 
-        for local_policy in self.policy_dict["ToCreate"]:
+        for local_policy in policy_dict["ToCreate"]:
 
             with open(self.policy_dir + local_policy + ".json") as f:
                 local_policy_document = json.loads(f.read())
@@ -110,7 +118,7 @@ class IAMPolicySetup(update_template.BaseClass):
             OnlyAttached=False,
             PathPrefix=self.path_prefix
         )["Policies"]
-        for local_policy in self.policy_dict["ToUpdate"]:
+        for local_policy in policy_dict["ToUpdate"]:
 
             with open(self.policy_dir + local_policy + ".json") as f:
                 local_policy_document = json.loads(f.read())
@@ -128,11 +136,11 @@ class IAMPolicySetup(update_template.BaseClass):
 
             print("IAM policy " + local_policy + " updated.")
 
-        for local_policy in self.policy_dict["UpToDate"]:
+        for local_policy in policy_dict["UpToDate"]:
             print("IAM policy " + local_policy + " is already up-to-date.")
 
 
-    def delete_component(self):
+    def delete_component(self, _):
         """remove attachments, delete old versions, then delete policies"""
 
         print("")

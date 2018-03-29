@@ -23,18 +23,16 @@ class AWSSetup(command_template.BaseClass):
         """
 
         for component in self.aws_components:
-            component.verify_component()
+            component_info = component.verify_component()
+            if kwargs["action"] == "check":
+                component.notify_state(component_info)
+            elif kwargs["action"] == "upload":
+                component.upload_component(component_info)
+            elif kwargs["action"] == "delete":
+                component.delete_component(component_info)
 
         if kwargs["action"] == "check":
-            for component in self.aws_components:
-                component.notify_state()
             quit_out.q(["Change \"check\" to \"upload\" to upload setup."])
-        elif kwargs["action"] == "upload":
-            for component in self.aws_components:
-                component.upload_component()
-        elif kwargs["action"] == "delete":
-            for component in self.aws_components:
-                component.delete_component()
 
 
     def add_documentation(self, argparse_obj):
