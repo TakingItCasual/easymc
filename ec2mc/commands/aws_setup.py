@@ -8,7 +8,8 @@ class AWSSetup(command_template.BaseClass):
     def __init__(self):
         super().__init__()
         self.aws_components = [
-            iam_policy_setup.IAMPolicySetup()
+            iam_policy_setup.IAMPolicySetup(),
+            iam_group_setup.IAMGroupSetup()
         ]
 
 
@@ -24,15 +25,13 @@ class AWSSetup(command_template.BaseClass):
 
         for component in self.aws_components:
             component_info = component.verify_component()
+            print("")
             if kwargs["action"] == "check":
                 component.notify_state(component_info)
             elif kwargs["action"] == "upload":
                 component.upload_component(component_info)
             elif kwargs["action"] == "delete":
                 component.delete_component(component_info)
-
-        if kwargs["action"] == "check":
-            quit_out.q(["Change \"check\" to \"upload\" to upload setup."])
 
 
     def add_documentation(self, argparse_obj):

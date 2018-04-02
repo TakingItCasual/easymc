@@ -58,6 +58,7 @@ class CreateServer(command_template.BaseClass):
                 "region": EC2 region to create instance in
                 "name": Tag value for instance tag key "Name"
                 "type": EC2 instance type to create
+                "size": EC2 instance size in GiB
                 "tags": list: Additional instance tag key-value pair(s)
         """
 

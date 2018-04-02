@@ -8,9 +8,6 @@ from ec2mc.stuff import aws
 from ec2mc.stuff import simulate_policy
 from ec2mc.stuff import quit_out
 
-import pprint
-pp = pprint.PrettyPrinter(indent=2)
-
 class IAMPolicySetup(update_template.BaseClass):
 
     def verify_component(self):
@@ -30,15 +27,16 @@ class IAMPolicySetup(update_template.BaseClass):
         self.path_prefix = "/" + config.NAMESPACE + "/"
 
         # Verify that aws_setup.json exists, and read it to a dict
-        iam_setup_file = config.AWS_SETUP_DIR + "aws_setup.json"
-        if not os.path.isfile(iam_setup_file):
+        aws_setup_file = config.AWS_SETUP_DIR + "aws_setup.json"
+        if not os.path.isfile(aws_setup_file):
             quit_out.err(["aws_setup.json not found from config."])
-        with open(iam_setup_file) as f:
-            self.iam_setup = json.loads(f.read())["IAM"]
+        with open(aws_setup_file) as f:
+            self.iam_policy_setup = json.loads(f.read())["IAM"]["Policies"]
 
-        # Policies already attached to the AWS account
-        aws_policies = self.get_aws_policies()
+        # Policies already present on AWS
+        aws_policies = self.get_iam_policies()
 
+        # Names of local policies described in aws_setup.json
         policy_names = {
             "AWSExtra": [],
             "ToCreate": self.verify_iam_setup(self.policy_dir),
@@ -58,7 +56,7 @@ class IAMPolicySetup(update_template.BaseClass):
                     # Policy already exists on AWS, so next check if to update
                     policy_names["ToCreate"].remove(local_policy)
                     policy_names["ToUpdate"].append(local_policy)
-                    continue
+                    break
 
         # Check if policy(s) on AWS need to be updated
         for local_policy in policy_names["ToUpdate"][:]:
@@ -85,13 +83,12 @@ class IAMPolicySetup(update_template.BaseClass):
 
 
     def notify_state(self, policy_names):
-        print("")
         for policy in policy_names["AWSExtra"]:
             print("IAM policy " + policy + " found on AWS but not locally.")
         for policy in policy_names["ToCreate"]:
-            print("IAM policy " + policy + " to be created on AWS.")
+            print("Local IAM policy " + policy + " to be created on AWS.")
         for policy in policy_names["ToUpdate"]:
-            print("IAM policy " + policy + " to be updated on AWS.")
+            print("Local IAM policy " + policy + " to be updated on AWS.")
         for policy in policy_names["UpToDate"]:
             print("IAM policy " + policy + " on AWS is up to date.")
 
@@ -103,61 +100,38 @@ class IAMPolicySetup(update_template.BaseClass):
             policy_names (dict): See what verify_component returns
         """
 
-        print("")
-
         for local_policy in policy_names["ToCreate"]:
             self.create_policy(local_policy)
+            print("IAM policy " + local_policy + " created on AWS.")
 
-        aws_policies = self.get_aws_policies()
+        aws_policies = self.get_iam_policies()
         for local_policy in policy_names["ToUpdate"]:
             self.update_policy(local_policy, aws_policies)
+            print("IAM policy " + local_policy + " updated on AWS.")
 
         for local_policy in policy_names["UpToDate"]:
-            print("IAM policy " + local_policy + " on AWS is up to date.")
+            print("IAM policy " + local_policy + " on AWS already up to date.")
 
 
     def delete_component(self, _):
         """remove attachments, delete old versions, then delete policies"""
 
-        print("")
-
-        aws_policies = self.get_aws_policies()
+        aws_policies = self.get_iam_policies()
         if not aws_policies:
             print("No IAM policies on AWS to delete.")
 
         for aws_policy in aws_policies:
-            attachments = self.iam_client.list_entities_for_policy(
-                PolicyArn=aws_policy["Arn"])
-
-            # ec2mc only attaches policies to groups, but just to be safe
-            for attached_group in attachments["PolicyGroups"]:
-                self.iam_client.detach_group_policy(
-                    GroupName=attached_group["GroupName"],
-                    PolicyArn=aws_policy["Arn"]
-                )
-            for attached_role in attachments["PolicyRoles"]:
-                self.iam_client.detach_role_policy(
-                    RoleName=attached_role["RoleName"],
-                    PolicyArn=aws_policy["Arn"]
-                )
-            for attached_user in attachments["PolicyUsers"]:
-                self.iam_client.detach_user_policy(
-                    UserName=attached_user["UserName"],
-                    PolicyArn=aws_policy["Arn"]
-                )
-
-            self.delete_old_policy_versions(aws_policy["Arn"])
-            self.iam_client.delete_policy(PolicyArn=aws_policy["Arn"])
-
-            print("IAM policy " + aws_policy["PolicyName"] + " deleted.")
+            self.delete_policy(aws_policy["Arn"])
+            print("IAM policy " + aws_policy["PolicyName"] +
+                " deleted from AWS.")
 
 
     def create_policy(self, policy_name):
-        """create a new policy on AWS"""
+        """create a new IAM policy on AWS"""
         with open(self.policy_dir + policy_name + ".json") as f:
             local_policy_document = json.loads(f.read())
         policy_description = next(
-            policy["Description"] for policy in self.iam_setup["Policies"]
+            policy["Description"] for policy in self.iam_policy_setup
                 if policy["Name"] == policy_name)
 
         self.iam_client.create_policy(
@@ -167,11 +141,9 @@ class IAMPolicySetup(update_template.BaseClass):
             Description=policy_description
         )
 
-        print("IAM policy " + policy_name + " created on AWS.")
-
 
     def update_policy(self, policy_name, aws_policies):
-        """update policy that already exists on AWS"""
+        """update IAM policy that already exists on AWS"""
         with open(self.policy_dir + policy_name + ".json") as f:
             local_policy_document = json.loads(f.read())
 
@@ -186,7 +158,12 @@ class IAMPolicySetup(update_template.BaseClass):
             SetAsDefault=True
         )
 
-        print("IAM policy " + policy_name + " updated on AWS.")
+
+    def delete_policy(self, policy_arn):
+        """delete IAM policy from AWS"""
+        self.remove_attachments(policy_arn)
+        self.delete_old_policy_versions(policy_arn)
+        self.iam_client.delete_policy(PolicyArn=policy_arn)
 
 
     def delete_old_policy_versions(self, policy_arn):
@@ -203,6 +180,29 @@ class IAMPolicySetup(update_template.BaseClass):
                 )
 
 
+    def remove_attachments(self, policy_arn):
+        """remove group, role, and user attachments from IAM policy"""
+        attachments = self.iam_client.list_entities_for_policy(
+            PolicyArn=policy_arn)
+
+        # ec2mc only attaches policies to groups, but just to be safe
+        for attached_group in attachments["PolicyGroups"]:
+            self.iam_client.detach_group_policy(
+                GroupName=attached_group["GroupName"],
+                PolicyArn=policy_arn
+            )
+        for attached_role in attachments["PolicyRoles"]:
+            self.iam_client.detach_role_policy(
+                RoleName=attached_role["RoleName"],
+                PolicyArn=policy_arn
+            )
+        for attached_user in attachments["PolicyUsers"]:
+            self.iam_client.detach_user_policy(
+                UserName=attached_user["UserName"],
+                PolicyArn=policy_arn
+            )
+
+
     def verify_iam_setup(self, policy_dir):
         """verify that aws_setup.json reflects the contents of iam_policies
 
@@ -215,15 +215,15 @@ class IAMPolicySetup(update_template.BaseClass):
 
         # Policies described in aws_setup/aws_setup.json
         setup_policy_list = [
-            policy["Name"] for policy in self.iam_setup["Policies"]
+            policy["Name"] for policy in self.iam_policy_setup
         ]
-        # Actual policies located aws_setup/iam_policies/
+        # Actual policy json files located in aws_setup/iam_policies/
         iam_policy_files = [
             json_file[:-5] for json_file in os.listdir(policy_dir)
                 if json_file.endswith(".json")
         ]
 
-        # Quit if iam_setup.json describes policies not found in iam_policies
+        # Quit if aws_setup.json describes policies not found in iam_policies
         if not set(setup_policy_list).issubset(set(iam_policy_files)):
             quit_out.err([
                 "Following policy(s) not found from iam_policies dir:",
@@ -239,8 +239,8 @@ class IAMPolicySetup(update_template.BaseClass):
         return setup_policy_list
 
 
-    def get_aws_policies(self):
-        """returns policies on AWS under set namespace"""
+    def get_iam_policies(self):
+        """returns policy(s) on AWS under set namespace"""
         return self.iam_client.list_policies(
             Scope="Local",
             OnlyAttached=False,

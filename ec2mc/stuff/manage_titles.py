@@ -72,7 +72,7 @@ def update_servers_dat(servers_dat_path, server_title, new_dns):
     for server_list_entry in servers_dat_file.root["servers"]:
         if server_title == server_list_entry["name"]:
             server_list_entry["ip"] = nbtlib.tag.String(new_dns)
-            print("  Server titled \"" + server_title + 
+            print("  Server titled \"" + server_title +
                 "\" in server list updated w/ instance's DNS.")
             break
     else:
@@ -81,7 +81,7 @@ def update_servers_dat(servers_dat_path, server_title, new_dns):
             "ip": nbtlib.tag.String(new_dns),
             "name": nbtlib.tag.String(server_title)
         }))
-        print("  Server titled \"" + server_title + 
+        print("  Server titled \"" + server_title +
             "\" added to server list w/ instance's DNS.")
 
     servers_dat_file.save(gzipped=False)

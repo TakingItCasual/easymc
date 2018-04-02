@@ -33,7 +33,11 @@ class BaseClass(ABC):
 
     @abstractmethod
     def blocked_actions(self, kwargs):
-        """check that IAM user is allowed to perform actions on component"""
+        """check that IAM user is allowed to perform actions on component
+
+        check_actions, upload_actions, and delete_actions are expected to 
+        be defined by the child class's blocked_actions.
+        """
         needed_actions = self.check_actions
         if kwargs["action"] == "upload":
             needed_actions.extend(self.upload_actions)
