@@ -5,9 +5,6 @@ import shutil
 from ec2mc import config
 from ec2mc.stuff import quit_out
 
-import pprint
-pp = pprint.PrettyPrinter(indent=2)
-
 def main():
     """create aws_setup if nonexistant, update if needed and is unprotected"""
     
@@ -39,7 +36,7 @@ def main():
     # Version can be set to 0 during development for constant refreshing
     elif source_aws_setup["Version"] == 0:
         cp_aws_setup_to_config(aws_setup_src_dir)
-    # Update if version in source is more recent
+    # Update if aws_setup_src has larger version number
     elif source_aws_setup["Version"] > config_aws_setup["Version"]:
         cp_aws_setup_to_config(aws_setup_src_dir)
 
