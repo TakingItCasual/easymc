@@ -19,16 +19,14 @@ class IAMGroupSetup(update_template.BaseClass):
                 "AWSExtra": Extra groups on AWS found under same namespace
                 "ToCreate": Groups that do not (yet) exist on AWS
                 "ToUpdate": Groups on AWS, but not the same as local versions
-                "UpToDate": Groups on AWS and up-to-date with local versions
+                "UpToDate": Groups on AWS and up to date with local versions
         """
 
         self.iam_client = aws.iam_client()
         self.path_prefix = "/" + config.NAMESPACE + "/"
 
-        # Verify that aws_setup.json exists, and read it to a dict
+        # Read IAM groups from aws_setup.json to a dict
         aws_setup_file = config.AWS_SETUP_DIR + "aws_setup.json"
-        if not os.path.isfile(aws_setup_file):
-            quit_out.err(["aws_setup.json not found from config."])
         with open(aws_setup_file) as f:
             self.iam_group_setup = json.loads(f.read())["IAM"]["Groups"]
 
@@ -77,7 +75,7 @@ class IAMGroupSetup(update_template.BaseClass):
         for group in group_names["ToCreate"]:
             print("Local IAM group " + group + " to be created on AWS.")
         for group in group_names["ToUpdate"]:
-            print("Local IAM group " + group + " to be updated on AWS.")
+            print("IAM group " + group + " on AWS to be updated.")
         for group in group_names["UpToDate"]:
             print("IAM group " + group + " on AWS is up to date.")
 
@@ -95,7 +93,7 @@ class IAMGroupSetup(update_template.BaseClass):
 
         for local_group in group_names["ToUpdate"]:
             self.update_group(local_group)
-            print("IAM group " + local_group + " updated on AWS.")
+            print("IAM group " + local_group + " on AWS updated.")
 
         for local_group in group_names["UpToDate"]:
             print("IAM group " + local_group + " on AWS already up to date.")

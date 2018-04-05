@@ -18,7 +18,7 @@ class IAMPolicySetup(update_template.BaseClass):
                 "AWSExtra": Extra policies on AWS found under same namespace
                 "ToCreate": Policies that do not (yet) exist on AWS
                 "ToUpdate": Policies on AWS, but not the same as local versions
-                "UpToDate": Policies on AWS and up-to-date with local versions
+                "UpToDate": Policies on AWS and up to date with local versions
         """
 
         self.iam_client = aws.iam_client()
@@ -26,10 +26,8 @@ class IAMPolicySetup(update_template.BaseClass):
             (config.AWS_SETUP_DIR + "iam_policies"), "")
         self.path_prefix = "/" + config.NAMESPACE + "/"
 
-        # Verify that aws_setup.json exists, and read it to a dict
+        # Read IAM policies from aws_setup.json to a dict
         aws_setup_file = config.AWS_SETUP_DIR + "aws_setup.json"
-        if not os.path.isfile(aws_setup_file):
-            quit_out.err(["aws_setup.json not found from config."])
         with open(aws_setup_file) as f:
             self.iam_policy_setup = json.loads(f.read())["IAM"]["Policies"]
 
@@ -88,7 +86,7 @@ class IAMPolicySetup(update_template.BaseClass):
         for policy in policy_names["ToCreate"]:
             print("Local IAM policy " + policy + " to be created on AWS.")
         for policy in policy_names["ToUpdate"]:
-            print("Local IAM policy " + policy + " to be updated on AWS.")
+            print("IAM policy " + policy + " on AWS to be updated.")
         for policy in policy_names["UpToDate"]:
             print("IAM policy " + policy + " on AWS is up to date.")
 
@@ -107,7 +105,7 @@ class IAMPolicySetup(update_template.BaseClass):
         aws_policies = self.get_iam_policies()
         for local_policy in policy_names["ToUpdate"]:
             self.update_policy(local_policy, aws_policies)
-            print("IAM policy " + local_policy + " updated on AWS.")
+            print("IAM policy " + local_policy + " on AWS updated.")
 
         for local_policy in policy_names["UpToDate"]:
             print("IAM policy " + local_policy + " on AWS already up to date.")

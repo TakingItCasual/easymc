@@ -40,7 +40,7 @@ def main():
     elif source_aws_setup["Version"] > config_aws_setup["Version"]:
         cp_aws_setup_to_config(aws_setup_src_dir)
 
-    if not "Namespace" in config_aws_setup:
+    if "Namespace" not in config_aws_setup:
         quit_out.err(["Namespace key missing from aws_setup.json in config."])
     config.NAMESPACE = config_aws_setup["Namespace"]
 

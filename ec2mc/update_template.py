@@ -9,7 +9,7 @@ class BaseClass(ABC):
 
     @abstractmethod
     def verify_component(self):
-        """check if AWS already has component, and if it is up-to-date"""
+        """check if AWS already has component, and if it is up to date"""
         pass
 
 
