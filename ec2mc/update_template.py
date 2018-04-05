@@ -38,7 +38,7 @@ class BaseClass(ABC):
         check_actions, upload_actions, and delete_actions are expected to 
         be defined by the child class's blocked_actions.
         """
-        needed_actions = self.check_actions
+        needed_actions = self.describe_actions
         if kwargs["action"] == "upload":
             needed_actions.extend(self.upload_actions)
         elif kwargs["action"] == "delete":

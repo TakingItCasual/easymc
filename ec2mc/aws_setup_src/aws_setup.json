@@ -28,5 +28,13 @@
                 ]
             }
         ]
+    },
+    "VPC": {
+        "SecurityGroups": [
+            {
+                "Name": "ec2mc_default",
+                "Description": "Allow all traffic through ports 22 and 25565."
+            }
+        ]
     }
 }

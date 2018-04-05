@@ -37,7 +37,7 @@ class IAMPolicySetup(update_template.BaseClass):
         # Names of local policies described in aws_setup.json
         policy_names = {
             "AWSExtra": [],
-            "ToCreate": self.verify_iam_setup(self.policy_dir),
+            "ToCreate": [policy["Name"] for policy in self.iam_policy_setup],
             "ToUpdate": [],
             "UpToDate": []
         }
@@ -201,42 +201,6 @@ class IAMPolicySetup(update_template.BaseClass):
             )
 
 
-    def verify_iam_setup(self, policy_dir):
-        """verify that aws_setup.json reflects the contents of iam_policies
-
-        Args:
-            policy_dir (str): Directory containing local policies
-
-        Returns:
-            list: Policy names described in aws_setup.json
-        """
-
-        # Policies described in aws_setup/aws_setup.json
-        setup_policy_list = [
-            policy["Name"] for policy in self.iam_policy_setup
-        ]
-        # Actual policy json files located in aws_setup/iam_policies/
-        iam_policy_files = [
-            json_file[:-5] for json_file in os.listdir(policy_dir)
-                if json_file.endswith(".json")
-        ]
-
-        # Quit if aws_setup.json describes policies not found in iam_policies
-        if not set(setup_policy_list).issubset(set(iam_policy_files)):
-            quit_out.err([
-                "Following policy(s) not found from iam_policies dir:",
-                *[(policy + ".json") for policy in setup_policy_list
-                    if policy not in iam_policy_files]
-            ])
-
-        # Warn if iam_policies has policies not described by aws_setup.json
-        if not set(iam_policy_files).issubset(set(setup_policy_list)):
-            print("")
-            print("Warning: Unused policy(s) found from iam_policies dir.")
-
-        return setup_policy_list
-
-
     def get_iam_policies(self):
         """returns policy(s) on AWS under set namespace"""
         return self.iam_client.list_policies(
@@ -247,7 +211,7 @@ class IAMPolicySetup(update_template.BaseClass):
 
 
     def blocked_actions(self, kwargs):
-        self.check_actions = [
+        self.describe_actions = [
             "iam:ListPolicies",
             "iam:ListPolicyVersions",
             "iam:GetPolicyVersion"

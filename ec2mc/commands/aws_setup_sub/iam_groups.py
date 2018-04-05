@@ -184,7 +184,7 @@ class IAMGroupSetup(update_template.BaseClass):
 
 
     def blocked_actions(self, kwargs):
-        self.check_actions = [
+        self.describe_actions = [
             "iam:ListGroups",
             "iam:ListAttachedGroupPolicies"
         ]
