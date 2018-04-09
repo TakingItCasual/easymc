@@ -1,7 +1,22 @@
+import os.path
+import json
+
 def assert_empty(blocked_actions):
     """used with simulate_policy, which returns a list of denied AWS actions"""
     if blocked_actions:
         err(["Missing following IAM permission(s):"] + blocked_actions)
+
+
+def parse_json(file_path):
+    """verify that JSON file contains valid JSON"""
+    if not os.path.isfile(file_path):
+        err([file_path + " not found."])
+    with open(file_path) as f:
+        file_contents = f.read()
+    try:
+        return json.loads(file_contents)
+    except ValueError:
+        err([file_path + " is not a valid JSON file."])
 
 
 def err(quit_message_list):

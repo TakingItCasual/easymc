@@ -1,4 +1,4 @@
-import os
+import os.path
 import json
 from deepdiff import DeepDiff
 
@@ -27,8 +27,8 @@ class IAMPolicySetup(update_template.BaseClass):
         self.path_prefix = "/" + config.NAMESPACE + "/"
 
         # Read IAM policies from aws_setup.json to list
-        with open(config.AWS_SETUP_JSON) as f:
-            self.iam_policy_setup = json.loads(f.read())["IAM"]["Policies"]
+        self.iam_policy_setup = quit_out.parse_json(
+            config.AWS_SETUP_JSON)["IAM"]["Policies"]
 
         # IAM Policies already present on AWS
         aws_policies = self.get_iam_policies()
@@ -57,9 +57,8 @@ class IAMPolicySetup(update_template.BaseClass):
 
         # Check if policy(s) on AWS need to be updated
         for local_policy in policy_names["ToUpdate"][:]:
-
-            with open(self.policy_dir + local_policy + ".json") as f:
-                local_policy_document = json.loads(f.read())
+            local_policy_document = quit_out.parse_json(
+                self.policy_dir + local_policy + ".json")
 
             aws_policy_desc = next(aws_policy for aws_policy in aws_policies
                 if aws_policy["PolicyName"] == local_policy)
@@ -125,8 +124,8 @@ class IAMPolicySetup(update_template.BaseClass):
 
     def create_policy(self, policy_name):
         """create a new IAM policy on AWS"""
-        with open(self.policy_dir + policy_name + ".json") as f:
-            local_policy_document = json.loads(f.read())
+        local_policy_document = quit_out.parse_json(
+            self.policy_dir + policy_name + ".json")
         policy_description = next(
             policy["Description"] for policy in self.iam_policy_setup
                 if policy["Name"] == policy_name)
@@ -141,8 +140,8 @@ class IAMPolicySetup(update_template.BaseClass):
 
     def update_policy(self, policy_name, aws_policies):
         """update IAM policy that already exists on AWS"""
-        with open(self.policy_dir + policy_name + ".json") as f:
-            local_policy_document = json.loads(f.read())
+        local_policy_document = quit_out.parse_json(
+            self.policy_dir + policy_name + ".json")
 
         aws_policy_desc = next(aws_policy for aws_policy in aws_policies
             if aws_policy["PolicyName"] == policy_name)

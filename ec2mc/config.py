@@ -3,7 +3,7 @@
 Variables initialized as None are set *once* elsewhere.
 """
 
-import os
+import os.path
 
 # Location where ec2mc finds/creates its configuration file(s).
 CONFIG_DIR = os.path.join(os.path.expanduser("~"), ".ec2mc", "")

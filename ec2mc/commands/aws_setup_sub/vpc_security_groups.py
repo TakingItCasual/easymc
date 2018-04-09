@@ -1,8 +1,8 @@
-#from ec2mc import config
+from ec2mc import config
 from ec2mc import update_template
 from ec2mc.stuff import aws
 from ec2mc.stuff import simulate_policy
-#from ec2mc.stuff import quit_out
+from ec2mc.stuff import quit_out
 
 class VPCSecurityGroupSetup(update_template.BaseClass):
 
@@ -20,9 +20,8 @@ class VPCSecurityGroupSetup(update_template.BaseClass):
         self.ec2_client = aws.ec2_client()
 
         # Read VCP security groups from aws_setup.json to list
-        with open(config.AWS_SETUP_JSON) as f:
-            self.vpc_security_group_setup = json.loads(
-                f.read())["EC2"]["SecurityGroups"]
+        self.vpc_security_group_setup = quit_out.parse_json(
+            config.AWS_SETUP_JSON)["EC2"]["SecurityGroups"]
 
         # VCP security groups already present on AWS
         aws_groups = self.ec2_client().describe_security_groups()

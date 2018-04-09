@@ -1,13 +1,11 @@
-import os
-import json
-
 from ec2mc import config
 from ec2mc import update_template
 from ec2mc.stuff import aws
 from ec2mc.stuff import simulate_policy
+from ec2mc.stuff import quit_out
 
-import pprint
-pp = pprint.PrettyPrinter(indent=2)
+#import pprint
+#pp = pprint.PrettyPrinter(indent=2)
 
 class IAMGroupSetup(update_template.BaseClass):
 
@@ -26,8 +24,8 @@ class IAMGroupSetup(update_template.BaseClass):
         self.path_prefix = "/" + config.NAMESPACE + "/"
 
         # Read IAM groups from aws_setup.json to list
-        with open(config.AWS_SETUP_JSON) as f:
-            self.iam_group_setup = json.loads(f.read())["IAM"]["Groups"]
+        self.iam_group_setup = quit_out.parse_json(
+            config.AWS_SETUP_JSON)["IAM"]["Groups"]
 
         # IAM Groups already present on AWS
         aws_groups = self.get_iam_groups()

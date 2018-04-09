@@ -1,8 +1,8 @@
-#from ec2mc import config
+from ec2mc import config
 from ec2mc import update_template
 from ec2mc.stuff import aws
 from ec2mc.stuff import simulate_policy
-#from ec2mc.stuff import quit_out
+from ec2mc.stuff import quit_out
 
 class VPCSetup(update_template.BaseClass):
 
@@ -18,8 +18,8 @@ class VPCSetup(update_template.BaseClass):
         all_regions = aws.get_regions()
 
         # Read VCPs from aws_setup.json to list
-        with open(config.AWS_SETUP_JSON) as f:
-            self.vpc_setup = json.loads(f.read())["EC2"]["VPCs"]
+        self.vpc_setup = quit_out.parse_json(
+            config.AWS_SETUP_JSON)["EC2"]["VPCs"]
 
         for region in all_regions():
             ec2_client = aws.ec2_client([region])

@@ -1,4 +1,4 @@
-import os
+import os.path
 import json
 import nbtlib
 
@@ -39,14 +39,14 @@ def verify_titles_json():
     basic_struct = {"instances": []}
 
     if os.path.isfile(titles_file):
-        with open(titles_file, "r", encoding="utf-8") as server_titles_json:
+        with open(titles_file, encoding="utf-8") as f:
             try:
-                server_titles = json.load(server_titles_json)
+                server_titles = json.loads(f.read())
                 if "instances" in server_titles:
                     if isinstance(server_titles["instances"], list):
                         return server_titles
-            except json.decoder.JSONDecodeError:
-                pass
+            except ValueError:
+                pass # The invalid JSON will just be overwritten
 
     save_titles_json(basic_struct)
     return basic_struct

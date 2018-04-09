@@ -1,5 +1,4 @@
 import os
-import json
 import shutil
 import filecmp
 
@@ -49,8 +48,7 @@ def get_config_dict():
     config_aws_setup_file = config.AWS_SETUP_JSON
     if not os.path.isfile(config_aws_setup_file):
         quit_out.err(["aws_setup.json not found from config."])
-    with open(config_aws_setup_file) as f:
-        return json.loads(f.read())
+    return quit_out.parse_json(config_aws_setup_file)
 
 
 def cp_aws_setup_to_config(src_aws_setup_dir):
