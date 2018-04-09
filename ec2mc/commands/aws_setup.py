@@ -10,6 +10,7 @@ class AWSSetup(command_template.BaseClass):
         self.aws_components = [
             iam_policies.IAMPolicySetup(),
             iam_groups.IAMGroupSetup()#,
+            #vpcs.VPCSetup(),
             #vpc_security_groups.VPCSecurityGroupSetup()
         ]
 

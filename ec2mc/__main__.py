@@ -54,7 +54,6 @@ def main(args=None):
 
         # Load and verify the config (primarily for the IAM credentials)
         verify_config.main()
-
         # Verify that aws_setup is in the config
         verify_aws_setup.main()
 

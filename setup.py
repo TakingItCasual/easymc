@@ -3,7 +3,6 @@ from setuptools import setup, find_packages
 from codecs import open
 from os import path
 
-# aws_setup.json version: 0
 version = "0.1.3"
 
 here = path.abspath(path.dirname(__file__))

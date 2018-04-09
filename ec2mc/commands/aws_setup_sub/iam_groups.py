@@ -25,12 +25,11 @@ class IAMGroupSetup(update_template.BaseClass):
         self.iam_client = aws.iam_client()
         self.path_prefix = "/" + config.NAMESPACE + "/"
 
-        # Read IAM groups from aws_setup.json to a dict
-        aws_setup_file = config.AWS_SETUP_DIR + "aws_setup.json"
-        with open(aws_setup_file) as f:
+        # Read IAM groups from aws_setup.json to list
+        with open(config.AWS_SETUP_JSON) as f:
             self.iam_group_setup = json.loads(f.read())["IAM"]["Groups"]
 
-        # Groups already present on AWS
+        # IAM Groups already present on AWS
         aws_groups = self.get_iam_groups()
 
         # Names of local policies described in aws_setup.json

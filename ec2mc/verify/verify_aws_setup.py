@@ -1,57 +1,62 @@
 import os
 import json
 import shutil
+import filecmp
 
 from ec2mc import config
 from ec2mc.stuff import quit_out
 
 def main():
-    """create aws_setup if nonexistant, update if needed and is unprotected"""
-    
-    aws_setup_src_dir = os.path.abspath(
+    """create aws_setup if nonexistant, update if needed and is unmodified"""
+
+    # Directory path for the distribution's packaged aws_setup
+    src_aws_setup_dir = os.path.abspath(
         os.path.join(__file__, os.pardir, os.pardir, "aws_setup_src"))
 
     # If config.AWS_SETUP_DIR nonexistant, copy from ec2mc.aws_setup_src
     if not os.path.isdir(config.AWS_SETUP_DIR):
-        cp_aws_setup_to_config(aws_setup_src_dir)
+        cp_aws_setup_to_config(src_aws_setup_dir)
+    config_aws_setup = get_config_dict()
 
-    config_aws_setup_file = config.AWS_SETUP_DIR + "aws_setup.json"
-    if not os.path.isfile(config_aws_setup_file):
-        quit_out.err(["aws_setup.json not found from config."])
-    with open(config_aws_setup_file) as f:
-        config_aws_setup = json.loads(f.read())
+    # The config's aws_setup.json must have the "Modified" and "Namespace" keys
+    if not all(key in config_aws_setup for key in ("Modified", "Namespace")):
+        cp_aws_setup_to_config(src_aws_setup_dir)
+        config_aws_setup = get_config_dict()
 
-    source_aws_setup_file = os.path.join(aws_setup_src_dir, "aws_setup.json")
-    if not os.path.isfile(source_aws_setup_file):
-        quit_out.err(["aws_setup.json not found from distribution."])
-    with open(source_aws_setup_file) as f:
-        source_aws_setup = json.loads(f.read())
+    # If "Modified" key is True, prevent overwriting config's aws_setup
+    if not config_aws_setup["Modified"]:
+        diff = filecmp.cmpfiles(src_aws_setup_dir, config.AWS_SETUP_DIR, [
+            "aws_setup.json",
+            "iam_policies/admin_permissions.json",
+            "iam_policies/basic_permissions.json",
+            "vpc_security_groups/ec2mc_sg.json"
+        ], shallow=False)
+        if diff[2]:
+            quit_out.err(["Source and config setup comparison failed."])
+        # If source and config aws_setup.json differ, overwrite aws_setup
+        elif diff[1]:
+            cp_aws_setup_to_config(src_aws_setup_dir)
+            config_aws_setup = get_config_dict()
 
-    # The aws_setup in the config must have the "Protect" and "Version" keys
-    if not all(key in config_aws_setup for key in ("Protect", "Version")):
-        cp_aws_setup_to_config(aws_setup_src_dir)
-    # If the "Protect" key has been set to True, prevent overwriting aws_setup
-    elif config_aws_setup["Protect"]:
-        pass
-    # Version can be set to 0 during development for constant refreshing
-    elif source_aws_setup["Version"] == 0:
-        cp_aws_setup_to_config(aws_setup_src_dir)
-    # Update if aws_setup_src has larger version number
-    elif source_aws_setup["Version"] > config_aws_setup["Version"]:
-        cp_aws_setup_to_config(aws_setup_src_dir)
-
-    if "Namespace" not in config_aws_setup:
-        quit_out.err(["Namespace key missing from aws_setup.json in config."])
     config.NAMESPACE = config_aws_setup["Namespace"]
 
     verify_iam_policies(config_aws_setup)
     verify_vpc_security_groups(config_aws_setup)
 
 
-def cp_aws_setup_to_config(aws_setup_src_dir):
+def get_config_dict():
+    """returns aws_setup.json from config in user's home dir as dict"""
+    config_aws_setup_file = config.AWS_SETUP_JSON
+    if not os.path.isfile(config_aws_setup_file):
+        quit_out.err(["aws_setup.json not found from config."])
+    with open(config_aws_setup_file) as f:
+        return json.loads(f.read())
+
+
+def cp_aws_setup_to_config(src_aws_setup_dir):
     if os.path.isdir(config.AWS_SETUP_DIR):
         shutil.rmtree(config.AWS_SETUP_DIR)
-    shutil.copytree(aws_setup_src_dir, config.AWS_SETUP_DIR)
+    shutil.copytree(src_aws_setup_dir, config.AWS_SETUP_DIR)
 
 
 def verify_iam_policies(config_aws_setup):
@@ -87,7 +92,7 @@ def verify_vpc_security_groups(config_aws_setup):
 
     # SGs described in aws_setup/aws_setup.json
     setup_sg_list = [
-        sg["Name"] for sg in config_aws_setup["VPC"]["SecurityGroups"]
+        sg["Name"] for sg in config_aws_setup["EC2"]["SecurityGroups"]
     ]
     # Actual SG json files located in aws_setup/vpc_security_groups/
     vpc_sg_files = [

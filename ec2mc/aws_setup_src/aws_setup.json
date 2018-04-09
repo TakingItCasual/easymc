@@ -1,6 +1,5 @@
 {
-    "Version": 0,
-    "Protect": false,
+    "Modified": false,
     "Namespace": "ec2mc",
     "IAM": {
         "Policies": [
@@ -29,11 +28,18 @@
             }
         ]
     },
-    "VPC": {
+    "EC2": {
+        "VPCs": [
+            {
+                "Name": "ec2mc_vpc",
+                "Description": "VCP for Minecraft server instances."
+            }
+        ],
         "SecurityGroups": [
             {
-                "Name": "ec2mc_default",
-                "Description": "Allow all traffic through ports 22 and 25565."
+                "Name": "ec2mc_sg",
+                "Description": "Allow all traffic through ports 22 and 25565.",
+                "VPC": "ec2mc_vpc"
             }
         ]
     }

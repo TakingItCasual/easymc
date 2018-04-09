@@ -1,16 +1,36 @@
 #from ec2mc import config
 from ec2mc import update_template
-#from ec2mc.stuff import aws
+from ec2mc.stuff import aws
 from ec2mc.stuff import simulate_policy
 #from ec2mc.stuff import quit_out
 
 class VPCSecurityGroupSetup(update_template.BaseClass):
 
     def verify_component(self):
+        """determine which SGs need creating/updating, and which don't
 
+        Returns:
+            group_names (dict):
+                "AWSExtra": Extra SGs on AWS found with same prefix
+                "ToCreate": SGs that do not (yet) exist on AWS
+                "ToUpdate": SGs on AWS, but not the same as local versions
+                "UpToDate": SGs on AWS and up to date with local versions
+        """
+
+        self.ec2_client = aws.ec2_client()
+
+        # Read VCP security groups from aws_setup.json to list
+        with open(config.AWS_SETUP_JSON) as f:
+            self.vpc_security_group_setup = json.loads(
+                f.read())["EC2"]["SecurityGroups"]
+
+        # VCP security groups already present on AWS
+        aws_groups = self.ec2_client().describe_security_groups()
+
+        # Names of local security groups described in aws_setup.json
         sg_names = {
             "AWSExtra": [],
-            "ToCreate": [],
+            "ToCreate": [sg["Name"] for sg in self.vpc_security_group_setup],
             "ToUpdate": [],
             "UpToDate": []
         }
@@ -18,8 +38,15 @@ class VPCSecurityGroupSetup(update_template.BaseClass):
         return sg_names
 
 
-    def notify_state(self, component_info):
-        pass
+    def notify_state(self, security_group_names):
+        for sg in security_group_names["AWSExtra"]:
+            print("VPC SG " + sg + " found on AWS but not locally.")
+        for sg in security_group_names["ToCreate"]:
+            print("Local VPC SG " + sg + " to be created on AWS.")
+        for sg in security_group_names["ToUpdate"]:
+            print("VPC SG " + sg + " on AWS to be updated.")
+        for sg in security_group_names["UpToDate"]:
+            print("VPC SG " + sg + " on AWS is up to date.")
 
 
     def upload_component(self, component_info):
@@ -32,6 +59,7 @@ class VPCSecurityGroupSetup(update_template.BaseClass):
 
     def blocked_actions(self, kwargs):
         self.describe_actions = [
+            "ec2:DescribeSecurityGroups",
             "ec2:DescribeVpcs"
         ]
         self.upload_actions = [

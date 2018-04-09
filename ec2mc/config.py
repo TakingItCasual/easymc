@@ -9,6 +9,8 @@ import os
 CONFIG_DIR = os.path.join(os.path.expanduser("~"), ".ec2mc", "")
 # Location where ec2mc finds the AWS setup files to upload to AWS.
 AWS_SETUP_DIR = os.path.join((CONFIG_DIR + "aws_setup"), "")
+# JSON file containing AWS setup instructions.
+AWS_SETUP_JSON = AWS_SETUP_DIR + "aws_setup.json"
 
 # IAM user data needed for AWS programmatic access.
 # Set in ec2mc.verify.verify_config:verify_user

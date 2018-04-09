@@ -26,12 +26,11 @@ class IAMPolicySetup(update_template.BaseClass):
             (config.AWS_SETUP_DIR + "iam_policies"), "")
         self.path_prefix = "/" + config.NAMESPACE + "/"
 
-        # Read IAM policies from aws_setup.json to a dict
-        aws_setup_file = config.AWS_SETUP_DIR + "aws_setup.json"
-        with open(aws_setup_file) as f:
+        # Read IAM policies from aws_setup.json to list
+        with open(config.AWS_SETUP_JSON) as f:
             self.iam_policy_setup = json.loads(f.read())["IAM"]["Policies"]
 
-        # Policies already present on AWS
+        # IAM Policies already present on AWS
         aws_policies = self.get_iam_policies()
 
         # Names of local policies described in aws_setup.json
