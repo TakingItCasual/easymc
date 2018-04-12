@@ -1,7 +1,6 @@
 from ec2mc import config
 from ec2mc import update_template
 from ec2mc.stuff import aws
-from ec2mc.stuff import simulate_policy
 from ec2mc.stuff import quit_out
 
 class VPCSetup(update_template.BaseClass):
@@ -51,10 +50,10 @@ class VPCSetup(update_template.BaseClass):
         pass
 
 
-    def blocked_actions(self, kwargs):
+    def blocked_actions(self, sub_command):
         self.describe_actions = [
             "ec2:DescribeVpcs"
         ]
         self.upload_actions = []
         self.delete_actions = []
-        return simulate_policy.blocked(actions=super().blocked_actions(kwargs))
+        return super().blocked_actions(sub_command)

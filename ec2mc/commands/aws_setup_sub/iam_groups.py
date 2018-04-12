@@ -1,7 +1,6 @@
 from ec2mc import config
 from ec2mc import update_template
 from ec2mc.stuff import aws
-from ec2mc.stuff import simulate_policy
 from ec2mc.stuff import quit_out
 
 #import pprint
@@ -180,7 +179,7 @@ class IAMGroupSetup(update_template.BaseClass):
             PathPrefix=self.path_prefix)["Groups"]
 
 
-    def blocked_actions(self, kwargs):
+    def blocked_actions(self, sub_command):
         self.describe_actions = [
             "iam:ListGroups",
             "iam:ListAttachedGroupPolicies"
@@ -198,4 +197,4 @@ class IAMGroupSetup(update_template.BaseClass):
             "iam:DetachGroupPolicy",
             "iam:DeleteGroup"
         ]
-        return simulate_policy.blocked(actions=super().blocked_actions(kwargs))
+        return super().blocked_actions(sub_command)

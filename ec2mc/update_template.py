@@ -1,5 +1,7 @@
 from abc import ABC, abstractmethod
 
+from ec2mc.stuff import simulate_policy
+
 class BaseClass(ABC):
     """template for aws_setup component verifying/uploading/deleting"""
 
@@ -32,15 +34,23 @@ class BaseClass(ABC):
 
 
     @abstractmethod
-    def blocked_actions(self, kwargs):
-        """check that IAM user is allowed to perform actions on component
+    def blocked_actions(self, sub_command):
+        """check whether IAM user is allowed to perform actions on component
 
-        check_actions, upload_actions, and delete_actions are expected to 
-        be defined by the child class's blocked_actions.
+        describe_actions, upload_actions, and delete_actions are expected to 
+        be defined by the child class's blocked_actions. Must be overloaded 
+        in the following fashion:
+
+        def blocked_actions(self, sub_command):
+            self.describe_actions = []
+            self.upload_actions = []
+            self.delete_actions = []
+            return super().blocked_actions(sub_command)
         """
+
         needed_actions = self.describe_actions
-        if kwargs["action"] == "upload":
+        if sub_command == "upload":
             needed_actions.extend(self.upload_actions)
-        elif kwargs["action"] == "delete":
+        elif sub_command == "delete":
             needed_actions.extend(self.delete_actions)
-        return needed_actions
+        return simulate_policy.blocked(actions=needed_actions)

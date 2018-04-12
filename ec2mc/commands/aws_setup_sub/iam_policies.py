@@ -5,7 +5,6 @@ from deepdiff import DeepDiff
 from ec2mc import config
 from ec2mc import update_template
 from ec2mc.stuff import aws
-from ec2mc.stuff import simulate_policy
 from ec2mc.stuff import quit_out
 
 class IAMPolicySetup(update_template.BaseClass):
@@ -208,7 +207,7 @@ class IAMPolicySetup(update_template.BaseClass):
         )["Policies"]
 
 
-    def blocked_actions(self, kwargs):
+    def blocked_actions(self, sub_command):
         self.describe_actions = [
             "iam:ListPolicies",
             "iam:ListPolicyVersions",
@@ -227,4 +226,4 @@ class IAMPolicySetup(update_template.BaseClass):
             "iam:DeletePolicyVersion",
             "iam:DeletePolicy"
         ]
-        return simulate_policy.blocked(actions=super().blocked_actions(kwargs))
+        return super().blocked_actions(sub_command)

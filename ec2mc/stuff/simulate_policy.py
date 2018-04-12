@@ -1,6 +1,5 @@
 from ec2mc import config
 from ec2mc.stuff import aws
-from ec2mc.stuff import quit_out
 
 def blocked(*, actions=None, resources=None, context=None):
     """test whether IAM user is able to use specified AWS action(s)
@@ -17,13 +16,15 @@ def blocked(*, actions=None, resources=None, context=None):
     """
 
     if actions is None:
-        quit_out.err(["Actions list required for simulate_policy"])
+        raise ValueError("Actions list required for simulate_policy")
+    elif not actions:
+        return []
 
     if resources is None:
         resources = ["*"]
 
     if context is not None:
-        # Convert dict to what ContextEntries expects.
+        # Convert context dict to what ContextEntries expects.
         context_temp = []
         for context_key in context:
             context_temp.append({
@@ -47,4 +48,4 @@ def blocked(*, actions=None, resources=None, context=None):
         if result["EvalDecision"] != "allowed":
             blocked_actions.append(result["EvalActionName"])
 
-    return blocked_actions
+    return sorted(blocked_actions)

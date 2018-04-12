@@ -8,7 +8,7 @@ def assert_empty(blocked_actions):
 
 
 def parse_json(file_path):
-    """verify that JSON file contains valid JSON"""
+    """verify that JSON file exists and contains valid JSON"""
     if not os.path.isfile(file_path):
         err([file_path + " not found."])
     with open(file_path) as f:

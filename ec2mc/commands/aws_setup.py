@@ -51,7 +51,7 @@ class AWSSetup(command_template.BaseClass):
     def blocked_actions(self, kwargs):
         denied_actions = []
         for component in self.aws_components:
-            denied_actions.extend(component.blocked_actions(kwargs))
+            denied_actions.extend(component.blocked_actions(kwargs["action"]))
         return denied_actions
 
 
