@@ -1,4 +1,5 @@
 from ec2mc import command_template
+from ec2mc.verify import verify_instances
 from ec2mc.stuff import simulate_policy
 
 class GetBackup(command_template.BaseClass):
@@ -9,7 +10,7 @@ class GetBackup(command_template.BaseClass):
         Args:
             kwargs (dict): See verify.verify_instances:argparse_args
         """
-        
+
         pass
 
 

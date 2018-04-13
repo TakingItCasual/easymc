@@ -15,7 +15,7 @@ def update_dns(aws_region, instance_id, new_dns):
     """
 
     titles_dict = verify_titles_json()
-    title = [x["title"] for x in titles_dict["instances"] 
+    title = [x["title"] for x in titles_dict["instances"]
         if x["region"] == aws_region and x["id"] == instance_id]
 
     # It should only be possible for the length of title to be 0 or 1.
@@ -55,7 +55,7 @@ def verify_titles_json():
 def save_titles_json(input_dict):
     titles_file = config.CONFIG_DIR + "server_titles.json"
     with open(titles_file, "w", encoding="utf-8") as out_file:
-        json.dump(input_dict, out_file, ensure_ascii=False)    
+        json.dump(input_dict, out_file, ensure_ascii=False)
 
 
 def update_servers_dat(servers_dat_path, server_title, new_dns):

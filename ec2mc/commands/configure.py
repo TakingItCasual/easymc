@@ -38,10 +38,9 @@ class Configure(command_template.BaseClass):
         servers_dat = input(
             "MC client's servers.dat file path [" + servers_dat_str + "]: ")
 
-        while (servers_dat and (
-            not os.path.isfile(servers_dat) or 
-            not servers_dat.endswith("servers.dat")
-            )):
+        while servers_dat and not (
+                os.path.isfile(servers_dat) and
+                servers_dat.endswith("servers.dat")):
             servers_dat = input(
                 servers_dat + " is not valid. Try again or leave empty: ")
 
@@ -58,7 +57,7 @@ class Configure(command_template.BaseClass):
 
 
     def add_documentation(self, argparse_obj):
-        cmd_parser = super().add_documentation(argparse_obj)
+        super().add_documentation(argparse_obj)
 
 
     def blocked_actions(self, _):

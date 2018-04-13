@@ -5,11 +5,14 @@ import argparse
 
 sys.dont_write_bytecode = True
 
-from ec2mc.commands import *
 from ec2mc.verify import verify_config
 from ec2mc.verify import verify_aws_setup
-from ec2mc.stuff import send_bash
 from ec2mc.stuff import quit_out
+
+from ec2mc.commands import configure
+from ec2mc.commands import aws_setup
+from ec2mc.commands import server
+from ec2mc.commands import create_server
 
 #import pprint
 #pp = pprint.PrettyPrinter(indent=2)
@@ -29,7 +32,7 @@ def main(args=None):
             args = sys.argv[1:]
 
         try:
-            assert(sys.version_info >= (3,6))
+            assert sys.version_info >= (3, 6)
         except AssertionError:
             quit_out.err(["Python version 3.6 or greater required."])
 

@@ -16,7 +16,7 @@ def blocked(*, actions=None, resources=None, context=None):
     """
 
     if actions is None:
-        raise ValueError("Actions list required for simulate_policy")
+        raise ValueError("The actions argument is required.")
     elif not actions:
         return []
 

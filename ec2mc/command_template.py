@@ -31,7 +31,7 @@ class BaseClass(ABC):
     def module_name(self, name):
         """convert child class' __name__ to its module name
 
-        Must be overridden in the child class like this:
+        Must be overloaded by child classes like so:
             def module_name(self):
                 return super().module_name(__name__)
         """

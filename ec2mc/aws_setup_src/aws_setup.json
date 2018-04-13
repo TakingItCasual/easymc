@@ -29,17 +29,12 @@
         ]
     },
     "EC2": {
-        "VPCs": [
-            {
-                "Name": "ec2mc_vpc",
-                "Description": "VCP for Minecraft server instances."
-            }
-        ],
+        "VPCs": [],
         "SecurityGroups": [
             {
                 "Name": "ec2mc_sg",
                 "Description": "Allow all traffic through ports 22 and 25565.",
-                "VPC": "ec2mc_vpc"
+                "VPC": null
             }
         ]
     }

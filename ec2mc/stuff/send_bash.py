@@ -1,4 +1,6 @@
 from ec2mc.stuff import aws
+from ec2mc.stuff import simulate_policy
+from ec2mc.stuff import quit_out
 
 def main(instance_id, cmd_list):
     """send bash command(s) to an instance via SSM"""

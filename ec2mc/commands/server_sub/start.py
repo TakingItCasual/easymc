@@ -6,7 +6,6 @@ from ec2mc.verify import verify_instances
 from ec2mc.stuff import aws
 from ec2mc.stuff import manage_titles
 from ec2mc.stuff import simulate_policy
-from ec2mc.stuff import quit_out
 
 class StartServer(command_template.BaseClass):
 
@@ -59,7 +58,7 @@ class StartServer(command_template.BaseClass):
             print("  Instance DNS: " + instance_dns)
             if config.SERVERS_DAT is not None:
                 manage_titles.update_dns(
-                    instance["region"], instance["id"], instance_dns)   
+                    instance["region"], instance["id"], instance_dns)
 
 
     def add_documentation(self, argparse_obj):

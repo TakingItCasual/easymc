@@ -1,10 +1,9 @@
-from ec2mc import config
 from ec2mc import command_template
-from ec2mc.commands.server_sub import *
-from ec2mc.verify import verify_instances
-from ec2mc.stuff import aws
-from ec2mc.stuff import manage_titles
-from ec2mc.stuff import simulate_policy
+
+from ec2mc.commands.server_sub import check
+from ec2mc.commands.server_sub import start
+from ec2mc.commands.server_sub import ssh
+from ec2mc.commands.server_sub import stop
 
 class Server(command_template.BaseClass):
 
@@ -28,7 +27,7 @@ class Server(command_template.BaseClass):
         """
 
         chosen_cmd = next(cmd for cmd in self.sub_commands
-            if cmd.module_name() == kwargs["action"])        
+            if cmd.module_name() == kwargs["action"])
         chosen_cmd.main(kwargs)
 
 

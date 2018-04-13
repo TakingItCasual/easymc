@@ -37,15 +37,12 @@ class BaseClass(ABC):
     def blocked_actions(self, sub_command):
         """check whether IAM user is allowed to perform actions on component
 
-        describe_actions, upload_actions, and delete_actions are expected to 
-        be defined by the child class's blocked_actions. Must be overloaded 
-        in the following fashion:
-
-        def blocked_actions(self, sub_command):
-            self.describe_actions = []
-            self.upload_actions = []
-            self.delete_actions = []
-            return super().blocked_actions(sub_command)
+        Must be overloaded by child classes in the following fashion:
+            def blocked_actions(self, sub_command):
+                self.describe_actions = []
+                self.upload_actions = []
+                self.delete_actions = []
+                return super().blocked_actions(sub_command)
         """
 
         needed_actions = self.describe_actions

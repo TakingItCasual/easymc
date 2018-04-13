@@ -27,11 +27,11 @@ class CreateServer(command_template.BaseClass):
         aws.get_regions([kwargs["region"]])[0]
         self.ec2_client = aws.ec2_client(kwargs["region"])
 
-        self.init_run_instance_args(kwargs)
+        creation_kwargs = self.parse_run_instance_args(kwargs)
 
         # Instance creation dry run to verify IAM permissions
         try:
-            self.create_instance(dry_run=True)
+            self.create_instance(creation_kwargs, dry_run=True)
         except ClientError as e:
             if e.response["Error"]["Code"] == "UnauthorizedOperation":
                 print("")
@@ -50,17 +50,28 @@ class CreateServer(command_template.BaseClass):
             quit_out.q(["Please append the -c argument to confirm."])
 
 
-    def init_run_instance_args(self, kwargs):
-        """initialize the necessary arguments for run_instances
+    def parse_run_instance_args(self, kwargs):
+        """parse arguments for run_instances from argparse kwargs
 
         Args:
             kwargs (dict):
-                "region": EC2 region to create instance in
-                "name": Tag value for instance tag key "Name"
-                "type": EC2 instance type to create
-                "size": EC2 instance size in GiB
-                "tags": list: Additional instance tag key-value pair(s)
+                "region": EC2 region to create instance in.
+                "name": Tag value for instance tag key "Name".
+                "type": EC2 instance type to create.
+                "size": EC2 instance size in GiB.
+                "tags" (list): Additional instance tag key-value pair(s).
+
+        Returns:
+            creation_kwargs (dict):
+                "availability_zone": EC2 region's availability zone to create 
+                    instance in.
+                "instance_type": EC2 instance type to create.
+                "storage_size": EC2 instance size in GiB.
+                "tags" (list): Additional instance tag key-value pair(s).
+                "sg_id": ID of VPC security group to attach to instance.
         """
+
+        creation_kwargs = {}
 
         # TODO: Figure out some way to filter VPCs
         vpc_stuff = self.ec2_client.describe_network_interfaces(
@@ -69,30 +80,32 @@ class CreateServer(command_template.BaseClass):
             quit_out.err(["Default VPC not found."])
         elif len(vpc_stuff) > 1:
             quit_out.err(["Multiple VPCs found."])
-        self.availability_zone = vpc_stuff[0]["AvailabilityZone"]
+        creation_kwargs["availability_zone"] = vpc_stuff[0]["AvailabilityZone"]
 
-        self.instance_type = kwargs["type"]
+        creation_kwargs["instance_type"] = kwargs["type"]
+        creation_kwargs["storage_size"] = kwargs["size"]
 
-        self.storage_amount = kwargs["size"]
-
-        self.tags = [{
+        creation_kwargs["tags"] = [{
             "Key": "Name",
             "Value": kwargs["name"]
         }]
         if kwargs["tags"]:
             for tag_key, tag_value in kwargs["tags"]:
-                self.tags.append({
+                creation_kwargs["tags"].append({
                     "Key": tag_key,
                     "Value": tag_value
                 })
 
-        self.security_group_id = aws.security_group_id(kwargs["region"])
+        creation_kwargs["sg_id"] = aws.security_group_id(kwargs["region"])
+
+        return creation_kwargs
 
 
-    def create_instance(self, *, dry_run=True):
-        """create an EC2 instance
+    def create_instance(self, kwargs, *, dry_run=True):
+        """create EC2 instance
 
         Args:
+            kwargs (dict): See what parse_run_instance_args returns
             dry_run (bool): If true, only test if IAM user is allowed to
         """
 
@@ -100,19 +113,19 @@ class CreateServer(command_template.BaseClass):
             DryRun=dry_run,
             MinCount=1, MaxCount=1,
             ImageId=config.EC2_OS_AMI,
-            Placement={"AvailabilityZone": self.availability_zone},
-            InstanceType=self.instance_type,
+            Placement={"AvailabilityZone": kwargs["availability_zone"]},
+            InstanceType=kwargs["instance_type"],
             BlockDeviceMappings=[{
                 "DeviceName": config.DEVICE_NAME,
                 "Ebs": {
-                    "VolumeSize": self.storage_amount
+                    "VolumeSize": kwargs["storage_size"]
                 }
             }],
             TagSpecifications=[{
                 "ResourceType": "instance",
-                "Tags": self.tags
+                "Tags": kwargs["tags"]
             }],
-            SecurityGroupIds=[self.security_group_id]
+            SecurityGroupIds=[kwargs["sg_id"]]
         )
 
 

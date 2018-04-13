@@ -1,7 +1,7 @@
-from ec2mc import config
 from ec2mc import command_template
-from ec2mc.commands.aws_setup_sub import *
-from ec2mc.stuff import quit_out
+
+from ec2mc.commands.aws_setup_sub import iam_policies
+from ec2mc.commands.aws_setup_sub import iam_groups
 
 class AWSSetup(command_template.BaseClass):
 
@@ -17,8 +17,6 @@ class AWSSetup(command_template.BaseClass):
 
     def main(self, kwargs):
         """(re)upload AWS setup files located in ~/.ec2mc/ to AWS
-
-        Copies ec2mc.aws_setup_src to config.AWS_SETUP_DIR
 
         Args:
             kwargs (dict):

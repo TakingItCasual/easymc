@@ -56,7 +56,7 @@ def main(kwargs):
     all_instances = probe_regions(regions, tag_filter)
 
     for region in regions:
-        instances = [instance for instance in all_instances 
+        instances = [instance for instance in all_instances
             if instance["region"] == region]
         if not instances:
             continue

@@ -79,7 +79,7 @@ def security_group_id(region, sg_name=config.SECURITY_GROUP_FILTER):
 
     Args:
         region (str): EC2 region to search security group from
-        sg_name (str): 
+        sg_name (str): Name of security group
 
     Returns:
         str: ID for security group used for Minecraft instances
@@ -93,7 +93,7 @@ def security_group_id(region, sg_name=config.SECURITY_GROUP_FILTER):
 
     security_groups = ec2_client(
         region).describe_security_groups()["SecurityGroups"]
-    security_group = [SG for SG in security_groups 
+    security_group = [SG for SG in security_groups
         if sg_name.lower() in SG["GroupName"].lower()]
 
     if not security_group:
