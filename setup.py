@@ -1,24 +1,23 @@
+import os.path
+#from codecs import open # For Python2.x
+
 from setuptools import setup, find_packages
 
-from codecs import open
-from os import path
+VERSION = "0.1.3"
 
-version = "0.1.3"
-
-here = path.abspath(path.dirname(__file__))
-
-with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
-    long_description = f.read()
+HERE = os.path.abspath(os.path.dirname(__file__))
+with open(os.path.join(HERE, 'README.rst'), encoding='utf-8') as f:
+    LONG_DESC = f.read()
 
 setup(
     name='ec2mc',
-    version=version,
+    version=VERSION,
     description='AWS EC2 instance manager for Minecraft servers',
-    long_description=long_description,
+    long_description=LONG_DESC,
     author='TakingItCasual',
     author_email='takingitcasual+gh@gmail.com',
     url='https://github.com/TakingItCasual/ec2mc',
-    download_url='https://github.com/TakingItCasual/ec2mc/archive/v'+version+'.tar.gz',
+    download_url='https://github.com/TakingItCasual/ec2mc/archive/v'+VERSION+'.tar.gz',
     platforms=['any'],
     license='MIT',
     classifiers=[
@@ -29,7 +28,7 @@ setup(
         'Programming Language :: Python :: 3.6'
     ],
     keywords='mc minecraft server aws ec2 iam',
-    packages=find_packages(exclude=['docs','tests']),
+    packages=find_packages(exclude=['docs', 'tests']),
     python_requires='~=3.6',
     entry_points={
         'console_scripts': [

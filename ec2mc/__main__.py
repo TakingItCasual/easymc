@@ -1,4 +1,9 @@
 #!/usr/bin/env python3
+"""AWS EC2 instance manager for Minecraft servers. Requires IAM user 
+credentials associated with an AWS account. To use a specific command, 
+the necessary permissions must be attached to the IAM group that the 
+IAM user is a part of.
+"""
 
 import sys
 import argparse
@@ -24,16 +29,14 @@ def main(args=None):
     well, ec2mc will interact with the specified AWS EC2 instance(s).
 
     Args:
-        args (list): The command line arguments passed to ec2mc
+        args (list): Args for argparse. If None use CLI's args.
     """
 
     try:
         if args is None:
             args = sys.argv[1:]
 
-        try:
-            assert sys.version_info >= (3, 6)
-        except AssertionError:
+        if sys.version_info < (3, 6):
             quit_out.err(["Python version 3.6 or greater required."])
 
         # Available commands from the ec2mc.commands directory
@@ -85,11 +88,7 @@ def argv_to_kwargs(args, commands):
                 command's add_documentation method to see its args.
     """
 
-    parser = argparse.ArgumentParser(
-        description=("AWS EC2 instance manager for Minecraft servers. "
-            "Requires IAM credentials associated with an AWS account. "
-            "Depending on your access level some commands may not be "
-            "available due to missing IAM permissions."))
+    parser = argparse.ArgumentParser(description=__doc__)
     cmd_args = parser.add_subparsers(metavar="{command}"+" "*6, dest="command")
     cmd_args.required = True
 

@@ -2,6 +2,8 @@ from ec2mc import command_template
 
 from ec2mc.commands.aws_setup_sub import iam_policies
 from ec2mc.commands.aws_setup_sub import iam_groups
+from ec2mc.commands.aws_setup_sub import vpcs
+from ec2mc.commands.aws_setup_sub import vpc_security_groups
 
 class AWSSetup(command_template.BaseClass):
 
@@ -9,8 +11,8 @@ class AWSSetup(command_template.BaseClass):
         super().__init__()
         self.aws_components = [
             iam_policies.IAMPolicySetup(),
-            iam_groups.IAMGroupSetup()#,
-            #vpcs.VPCSetup(),
+            iam_groups.IAMGroupSetup(),
+            vpcs.VPCSetup()#,
             #vpc_security_groups.VPCSecurityGroupSetup()
         ]
 
@@ -51,7 +53,3 @@ class AWSSetup(command_template.BaseClass):
         for component in self.aws_components:
             denied_actions.extend(component.blocked_actions(kwargs["action"]))
         return denied_actions
-
-
-    def module_name(self):
-        return super().module_name(__name__)

@@ -56,7 +56,3 @@ class StopServer(command_template.BaseClass):
             "ec2:DescribeInstances",
             "ec2:StopInstances"
         ])
-
-
-    def module_name(self):
-        return super().module_name(__name__)

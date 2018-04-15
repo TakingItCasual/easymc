@@ -173,10 +173,10 @@ def argparse_args(cmd_parser):
             "regions will be probed."))
     cmd_parser.add_argument(
         "-t", dest="tagfilter", nargs="+", action="append", metavar="",
-        help=("Instance tag filter. First value is the tag key, with "
+        help=("Instance tag value filter. First value is the tag key, with "
             "proceeding value(s) as the tag value(s). If not set, no filter "
-            "will be applied. If tag value(s) not specified, only the tag "
-            "key will be filtered for."))
+            "will be applied. If only 1 value given, the tag key itself will "
+            "be filtered for instead."))
     cmd_parser.add_argument(
         "-n", dest="namefilter", nargs="+", metavar="",
         help="Instance tag value filter for the tag key \"Name\".")

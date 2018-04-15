@@ -162,7 +162,3 @@ class CreateServer(command_template.BaseClass):
             "ec2:InstanceType": ["t2.nano"]
         }))
         return denied_actions
-
-
-    def module_name(self):
-        return super().module_name(__name__)

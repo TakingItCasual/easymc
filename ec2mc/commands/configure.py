@@ -56,13 +56,5 @@ class Configure(command_template.BaseClass):
         os.chmod(config_file, config.CONFIG_PERMS)
 
 
-    def add_documentation(self, argparse_obj):
-        super().add_documentation(argparse_obj)
-
-
     def blocked_actions(self, _):
         return []
-
-
-    def module_name(self):
-        return super().module_name(__name__)

@@ -60,7 +60,7 @@ def verify_user(config_dict):
         config_dict (configparser): IAM user credentials needed.
     """
 
-    if not (config_dict.has_option("default", "iam_id") and 
+    if not (config_dict.has_option("default", "iam_id") and
             config_dict.has_option("default", "iam_secret")):
         quit_out.err([
             "Configuration incomplete. Set with \"ec2mc configure\"."])

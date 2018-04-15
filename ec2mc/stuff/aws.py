@@ -1,4 +1,4 @@
-"""various functions that directly interact with AWS"""
+"""miscellaneous functions that directly interact with AWS"""
 
 import json
 import boto3
@@ -64,7 +64,7 @@ def decode_error_msg(error_response):
     ]))
 
     encoded_error_str = error_response["Error"]["Message"].split(
-        encoded_message_indication,1)[1]
+        encoded_message_indication, 1)[1]
 
     return json.loads(boto3.client("sts",
         aws_access_key_id=config.IAM_ID,

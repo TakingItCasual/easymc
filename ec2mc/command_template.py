@@ -3,22 +3,16 @@ from abc import ABC, abstractmethod
 class BaseClass(ABC):
     """template for all available ec2mc commands to follow"""
 
-    def __init__(self):
-        super().__init__()
-
-
     @abstractmethod
     def main(self, kwargs):
         """overridden by child class to describe command's functionality"""
         pass
 
 
-    @abstractmethod
     def add_documentation(self, argparse_obj):
         """initialize child's argparse entry and help"""
-        module_name = self.module_name()
-        return argparse_obj.add_parser(module_name,
-            help=self.main.__doc__.splitlines()[0])
+        return argparse_obj.add_parser(
+            self.module_name(), help=self.docstring())
 
 
     @abstractmethod
@@ -27,15 +21,9 @@ class BaseClass(ABC):
         pass
 
 
-    @abstractmethod
-    def module_name(self, name):
-        """convert child class' __name__ to its module name
-
-        Must be overloaded by child classes like so:
-            def module_name(self):
-                return super().module_name(__name__)
-        """
-        return name.rsplit('.', 1)[-1]
+    def module_name(self):
+        """convert child class' __module__ to its module name"""
+        return self.__class__.__module__.rsplit('.', 1)[-1]
 
 
     def docstring(self):

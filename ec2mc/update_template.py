@@ -5,10 +5,6 @@ from ec2mc.stuff import simulate_policy
 class BaseClass(ABC):
     """template for aws_setup component verifying/uploading/deleting"""
 
-    def __init__(self):
-        super().__init__()
-
-
     @abstractmethod
     def verify_component(self):
         """check if AWS already has component, and if it is up to date"""
@@ -37,7 +33,7 @@ class BaseClass(ABC):
     def blocked_actions(self, sub_command):
         """check whether IAM user is allowed to perform actions on component
 
-        Must be overloaded by child classes in the following fashion:
+        Must be overridden by child classes in the following fashion:
             def blocked_actions(self, sub_command):
                 self.describe_actions = []
                 self.upload_actions = []

@@ -46,7 +46,3 @@ class CheckServer(command_template.BaseClass):
         return simulate_policy.blocked(actions=[
             "ec2:DescribeInstances"
         ])
-
-
-    def module_name(self):
-        return super().module_name(__name__)

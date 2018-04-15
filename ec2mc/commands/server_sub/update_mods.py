@@ -24,7 +24,3 @@ class UpdateMods(command_template.BaseClass):
             "ec2:DescribeInstances",
             "ssm:SendCommand"
         ])
-
-
-    def module_name(self):
-        return super().module_name(__name__)

@@ -43,7 +43,3 @@ class Server(command_template.BaseClass):
         chosen_cmd = next(cmd for cmd in self.sub_commands
             if cmd.module_name() == kwargs["action"])
         return chosen_cmd.blocked_actions()
-
-
-    def module_name(self):
-        return super().module_name(__name__)
