@@ -4,9 +4,6 @@ from ec2mc.stuff import aws
 from ec2mc.stuff.threader import Threader
 from ec2mc.stuff import quit_out
 
-import pprint
-pp = pprint.PrettyPrinter(indent=2)
-
 class VPCSetup(update_template.BaseClass):
 
     def verify_component(self):
@@ -34,7 +31,7 @@ class VPCSetup(update_template.BaseClass):
 
         # Names of local VPCs described in aws_setup.json, with region info
         vpc_names = {vpc["Name"]: {
-            "ToCreate": all_regions,
+            "ToCreate": [],
             "Existing": []
         } for vpc in self.vpc_setup}
 
@@ -46,17 +43,14 @@ class VPCSetup(update_template.BaseClass):
         aws_vpcs = threader.get_results(return_dict=True)
 
         # Check all regions for VPC(s) described by aws_setup.json
-        for region in all_regions:
-            ec2_client = aws.ec2_client(region)
-
-            # Check if VPC(s) already in region
+        for region in all_regions[:]: # Note to self, remove() is weird
             for local_vpc in vpc_names.keys():
                 for aws_vpc in aws_vpcs[region]:
-                    if next((tag for tag in aws_vpc["Tags"]
-                            if tag["Key"] == "Name" and
-                            tag["Value"] == local_vpc), None) is not None:
-                        vpc_names[local_vpc]["ToCreate"].remove(region)
+                    if {"Key": "Name", "Value": local_vpc} in aws_vpc["Tags"]:
                         vpc_names[local_vpc]["Existing"].append(region)
+                        break
+                else:
+                    vpc_names[local_vpc]["ToCreate"].append(region)
 
         return vpc_names
 
@@ -76,25 +70,35 @@ class VPCSetup(update_template.BaseClass):
             vpc_names (dict): See what verify_component returns
         """
 
-        all_regions = aws.get_regions()
-        for region in all_regions:
-            for vpc, vpc_regions in vpc_names.items():
-                if region in vpc_regions["ToCreate"]:
-                    self.create_vpc(region, vpc)
+        for region in aws.get_regions():
+
+            threader = Threader()
+            for vpc_name, region_info in vpc_names.items():
+                if region in region_info["ToCreate"]:
+                    threader.add_thread(self.create_vpc, (region, vpc_name))
+            threader.get_results()
+
+        for vpc_name, region_info in vpc_names.items():
+            create_count = len(region_info["ToCreate"])
+            if create_count > 0:
+                print("Local VPC " + vpc_name + " created in " +
+                    str(create_count) + " region(s).")
+            else:
+                print("Local VPC " + vpc_name + " already present in all "
+                    "regions. ")
 
 
     def delete_component(self, _):
-        """delete VPC(s) with Namespace tag of config.NAMESPACE from AWS
+        """delete VPC(s) with Namespace tag of config.NAMESPACE from AWS"""
 
-        Args:
-            vpc_names (dict): See what verify_component returns
-        """
+        threader = Threader()
+        for region in aws.get_regions():
+            threader.add_thread(self.delete_region_vpcs, (region,))
+        threader.get_results()
 
-        all_regions = aws.get_regions()
-        for region in all_regions:
-            ec2_client = aws.ec2_client(region)
-            for vpc in self.get_region_vpcs(region)[1]:
-                ec2_client.delete_vpc(VpcId=vpc["VpcId"])
+        # TODO: Give proper message for what's been deleted
+        print("All VPCs under the " + config.NAMESPACE + " namespace deleted "
+            "from AWS.")
 
 
     def get_region_vpcs(self, region, vpc_names=None):
@@ -105,7 +109,7 @@ class VPCSetup(update_template.BaseClass):
             vpc_names (list): Name(s) of VPC(s) to filter for.
 
         Returns:
-            (tuple): 
+            (tuple):
                 AWS region (str)
                 VPC(s) matching filter(s) (list of dicts)
         """
@@ -125,12 +129,13 @@ class VPCSetup(update_template.BaseClass):
 
 
     def create_vpc(self, region, vpc_name):
-        """create vpc in region, and create Namespace and Name tags for it"""
+        """create VPC in region and attach tags (threaded)"""
         ec2_client = aws.ec2_client(region)
         vpc_id = ec2_client.create_vpc(
             CidrBlock="172.31.0.0/16",
             AmazonProvidedIpv6CidrBlock=False
         )["Vpc"]["VpcId"]
+        # TODO: Attach tags on VPC creation when (if) it becomes supported
         ec2_client.get_waiter("vpc_exists").wait(VpcIds=[vpc_id])
         ec2_client.create_tags(
             Resources=[vpc_id],
@@ -145,6 +150,12 @@ class VPCSetup(update_template.BaseClass):
                 }
             ]
         )
+
+
+    def delete_region_vpcs(self, region):
+        """create VPC(s) from region with right Namespace tag (threaded)"""
+        for vpc in self.get_region_vpcs(region)[1]:
+            aws.ec2_client(region).delete_vpc(VpcId=vpc["VpcId"])
 
 
     def blocked_actions(self, sub_command):
