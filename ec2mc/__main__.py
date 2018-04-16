@@ -29,7 +29,7 @@ def main(args=None):
     well, ec2mc will interact with the specified AWS EC2 instance(s).
 
     Args:
-        args (list): Args for argparse. If None use CLI's args.
+        args (list): Args for argparse. If None, use CLI's args.
     """
 
     try:

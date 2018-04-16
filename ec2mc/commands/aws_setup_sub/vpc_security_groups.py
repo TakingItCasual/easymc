@@ -18,11 +18,11 @@ class VPCSecurityGroupSetup(update_template.BaseClass):
 
         self.ec2_client = aws.ec2_client()
 
-        # Read VCP security groups from aws_setup.json to list
+        # Read VPC security groups from aws_setup.json to list
         self.vpc_security_group_setup = quit_out.parse_json(
             config.AWS_SETUP_JSON)["EC2"]["SecurityGroups"]
 
-        # VCP security groups already present on AWS
+        # VPC security groups already present on AWS
         aws_groups = self.ec2_client().describe_security_groups()
 
         # Names of local security groups described in aws_setup.json

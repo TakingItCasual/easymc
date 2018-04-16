@@ -118,7 +118,7 @@ def probe_regions(regions, tag_filter=None):
 
 
 def probe_region(region, tag_filter=None):
-    """probe a single EC2 region for instances (usually threaded)
+    """probe a single EC2 region for instances (threaded)
 
     Args:
         region (str): EC2 region to probe

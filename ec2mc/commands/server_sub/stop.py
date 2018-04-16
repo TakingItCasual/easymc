@@ -34,7 +34,7 @@ class StopServer(command_template.BaseClass):
             ec2_client.stop_instances(InstanceIds=[instance["id"]])
 
             try:
-                ec2_client.get_waiter('instance_stopped').wait(
+                ec2_client.get_waiter("instance_stopped").wait(
                     InstanceIds=[instance["id"]], WaiterConfig={
                         "Delay": 5, "MaxAttempts": 12
                     })

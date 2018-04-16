@@ -38,7 +38,7 @@ class StartServer(command_template.BaseClass):
                 ec2_client.start_instances(InstanceIds=[instance["id"]])
 
                 try:
-                    ec2_client.get_waiter('instance_running').wait(
+                    ec2_client.get_waiter("instance_running").wait(
                         InstanceIds=[instance["id"]], WaiterConfig={
                             "Delay": 5, "MaxAttempts": 12
                         })
