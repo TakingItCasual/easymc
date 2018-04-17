@@ -6,7 +6,7 @@ class BaseClass(ABC):
     """template for aws_setup component verifying/uploading/deleting"""
 
     @abstractmethod
-    def verify_component(self):
+    def verify_component(self, config_aws_setup):
         """check if AWS already has component, and if it is up to date"""
         pass
 

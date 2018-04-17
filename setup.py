@@ -37,6 +37,7 @@ setup(
     },
     package_data={
         'ec2mc': [
+            'verify/aws_setup_schema.json',
             'aws_setup_src/*.json',
             'aws_setup_src/iam_policies/*.json',
             'aws_setup_src/vpc_security_groups/*.json'
@@ -45,6 +46,7 @@ setup(
     install_requires=[
         'boto3',
         'nbtlib',
-        'deepdiff'
+        'deepdiff',
+        'jsonschema'
     ]
 )

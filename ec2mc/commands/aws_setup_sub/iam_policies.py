@@ -9,8 +9,11 @@ from ec2mc.stuff import quit_out
 
 class IAMPolicySetup(update_template.BaseClass):
 
-    def verify_component(self):
+    def verify_component(self, config_aws_setup):
         """determine which policies need creating/updating, and which don't
+
+        Args:
+            config_aws_setup (dict): Config dict loaded from user's config.
 
         Returns:
             policy_names (dict):
@@ -26,8 +29,7 @@ class IAMPolicySetup(update_template.BaseClass):
         self.path_prefix = "/" + config.NAMESPACE + "/"
 
         # Read IAM policies from aws_setup.json to list
-        self.iam_policy_setup = quit_out.parse_json(
-            config.AWS_SETUP_JSON)["IAM"]["Policies"]
+        self.iam_policy_setup = config_aws_setup["IAM"]["Policies"]
 
         # IAM Policies already present on AWS
         aws_policies = self.get_iam_policies()

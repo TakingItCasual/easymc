@@ -1,4 +1,6 @@
+from ec2mc import config
 from ec2mc import command_template
+from ec2mc.stuff import quit_out
 
 from ec2mc.commands.aws_setup_sub import iam_policies
 from ec2mc.commands.aws_setup_sub import iam_groups
@@ -25,8 +27,11 @@ class AWSSetup(command_template.BaseClass):
                 "action": Whether to check, upload, or delete setup on AWS
         """
 
+        # AWS setup JSON config dictionary
+        config_aws_setup = quit_out.parse_json(config.AWS_SETUP_JSON)
+
         for component in self.aws_components:
-            component_info = component.verify_component()
+            component_info = component.verify_component(config_aws_setup)
             print("")
             if kwargs["action"] == "check":
                 component.notify_state(component_info)

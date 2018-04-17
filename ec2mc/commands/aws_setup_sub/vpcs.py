@@ -2,12 +2,14 @@ from ec2mc import config
 from ec2mc import update_template
 from ec2mc.stuff import aws
 from ec2mc.stuff.threader import Threader
-from ec2mc.stuff import quit_out
 
 class VPCSetup(update_template.BaseClass):
 
-    def verify_component(self):
+    def verify_component(self, config_aws_setup):
         """determine region(s) where VPC(s) need to be created
+
+        Args:
+            config_aws_setup (dict): Config dict loaded from user's config.
 
         Returns:
             vpc_names (dict): 
@@ -19,21 +21,16 @@ class VPCSetup(update_template.BaseClass):
         all_regions = aws.get_regions()
 
         # Read VPC(s) from aws_setup.json to list
-        self.vpc_setup = quit_out.parse_json(
-            config.AWS_SETUP_JSON)["EC2"]["VPCs"]
-        if next((vpc for vpc in self.vpc_setup
+        vpc_setup = config_aws_setup["EC2"]["VPCs"]
+        if next((vpc for vpc in vpc_setup
                 if vpc["Name"] == config.NAMESPACE), None) is None:
-            self.vpc_setup.append({
-                "Name": config.NAMESPACE,
-                "Description": (
-                    "Default VPC for the " + config.NAMESPACE + " namespace.")
-            })
+            vpc_setup.append({"Name": config.NAMESPACE})
 
         # Names of local VPCs described in aws_setup.json, with region info
         vpc_names = {vpc["Name"]: {
             "ToCreate": [],
             "Existing": []
-        } for vpc in self.vpc_setup}
+        } for vpc in vpc_setup}
 
         threader = Threader()
         for region in all_regions:
@@ -71,7 +68,6 @@ class VPCSetup(update_template.BaseClass):
         """
 
         for region in aws.get_regions():
-
             threader = Threader()
             for vpc_name, region_info in vpc_names.items():
                 if region in region_info["ToCreate"]:

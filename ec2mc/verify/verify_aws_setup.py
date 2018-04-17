@@ -1,6 +1,8 @@
 import os
 import shutil
 import filecmp
+from jsonschema import validate
+from jsonschema.exceptions import ValidationError
 
 from ec2mc import config
 from ec2mc.stuff import quit_out
@@ -37,6 +39,8 @@ def main():
             cp_aws_setup_to_config(src_aws_setup_dir)
             config_aws_setup = get_config_dict()
 
+    verify_json_schema(config_aws_setup)
+
     config.NAMESPACE = config_aws_setup["Namespace"]
 
     verify_iam_policies(config_aws_setup)
@@ -55,6 +59,16 @@ def cp_aws_setup_to_config(src_aws_setup_dir):
     if os.path.isdir(config.AWS_SETUP_DIR):
         shutil.rmtree(config.AWS_SETUP_DIR)
     shutil.copytree(src_aws_setup_dir, config.AWS_SETUP_DIR)
+
+
+def verify_json_schema(config_aws_setup):
+    schema = quit_out.parse_json(os.path.abspath(
+        os.path.join(__file__, os.pardir, "aws_setup_schema.json")))
+    try:
+        validate(config_aws_setup, schema)
+    except ValidationError as e:
+        quit_out.err(["aws_setup.json is incorrectly formatted:"] +
+            [str(e).split("\n\n")[0]])
 
 
 def verify_iam_policies(config_aws_setup):

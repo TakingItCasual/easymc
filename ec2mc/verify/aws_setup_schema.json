@@ -1,0 +1,77 @@
+{
+    "type": "object",
+    "properties": {
+        "Modified": {"type" : "boolean"},
+        "Namespace": {"type" : "string"},
+        "IAM": {
+            "type": "object",
+            "properties": {
+                "Policies": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "Name": {"type" : "string"},
+                            "Description": {"type" : "string"}
+                        },
+                        "required": ["Name", "Description"]
+                    },
+                    "minItems": 1,
+                    "uniqueItems": true
+                },
+                "Groups": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "Name": {"type" : "string"},
+                            "Policies": {
+                                "type" : "array",
+                                "items": {"type": "string"},
+                                "minItems": 1,
+                                "uniqueItems": true
+                            }
+                        },
+                        "required": ["Name", "Policies"]
+                    },
+                    "minItems": 1,
+                    "uniqueItems": true
+                }
+            },
+            "required": ["Policies", "Groups"]
+        },
+        "EC2": {
+            "type": "object",
+            "properties": {
+                "VPCs": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "Name": {"type": "string"}
+                        },
+                        "required": ["Name"]
+                    },
+                    "minItems": 0,
+                    "uniqueItems": true
+                },
+                "SecurityGroups": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "Name": {"type": "string"},
+                            "Description": {"type": "string"},
+                            "VPC": {"type": ["string", "null"]}
+                        },
+                        "required": ["Name", "Description", "VPC"]
+                    },
+                    "minItems": 1,
+                    "uniqueItems": true
+                }
+            },
+            "required": ["VPCs", "SecurityGroups"]
+        }
+    },
+    "required": ["Modified", "Namespace", "IAM", "EC2"]
+}

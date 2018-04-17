@@ -5,8 +5,11 @@ from ec2mc.stuff import quit_out
 
 class VPCSecurityGroupSetup(update_template.BaseClass):
 
-    def verify_component(self):
+    def verify_component(self, config_aws_setup):
         """determine which SGs need creating/updating, and which don't
+
+        Args:
+            config_aws_setup (dict): Config dict loaded from user's config.
 
         Returns:
             group_names (dict):
@@ -19,8 +22,7 @@ class VPCSecurityGroupSetup(update_template.BaseClass):
         self.ec2_client = aws.ec2_client()
 
         # Read VPC security groups from aws_setup.json to list
-        self.vpc_security_group_setup = quit_out.parse_json(
-            config.AWS_SETUP_JSON)["EC2"]["SecurityGroups"]
+        vpc_security_group_setup = config_aws_setup["EC2"]["SecurityGroups"]
 
         # VPC security groups already present on AWS
         aws_groups = self.ec2_client().describe_security_groups()
@@ -28,7 +30,7 @@ class VPCSecurityGroupSetup(update_template.BaseClass):
         # Names of local security groups described in aws_setup.json
         sg_names = {
             "AWSExtra": [],
-            "ToCreate": [sg["Name"] for sg in self.vpc_security_group_setup],
+            "ToCreate": [sg["Name"] for sg in vpc_security_group_setup],
             "ToUpdate": [],
             "UpToDate": []
         }

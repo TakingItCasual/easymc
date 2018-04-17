@@ -1,15 +1,17 @@
 from ec2mc import config
 from ec2mc import update_template
 from ec2mc.stuff import aws
-from ec2mc.stuff import quit_out
 
 #import pprint
 #pp = pprint.PrettyPrinter(indent=2)
 
 class IAMGroupSetup(update_template.BaseClass):
 
-    def verify_component(self):
+    def verify_component(self, config_aws_setup):
         """determine which groups need creating/updating, and which don't
+
+        Args:
+            config_aws_setup (dict): Config dict loaded from user's config.
 
         Returns:
             group_names (dict):
@@ -23,8 +25,7 @@ class IAMGroupSetup(update_template.BaseClass):
         self.path_prefix = "/" + config.NAMESPACE + "/"
 
         # Read IAM groups from aws_setup.json to list
-        self.iam_group_setup = quit_out.parse_json(
-            config.AWS_SETUP_JSON)["IAM"]["Groups"]
+        self.iam_group_setup = config_aws_setup["IAM"]["Groups"]
 
         # IAM Groups already present on AWS
         aws_groups = self.get_iam_groups()
