@@ -28,7 +28,7 @@ class IAMPolicySetup(update_template.BaseClass):
             (config.AWS_SETUP_DIR + "iam_policies"), "")
         self.path_prefix = "/" + config.NAMESPACE + "/"
 
-        # Read IAM policies from aws_setup.json to list
+        # Local IAM policy(s) list
         self.iam_policy_setup = config_aws_setup["IAM"]["Policies"]
 
         # IAM Policies already present on AWS

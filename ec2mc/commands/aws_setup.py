@@ -5,7 +5,7 @@ from ec2mc.stuff import quit_out
 from ec2mc.commands.aws_setup_sub import iam_policies
 from ec2mc.commands.aws_setup_sub import iam_groups
 from ec2mc.commands.aws_setup_sub import vpcs
-from ec2mc.commands.aws_setup_sub import vpc_security_groups
+from ec2mc.commands.aws_setup_sub import vpc_sec_grps
 
 class AWSSetup(command_template.BaseClass):
 
@@ -14,8 +14,8 @@ class AWSSetup(command_template.BaseClass):
         self.aws_components = [
             iam_policies.IAMPolicySetup(),
             iam_groups.IAMGroupSetup(),
-            vpcs.VPCSetup()#,
-            #vpc_security_groups.VPCSecurityGroupSetup()
+            vpcs.VPCSetup(),
+            vpc_sec_grps.VPCSecurityGroupSetup()
         ]
 
 

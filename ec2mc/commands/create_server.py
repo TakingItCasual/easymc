@@ -24,7 +24,7 @@ class CreateServer(command_template.BaseClass):
         """
 
         # Verify the specified region
-        aws.get_regions([kwargs["region"]])[0]
+        aws.get_regions([kwargs["region"]])
         self.ec2_client = aws.ec2_client(kwargs["region"])
 
         creation_kwargs = self.parse_run_instance_args(kwargs)
@@ -113,7 +113,7 @@ class CreateServer(command_template.BaseClass):
             DryRun=dry_run,
             MinCount=1, MaxCount=1,
             ImageId=config.EC2_OS_AMI,
-            Placement={"AvailabilityZone": kwargs["availability_zone"]},
+            #Placement={"AvailabilityZone": kwargs["availability_zone"]},
             InstanceType=kwargs["instance_type"],
             BlockDeviceMappings=[{
                 "DeviceName": config.DEVICE_NAME,
@@ -144,15 +144,21 @@ class CreateServer(command_template.BaseClass):
             help="confirm instance creation")
         cmd_parser.add_argument(
             "-t", dest="tags", nargs=2, action="append", metavar="",
-            help="instance tag key and tag value to attach to instance")
+            help="instance tag key-value pair to attach to instance")
+        cmd_parser.add_argument(
+            "--sg", dest="sec_grp", metavar="",
+            help="VPC security group to place instance under")
 
 
     def blocked_actions(self, _):
         denied_actions = []
         denied_actions.extend(simulate_policy.blocked(actions=[
+            "ec2:DescribeRegions",
             "ec2:DescribeInstances",
             "ec2:DescribeNetworkInterfaces",
-            "ec2:CreateTags"
+            "ec2:DescribeSecurityGroups",
+            "ec2:CreateTags",
+            "sts:DecodeAuthorizationMessage"
         ]))
         denied_actions.extend(simulate_policy.blocked(actions=[
             "ec2:RunInstances"

@@ -1,10 +1,11 @@
 from ec2mc.stuff import aws
-from ec2mc.stuff import simulate_policy
 from ec2mc.stuff.threader import Threader
 from ec2mc.stuff import quit_out
 
 def main(kwargs):
     """wrapper for probe_regions() which prints found instances to the CLI
+
+    Requires ec2:DescribeRegions and ec2:DescribeInstances permissions.
 
     Quits out if no instances are found. This functionality is relied upon.
 
@@ -20,10 +21,6 @@ def main(kwargs):
             "id": ID of instance.
             "tags": dict: Instance tag key-value pairs.
     """
-
-    quit_out.assert_empty(simulate_policy.blocked(actions=[
-        "ec2:DescribeInstances"
-    ]))
 
     region_filter = kwargs["regions"]
     regions = aws.get_regions(region_filter)

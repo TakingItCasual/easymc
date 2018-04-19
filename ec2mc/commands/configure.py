@@ -6,7 +6,7 @@ from ec2mc import command_template
 
 class Configure(command_template.BaseClass):
 
-    def main(self):
+    def main(self, _):
         """set IAM user's credentials and servers.dat file path"""
 
         if not os.path.isdir(config.CONFIG_DIR):

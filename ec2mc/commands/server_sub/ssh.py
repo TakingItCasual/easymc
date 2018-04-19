@@ -85,5 +85,6 @@ class SSHServer(command_template.BaseClass):
 
     def blocked_actions(self):
         return simulate_policy.blocked(actions=[
+            "ec2:DescribeRegions",
             "ec2:DescribeInstances"
         ])

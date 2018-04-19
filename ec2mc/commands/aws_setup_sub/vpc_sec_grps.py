@@ -12,20 +12,17 @@ class VPCSecurityGroupSetup(update_template.BaseClass):
             config_aws_setup (dict): Config dict loaded from user's config.
 
         Returns:
-            group_names (dict):
-                "AWSExtra": Extra SGs on AWS found with same prefix
+            sg_names (dict):
+                "AWSExtra": Extra SGs on AWS found in same namespace
                 "ToCreate": SGs that do not (yet) exist on AWS
                 "ToUpdate": SGs on AWS, but not the same as local versions
                 "UpToDate": SGs on AWS and up to date with local versions
         """
 
-        self.ec2_client = aws.ec2_client()
+        all_regions = aws.get_regions()
 
-        # Read VPC security groups from aws_setup.json to list
+        # Local VPC security groups(s) list
         vpc_security_group_setup = config_aws_setup["EC2"]["SecurityGroups"]
-
-        # VPC security groups already present on AWS
-        aws_groups = self.ec2_client().describe_security_groups()
 
         # Names of local security groups described in aws_setup.json
         sg_names = {
@@ -34,6 +31,17 @@ class VPCSecurityGroupSetup(update_template.BaseClass):
             "ToUpdate": [],
             "UpToDate": []
         }
+
+        #for region in all_regions[:]:
+        #    ec2_client = aws.ec2_client(region)
+
+            # VPC security groups already present on AWS
+        #    aws_groups = ec2_client.describe_security_groups(
+        #        Filters=[{
+        #            "Name": "tag:Namespace",
+        #            "Values": [config.NAMESPACE]
+        #        }]
+        #    )
 
         return sg_names
 
@@ -59,6 +67,7 @@ class VPCSecurityGroupSetup(update_template.BaseClass):
 
     def blocked_actions(self, sub_command):
         self.describe_actions = [
+            "ec2:DescribeRegions",
             "ec2:DescribeSecurityGroups",
             "ec2:DescribeVpcs"
         ]

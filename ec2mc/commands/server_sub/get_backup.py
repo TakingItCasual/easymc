@@ -19,8 +19,9 @@ class GetBackup(command_template.BaseClass):
         verify_instances.argparse_args(cmd_parser)
 
 
-    def blocked_actions(self, _):
+    def blocked_actions(self):
         return simulate_policy.blocked(actions=[
+            "ec2:DescribeRegions",
             "ec2:DescribeInstances",
             "ssm:SendCommand"
         ])

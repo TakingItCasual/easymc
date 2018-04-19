@@ -24,7 +24,7 @@ class IAMGroupSetup(update_template.BaseClass):
         self.iam_client = aws.iam_client()
         self.path_prefix = "/" + config.NAMESPACE + "/"
 
-        # Read IAM groups from aws_setup.json to list
+        # Local IAM group(s) list
         self.iam_group_setup = config_aws_setup["IAM"]["Groups"]
 
         # IAM Groups already present on AWS
