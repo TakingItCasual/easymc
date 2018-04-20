@@ -29,7 +29,7 @@ def blocked(*, actions=None, resources=None, context=None):
         for context_key in context:
             context_temp.append({
                 "ContextKeyName": context_key,
-                "ContextKeyValues": context[context_key],
+                "ContextKeyValues": [str(val) for val in context[context_key]],
                 "ContextKeyType": "string"
             })
         context = context_temp

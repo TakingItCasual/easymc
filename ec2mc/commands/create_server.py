@@ -23,6 +23,8 @@ class CreateServer(command_template.BaseClass):
                 "confirm" (bool): Whether to actually create the instance
         """
 
+        self.check_type_size_permissions(kwargs["type"], kwargs["size"])
+
         # Verify the specified region
         aws.get_regions([kwargs["region"]])
         self.ec2_client = aws.ec2_client(kwargs["region"])
@@ -33,15 +35,8 @@ class CreateServer(command_template.BaseClass):
         try:
             self.create_instance(creation_kwargs, dry_run=True)
         except ClientError as e:
-            if e.response["Error"]["Code"] == "UnauthorizedOperation":
-                print("")
-                pp.pprint(aws.decode_error_msg(e.response))
-                quit_out.err(["Missing action/resource/context IAM "
-                    "permission(s).",
-                    "  The above JSON is the decoded error message.",
-                    "  Maybe specified instance storage/type was too large?"])
-            elif not e.response["Error"]["Code"] == "DryRunOperation":
-                quit_out.q([e])
+            if not e.response["Error"]["Code"] == "DryRunOperation":
+                quit_out.err([e])
 
         # Actual instance creation occurs after this confirmation.
         if not kwargs["confirm"]:
@@ -129,6 +124,20 @@ class CreateServer(command_template.BaseClass):
         )
 
 
+    def check_type_size_permissions(self, instance_type, storage_size):
+        """verify user is allowed to create instance with type and size"""
+        if simulate_policy.blocked(actions=["ec2:RunInstances"],
+                resources=["arn:aws:ec2:*:*:instance/*"],
+                context={"ec2:InstanceType": [instance_type]}):
+            quit_out.err([
+                "Instance type " + instance_type + " not permitted."])
+        if simulate_policy.blocked(actions=["ec2:RunInstances"],
+                resources=["arn:aws:ec2:*:*:volume/*"],
+                context={"ec2:VolumeSize": [storage_size]}):
+            quit_out.err([
+                "Storage amount " + str(storage_size) + "GiB too large."])
+
+
     def add_documentation(self, argparse_obj):
         cmd_parser = super().add_documentation(argparse_obj)
         cmd_parser.add_argument(
@@ -157,8 +166,7 @@ class CreateServer(command_template.BaseClass):
             "ec2:DescribeInstances",
             "ec2:DescribeNetworkInterfaces",
             "ec2:DescribeSecurityGroups",
-            "ec2:CreateTags",
-            "sts:DecodeAuthorizationMessage"
+            "ec2:CreateTags"
         ]))
         denied_actions.extend(simulate_policy.blocked(actions=[
             "ec2:RunInstances"

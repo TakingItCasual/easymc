@@ -6,7 +6,7 @@ from ec2mc import command_template
 
 class Configure(command_template.BaseClass):
 
-    def main(self, _):
+    def main(self):
         """set IAM user's credentials and servers.dat file path"""
 
         if not os.path.isdir(config.CONFIG_DIR):
@@ -54,7 +54,3 @@ class Configure(command_template.BaseClass):
         with open(config_file, "w") as output:
             config_dict.write(output)
         os.chmod(config_file, config.CONFIG_PERMS)
-
-
-    def blocked_actions(self, _):
-        return []

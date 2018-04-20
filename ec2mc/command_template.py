@@ -15,10 +15,9 @@ class BaseClass(ABC):
             self.module_name(), help=self.docstring())
 
 
-    @abstractmethod
     def blocked_actions(self, kwargs):
         """return list of denied IAM actions needed for the child's main"""
-        pass
+        return []
 
 
     def module_name(self):
