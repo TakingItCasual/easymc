@@ -3,8 +3,8 @@ from ec2mc import update_template
 from ec2mc.stuff import aws
 from ec2mc.stuff.threader import Threader
 
-#import pprint
-#pp = pprint.PrettyPrinter(indent=2)
+import pprint
+pp = pprint.PrettyPrinter(indent=2)
 
 class VPCSetup(update_template.BaseClass):
 
@@ -15,8 +15,8 @@ class VPCSetup(update_template.BaseClass):
             config_aws_setup (dict): Config dict loaded from user's config.
 
         Returns:
-            vpc_names (dict): 
-                VPC name(s) (dict):
+            dict: VPC information. 
+                Name of VPC (dict):
                     "ToCreate" (list): AWS region(s) to create VPC in.
                     "Existing" (list): AWS region(s) already containing VPC.
         """
@@ -62,7 +62,7 @@ class VPCSetup(update_template.BaseClass):
         """create VPC(s) in AWS region(s) where not already present
 
         Args:
-            vpc_names (dict): See what verify_component returns
+            vpc_names (dict): See what verify_component returns.
         """
 
         threader = Threader()
@@ -88,21 +88,24 @@ class VPCSetup(update_template.BaseClass):
         threader = Threader()
         for region in aws.get_regions():
             threader.add_thread(self.delete_region_vpcs, (region,))
-        threader.get_results()
+        deleted_vpcs = list(filter(lambda x: x != 0, threader.get_results()))
 
-        # TODO: Give proper message for what's been deleted
-        print(config.NAMESPACE + " namespace VPCs deleted from AWS.")
+        if len(deleted_vpcs) > 0:
+            print("A total of " + str(sum(deleted_vpcs)) + " VPCs deleted " +
+                "from " + str(len(deleted_vpcs)) + " regions.")
+        else:
+            print("No VPCs to delete.")
 
 
     def get_region_vpcs(self, region, vpc_names=None):
-        """get VPC(s) from region with correct Namespace tag (threaded)
+        """get VPC(s) from region with config's Namespace tag (threaded)
 
         Args:
             region (str): AWS region to search from.
             vpc_names (list): Name(s) of VPC(s) to filter for.
 
         Returns:
-            (list): VPC(s) matching filter(s) (list of dicts)
+            list of dict(s): VPC(s) matching filter(s)
         """
 
         tag_filter = [{
@@ -130,9 +133,15 @@ class VPCSetup(update_template.BaseClass):
 
 
     def delete_region_vpcs(self, region):
-        """create VPC(s) from region with right Namespace tag (threaded)"""
-        for vpc in self.get_region_vpcs(region):
+        """create VPC(s) from region with correct Namespace tag (threaded)
+
+        Returns:
+            int: Number of VPCs deleted.
+        """
+        region_vpcs = self.get_region_vpcs(region)
+        for vpc in region_vpcs:
             aws.ec2_client(region).delete_vpc(VpcId=vpc["VpcId"])
+        return len(region_vpcs)
 
 
     def blocked_actions(self, sub_command):

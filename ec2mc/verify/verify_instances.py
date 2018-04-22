@@ -16,7 +16,7 @@ def main(kwargs):
                 don't filter. If only a key is given, filter by key.
 
     Returns:
-        list: dict(s): Found instance(s).
+        list of dict(s): Found instance(s).
             "region": AWS region that an instance is in.
             "id": ID of instance.
             "tags": dict: Instance tag key-value pairs.
@@ -89,7 +89,7 @@ def probe_regions(regions, tag_filter=None):
         tag_filter (dict): Passed to probe_region
 
     Returns:
-        list: dict(s): Found instance(s).
+        list of dict(s): Found instance(s).
             "region": AWS region that an instance is in.
             "id": ID of instance.
             "tags": dict: Instance tag key-value pairs.
@@ -118,14 +118,14 @@ def probe_region(region, tag_filter=None):
     """probe a single EC2 region for instances (threaded)
 
     Args:
-        region (str): EC2 region to probe
+        region (str): EC2 region to probe.
         tag_filter (dict): Filter out instances that don't have tags matching
             the filter. If None, filter not used.
 
     Returns:
-        dict:
+        dict: Instance(s) found in region.
             "region": Probed EC2 region.
-            "instances": list: dict(s): Found instance(s) matching tag filter.
+            "instances": list of dict(s): Instance(s) found.
                 "id": ID of instance.
                 "tags": Instance tags.
     """

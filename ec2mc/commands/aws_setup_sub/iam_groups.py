@@ -14,7 +14,7 @@ class IAMGroupSetup(update_template.BaseClass):
             config_aws_setup (dict): Config dict loaded from user's config.
 
         Returns:
-            group_names (dict):
+            dict: IAM group information.
                 "AWSExtra": Extra groups on AWS found under same namespace
                 "ToCreate": Groups that do not (yet) exist on AWS
                 "ToUpdate": Groups on AWS, but not the same as local versions
@@ -81,7 +81,7 @@ class IAMGroupSetup(update_template.BaseClass):
         """create groups on AWS that don't exist, update groups that do
 
         Args:
-            group_names (dict): See what verify_component returns
+            group_names (dict): See what verify_component returns.
         """
 
         for local_group in group_names["ToCreate"]:

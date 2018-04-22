@@ -16,7 +16,7 @@ class IAMPolicySetup(update_template.BaseClass):
             config_aws_setup (dict): Config dict loaded from user's config.
 
         Returns:
-            policy_names (dict):
+            dict: IAM customer managed policy information.
                 "AWSExtra": Extra policies on AWS found under same namespace
                 "ToCreate": Policies that do not (yet) exist on AWS
                 "ToUpdate": Policies on AWS, but not the same as local versions
@@ -94,7 +94,7 @@ class IAMPolicySetup(update_template.BaseClass):
         """create policies on AWS that don't exist, update policies that do
 
         Args:
-            policy_names (dict): See what verify_component returns
+            policy_names (dict): See what verify_component returns.
         """
 
         for local_policy in policy_names["ToCreate"]:

@@ -12,7 +12,7 @@ class VPCSecurityGroupSetup(update_template.BaseClass):
             config_aws_setup (dict): Config dict loaded from user's config.
 
         Returns:
-            sg_names (dict):
+            dict: VPC security group information.
                 "AWSExtra": Extra SGs on AWS found in same namespace
                 "ToCreate": SGs that do not (yet) exist on AWS
                 "ToUpdate": SGs on AWS, but not the same as local versions

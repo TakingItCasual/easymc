@@ -82,8 +82,8 @@ def argv_to_kwargs(args, commands):
     """ínitialize ec2mc's argparse and its help
 
     Returns:
-        dict: Parsed arguments
-            "command": First positional argument
+        dict: Parsed argparse arguments.
+            "command": First positional argument.
             Other key-value pairs vary depending on the command. See the 
                 command's add_documentation method to see its args.
     """

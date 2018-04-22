@@ -57,7 +57,7 @@ class CreateServer(command_template.BaseClass):
                 "tags" (list): Additional instance tag key-value pair(s).
 
         Returns:
-            creation_kwargs (dict):
+            dict: Needed args needed for instance creation.
                 "availability_zone": EC2 region's availability zone to create 
                     instance in.
                 "instance_type": EC2 instance type to create.
