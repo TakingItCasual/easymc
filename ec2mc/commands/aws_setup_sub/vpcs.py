@@ -3,9 +3,6 @@ from ec2mc import update_template
 from ec2mc.stuff import aws
 from ec2mc.stuff.threader import Threader
 
-import pprint
-pp = pprint.PrettyPrinter(indent=2)
-
 class VPCSetup(update_template.BaseClass):
 
     def verify_component(self, config_aws_setup):
@@ -35,12 +32,17 @@ class VPCSetup(update_template.BaseClass):
             "Existing": []
         } for vpc in vpc_setup}
 
+        threader = Threader()
+        for region in all_regions:
+            threader.add_thread(
+                self.get_region_vpcs, (region, list(vpc_names.keys())))
+        aws_vpcs = threader.get_results(return_dict=True)
+
         # Check all regions for VPC(s) described by aws_setup.json
         for region in all_regions[:]:
             # VPC(s) already present in region
-            aws_vpcs = self.get_region_vpcs(region, list(vpc_names.keys()))
             for local_vpc in vpc_names.keys():
-                for aws_vpc in aws_vpcs:
+                for aws_vpc in aws_vpcs[region]:
                     if {"Key": "Name", "Value": local_vpc} in aws_vpc["Tags"]:
                         vpc_names[local_vpc]["Existing"].append(region)
                         break
@@ -91,8 +93,8 @@ class VPCSetup(update_template.BaseClass):
         deleted_vpcs = list(filter(lambda x: x != 0, threader.get_results()))
 
         if len(deleted_vpcs) > 0:
-            print("A total of " + str(sum(deleted_vpcs)) + " VPCs deleted " +
-                "from " + str(len(deleted_vpcs)) + " regions.")
+            print("A total of " + str(sum(deleted_vpcs)) + " VPC(s) deleted " +
+                "from " + str(len(deleted_vpcs)) + " region(s).")
         else:
             print("No VPCs to delete.")
 
