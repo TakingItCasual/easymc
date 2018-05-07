@@ -3,6 +3,9 @@ from ec2mc import update_template
 from ec2mc.stuff import aws
 from ec2mc.stuff import quit_out
 
+import pprint
+pp = pprint.PrettyPrinter(indent=2)
+
 class VPCSecurityGroupSetup(update_template.BaseClass):
 
     def verify_component(self, config_aws_setup):
@@ -13,24 +16,29 @@ class VPCSecurityGroupSetup(update_template.BaseClass):
 
         Returns:
             dict: VPC security group information.
-                "AWSExtra": Extra SGs on AWS found in same namespace
-                "ToCreate": SGs that do not (yet) exist on AWS
-                "ToUpdate": SGs on AWS, but not the same as local versions
-                "UpToDate": SGs on AWS and up to date with local versions
+                Name of security group (dict):
+                    "VPCName": Name tag value of VPC that SG belongs to.
+                    "ToCreate": SGs that do not (yet) exist on AWS.
+                    "ToUpdate": SGs on AWS not the same as local versions.
+                    "UpToDate": SGs on AWS up to date with local versions.
         """
 
         all_regions = aws.get_regions()
 
         # Local VPC security groups(s) list
         vpc_security_group_setup = config_aws_setup["EC2"]["SecurityGroups"]
+        # Use configured namespace as default VPC
+        for vpc_sg in vpc_security_group_setup:
+            if vpc_sg["VPC"] is None:
+                vpc_sg["VPC"] = config.NAMESPACE
 
         # Names of local security groups described in aws_setup.json
-        sg_names = {
-            "AWSExtra": [],
-            "ToCreate": [sg["Name"] for sg in vpc_security_group_setup],
+        sg_names = {sg["Name"]: {
+            "VPCName": sg["VPC"],
+            "ToCreate": all_regions,
             "ToUpdate": [],
             "UpToDate": []
-        }
+        } for sg in vpc_security_group_setup}
 
         #for region in all_regions[:]:
         #    ec2_client = aws.ec2_client(region)
@@ -47,14 +55,11 @@ class VPCSecurityGroupSetup(update_template.BaseClass):
 
 
     def notify_state(self, security_group_names):
-        for sg in security_group_names["AWSExtra"]:
-            print("VPC SG " + sg + " found on AWS but not locally.")
-        for sg in security_group_names["ToCreate"]:
-            print("Local VPC SG " + sg + " to be created on AWS.")
-        for sg in security_group_names["ToUpdate"]:
-            print("VPC SG " + sg + " on AWS to be updated.")
-        for sg in security_group_names["UpToDate"]:
-            print("VPC SG " + sg + " on AWS is up to date.")
+        total_regions = str(len(aws.get_regions()))
+        for sg, region_info in security_group_names.items():
+            up_to_date = str(len(region_info["UpToDate"]))
+            print("Local SG " + sg + " up to date in " + up_to_date + " of " +
+                total_regions + " AWS regions.")
 
 
     def upload_component(self, component_info):

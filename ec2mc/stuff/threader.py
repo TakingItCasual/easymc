@@ -14,21 +14,31 @@ class Threader(object):
         self.threads = []
 
 
+    def worker(self, func, fargs):
+        """insert threaded function into queue to make its return retrievable
+
+        The index of the thread and the threaded function's first arg are 
+        inserted into the queue along with the threaded function itself.
+
+        Args: See add_thread
+        """
+        return self.result_queue.put([
+            len(self.threads), fargs[0], func(*fargs)])
+
+
     def add_thread(self, func, fargs):
         """add a function to be threaded
 
         Args:
             func (function): Function to thread.
-            fargs (tuple): Arguments to pass to the func function.
+            fargs (tuple): Argument(s) to pass to the func function.
         """
-        self.threads.append(Thread(
-            target=lambda f, args: self.result_queue.put([args[0], f(*args)]),
-            args=(func, fargs)))
+        self.threads.append(Thread(target=self.worker, args=(func, fargs)))
         self.threads[-1].start()
 
 
     def get_results(self, return_dict=False):
-        """block threads until all are done, then return their results
+        """block all threads, sort by thread index, then return thread results
 
         Args:
             return_dict (bool): Return dict instead of list. Threads' 
@@ -38,14 +48,18 @@ class Threader(object):
         for thread in self.threads:
             thread.join()
 
+        thread_data = []
+        while not self.result_queue.empty():
+            thread_data.append(self.result_queue.get())
+        thread_data.sort(key=lambda thread_index: thread_index[0])
+
         if return_dict:
             results = {}
-            while not self.result_queue.empty():
-                key, value = self.result_queue.get()
-                results[key] = value
+            for _, key, thread_return in thread_data:
+                results[key] = thread_return
         else:
             results = []
-            while not self.result_queue.empty():
-                results.append(self.result_queue.get()[1])
+            for _, _, thread_return in thread_data:
+                results.append(thread_return)
 
         return results

@@ -36,11 +36,11 @@ class VPCSetup(update_template.BaseClass):
         for region in all_regions:
             threader.add_thread(
                 self.get_region_vpcs, (region, list(vpc_names.keys())))
+        # VPCs already present in AWS regions
         aws_vpcs = threader.get_results(return_dict=True)
 
         # Check all regions for VPC(s) described by aws_setup.json
         for region in all_regions[:]:
-            # VPC(s) already present in region
             for local_vpc in vpc_names.keys():
                 for aws_vpc in aws_vpcs[region]:
                     if {"Key": "Name", "Value": local_vpc} in aws_vpc["Tags"]:

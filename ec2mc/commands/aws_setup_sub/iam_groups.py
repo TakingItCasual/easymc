@@ -15,10 +15,10 @@ class IAMGroupSetup(update_template.BaseClass):
 
         Returns:
             dict: IAM group information.
-                "AWSExtra": Extra groups on AWS found under same namespace
-                "ToCreate": Groups that do not (yet) exist on AWS
-                "ToUpdate": Groups on AWS, but not the same as local versions
-                "UpToDate": Groups on AWS and up to date with local versions
+                "AWSExtra": Extra groups on AWS found under same namespace.
+                "ToCreate": Groups that do not (yet) exist on AWS.
+                "ToUpdate": Groups on AWS not the same as local versions.
+                "UpToDate": Groups on AWS up to date with local versions.
         """
 
         self.iam_client = aws.iam_client()

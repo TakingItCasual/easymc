@@ -34,7 +34,7 @@ def main():
         ], shallow=False)
         if diff[2]:
             quit_out.err(["Source and config setup comparison failed."])
-        # If source and config aws_setup.json differ, overwrite aws_setup
+        # If source and config aws_setup differ, overwrite config aws_setup
         elif diff[1]:
             cp_aws_setup_to_config(src_aws_setup_dir)
             config_aws_setup = get_config_dict()

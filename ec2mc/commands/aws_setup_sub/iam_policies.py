@@ -17,10 +17,10 @@ class IAMPolicySetup(update_template.BaseClass):
 
         Returns:
             dict: IAM customer managed policy information.
-                "AWSExtra": Extra policies on AWS found under same namespace
-                "ToCreate": Policies that do not (yet) exist on AWS
-                "ToUpdate": Policies on AWS, but not the same as local versions
-                "UpToDate": Policies on AWS and up to date with local versions
+                "AWSExtra": Extra policies on AWS found under same namespace.
+                "ToCreate": Policies that do not (yet) exist on AWS.
+                "ToUpdate": Policies on AWS not the same as local versions.
+                "UpToDate": Policies on AWS up to date with local versions.
         """
 
         self.iam_client = aws.iam_client()
