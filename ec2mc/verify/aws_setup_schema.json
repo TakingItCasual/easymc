@@ -61,10 +61,9 @@
                         "type": "object",
                         "properties": {
                             "Name": {"type": "string"},
-                            "Description": {"type": "string"},
-                            "VPC": {"type": ["string", "null"]}
+                            "Description": {"type": "string"}
                         },
-                        "required": ["Name", "Description", "VPC"]
+                        "required": ["Name", "Description"]
                     },
                     "minItems": 1,
                     "uniqueItems": true

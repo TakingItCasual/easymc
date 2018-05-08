@@ -32,10 +32,9 @@ def main():
             "iam_policies/basic_permissions.json",
             "vpc_security_groups/ec2mc_sg.json"
         ], shallow=False)
-        if diff[2]:
-            quit_out.err(["Source and config setup comparison failed."])
         # If source and config aws_setup differ, overwrite config aws_setup
-        elif diff[1]:
+        # If comparison fails (missing files?), overwrite config aws_setup
+        if diff[1] or diff[2]:
             cp_aws_setup_to_config(src_aws_setup_dir)
             config_aws_setup = get_config_dict()
 
@@ -69,6 +68,20 @@ def verify_json_schema(config_aws_setup):
     except ValidationError as e:
         quit_out.err(["aws_setup.json is incorrectly formatted:"] +
             [str(e).split("\n\n")[0]])
+
+    # TODO: Handle this with jsonschema once it's able to
+    if not unique_names(config_aws_setup["IAM"]["Policies"]):
+        quit_out.err(["aws_setup.json is incorrectly formatted:",
+            "IAM policy names must be unique."])
+    if not unique_names(config_aws_setup["IAM"]["Groups"]):
+        quit_out.err(["aws_setup.json is incorrectly formatted:",
+            "IAM group names must be unique."])
+    if not unique_names(config_aws_setup["EC2"]["VPCs"]):
+        quit_out.err(["aws_setup.json is incorrectly formatted:",
+            "EC2 VPC names must be unique."])
+    if not unique_names(config_aws_setup["EC2"]["SecurityGroups"]):
+        quit_out.err(["aws_setup.json is incorrectly formatted:",
+            "EC2 security group names must be unique."])
 
 
 def verify_iam_policies(config_aws_setup):
@@ -123,3 +136,10 @@ def verify_vpc_security_groups(config_aws_setup):
     # Warn if vpc_security_groups has SGs not described by aws_setup.json
     if not set(vpc_sg_files).issubset(set(setup_sg_list)):
         print("Warning: Unused SG(s) found from vpc_security_groups dir.")
+
+
+def unique_names(dict_list):
+    names = [list_dict["Name"] for list_dict in dict_list]
+    if len(names) != len(set(names)):
+        return False
+    return True

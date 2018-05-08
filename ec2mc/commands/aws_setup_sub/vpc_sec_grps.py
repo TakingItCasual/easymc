@@ -17,7 +17,6 @@ class VPCSecurityGroupSetup(update_template.BaseClass):
         Returns:
             dict: VPC security group information.
                 Name of security group (dict):
-                    "VPCName": Name tag value of VPC that SG belongs to.
                     "ToCreate": SGs that do not (yet) exist on AWS.
                     "ToUpdate": SGs on AWS not the same as local versions.
                     "UpToDate": SGs on AWS up to date with local versions.
@@ -27,14 +26,9 @@ class VPCSecurityGroupSetup(update_template.BaseClass):
 
         # Local VPC security groups(s) list
         vpc_security_group_setup = config_aws_setup["EC2"]["SecurityGroups"]
-        # Use configured namespace as default VPC
-        for vpc_sg in vpc_security_group_setup:
-            if vpc_sg["VPC"] is None:
-                vpc_sg["VPC"] = config.NAMESPACE
 
         # Names of local security groups described in aws_setup.json
         sg_names = {sg["Name"]: {
-            "VPCName": sg["VPC"],
             "ToCreate": all_regions,
             "ToUpdate": [],
             "UpToDate": []
@@ -62,11 +56,11 @@ class VPCSecurityGroupSetup(update_template.BaseClass):
                 total_regions + " AWS regions.")
 
 
-    def upload_component(self, component_info):
+    def upload_component(self, security_group_names):
         pass
 
 
-    def delete_component(self, component_info):
+    def delete_component(self, _):
         pass
 
 

@@ -33,8 +33,7 @@
         "SecurityGroups": [
             {
                 "Name": "ec2mc_sg",
-                "Description": "Allow all traffic through ports 22 and 25565.",
-                "VPC": null
+                "Description": "Allow all traffic through ports 22 and 25565."
             }
         ]
     }
