@@ -1,3 +1,4 @@
+from types import FunctionType
 from queue import Queue
 from threading import Thread
 
@@ -33,6 +34,12 @@ class Threader(object):
             func (function): Function to thread.
             fargs (tuple): Argument(s) to pass to the func function.
         """
+
+        if not callable(func):
+            raise ValueError("func must be a function.")
+        if not isinstance(fargs, tuple):
+            raise ValueError("fargs must be a tuple.")
+
         self.threads.append(Thread(target=self.worker, args=(func, fargs)))
         self.threads[-1].start()
 

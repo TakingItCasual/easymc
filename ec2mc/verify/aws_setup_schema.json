@@ -43,18 +43,6 @@
         "EC2": {
             "type": "object",
             "properties": {
-                "VPCs": {
-                    "type": "array",
-                    "items": {
-                        "type": "object",
-                        "properties": {
-                            "Name": {"type": "string"}
-                        },
-                        "required": ["Name"]
-                    },
-                    "minItems": 0,
-                    "uniqueItems": true
-                },
                 "SecurityGroups": {
                     "type": "array",
                     "items": {
@@ -69,7 +57,7 @@
                     "uniqueItems": true
                 }
             },
-            "required": ["VPCs", "SecurityGroups"]
+            "required": ["SecurityGroups"]
         }
     },
     "required": ["Modified", "Namespace", "IAM", "EC2"]

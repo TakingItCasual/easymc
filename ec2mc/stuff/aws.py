@@ -51,28 +51,25 @@ def ssm_client():
     )
 
 
-def decode_error_msg(error_response):
-    """decode AWS encoded error messages (why are they encoded though?)
+def get_region_vpc(region):
+    """get VPC from region with config's Namespace tag
 
-    Requires the sts:DecodeAuthorizationMessage permission.
+    Args:
+        region (str): AWS region to search from.
+
+    Returns:
+        list of dict(s): VPC matching filter
     """
-    encoded_message_indication = "Encoded authorization failure message: "
 
-    if encoded_message_indication not in error_response["Error"]["Message"]:
-        return {
-            "Warning": "Error message wasn't encoded.",
-            "ErrorMessage": error_response["Error"]["Message"]
-        }
+    vpcs = ec2_client(region).describe_vpcs(Filters=[{
+        "Name": "tag:Namespace",
+        "Values": [config.NAMESPACE]
+    }])["Vpcs"]
 
-    encoded_error_str = error_response["Error"]["Message"].split(
-        encoded_message_indication, 1)[1]
-
-    return json.loads(boto3.client("sts",
-        aws_access_key_id=config.IAM_ID,
-        aws_secret_access_key=config.IAM_SECRET
-    ).decode_authorization_message(
-        EncodedMessage=encoded_error_str
-    )["DecodedMessage"])
+    if len(vpcs) > 1:
+        quit_out.err("Multiple VPCs with Namespace tag " + config.NAMESPACE +
+            "found from AWS.")
+    return vpcs
 
 
 def security_group_id(region, sg_name=config.SECURITY_GROUP_FILTER):
@@ -118,12 +115,12 @@ def attach_tags(aws_ec2_client, resource_id, name_tag=None):
         name_tag: A tag value to assign to the tag key "Name".
     """
 
-    add_tags = [{
+    new_tags = [{
         "Key": "Namespace",
         "Value": config.NAMESPACE
     }]
     if name_tag is not None:
-        add_tags.append({
+        new_tags.append({
             "Key": "Name",
             "Value": name_tag
         })
@@ -131,7 +128,7 @@ def attach_tags(aws_ec2_client, resource_id, name_tag=None):
     invalid_id_regex = re.compile("Invalid[a-zA-Z]*ID")
     for _ in range(60):
         try:
-            aws_ec2_client.create_tags(Resources=[resource_id], Tags=add_tags)
+            aws_ec2_client.create_tags(Resources=[resource_id], Tags=new_tags)
             return
         except ClientError as e:
             if invalid_id_regex.search(e.response["Error"]["Code"]) is None:
@@ -140,3 +137,27 @@ def attach_tags(aws_ec2_client, resource_id, name_tag=None):
             sleep(1)
 
     quit_out.err([resource_id + " doesn't exist after a minute of wating."])
+
+
+def decode_error_msg(error_response):
+    """decode AWS encoded error messages (why are they encoded though?)
+
+    Requires the sts:DecodeAuthorizationMessage permission.
+    """
+    encoded_message_indication = "Encoded authorization failure message: "
+
+    if encoded_message_indication not in error_response["Error"]["Message"]:
+        return {
+            "Warning": "Error message wasn't encoded.",
+            "ErrorMessage": error_response["Error"]["Message"]
+        }
+
+    encoded_error_str = error_response["Error"]["Message"].split(
+        encoded_message_indication, 1)[1]
+
+    return json.loads(boto3.client("sts",
+        aws_access_key_id=config.IAM_ID,
+        aws_secret_access_key=config.IAM_SECRET
+    ).decode_authorization_message(
+        EncodedMessage=encoded_error_str
+    )["DecodedMessage"])

@@ -24,7 +24,7 @@ class BaseClass(ABC):
 
 
     @abstractmethod
-    def delete_component(self, component_info):
+    def delete_component(self):
         """remove component from AWS if present"""
         pass
 

@@ -76,9 +76,6 @@ def verify_json_schema(config_aws_setup):
     if not unique_names(config_aws_setup["IAM"]["Groups"]):
         quit_out.err(["aws_setup.json is incorrectly formatted:",
             "IAM group names must be unique."])
-    if not unique_names(config_aws_setup["EC2"]["VPCs"]):
-        quit_out.err(["aws_setup.json is incorrectly formatted:",
-            "EC2 VPC names must be unique."])
     if not unique_names(config_aws_setup["EC2"]["SecurityGroups"]):
         quit_out.err(["aws_setup.json is incorrectly formatted:",
             "EC2 security group names must be unique."])

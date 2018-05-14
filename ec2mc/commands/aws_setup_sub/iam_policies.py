@@ -110,7 +110,7 @@ class IAMPolicySetup(update_template.BaseClass):
             print("IAM policy " + local_policy + " on AWS already up to date.")
 
 
-    def delete_component(self, _):
+    def delete_component(self):
         """remove attachments, delete old versions, then delete policies"""
 
         aws_policies = self.get_iam_policies()

@@ -96,7 +96,7 @@ class IAMGroupSetup(update_template.BaseClass):
             print("IAM group " + local_group + " on AWS already up to date.")
 
 
-    def delete_component(self, _):
+    def delete_component(self):
         """remove user(s) and policy(s) from group(s), then delete group(s)"""
 
         aws_groups = self.get_iam_groups()

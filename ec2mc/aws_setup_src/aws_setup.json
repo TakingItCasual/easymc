@@ -29,7 +29,6 @@
         ]
     },
     "EC2": {
-        "VPCs": [],
         "SecurityGroups": [
             {
                 "Name": "ec2mc_sg",
