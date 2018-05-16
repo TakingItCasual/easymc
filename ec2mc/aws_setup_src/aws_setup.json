@@ -5,11 +5,11 @@
         "Policies": [
             {
                 "Name": "admin_permissions",
-                "Description": "Admin privileges for ec2mc script user."
+                "Desc": "Admin privileges for ec2mc script user."
             },
             {
                 "Name": "basic_permissions",
-                "Description": "Basic privileges for ec2mc script user."
+                "Desc": "Basic privileges for ec2mc script user."
             }
         ],
         "Groups": [
@@ -32,7 +32,7 @@
         "SecurityGroups": [
             {
                 "Name": "ec2mc_sg",
-                "Description": "Allow all traffic through ports 22 and 25565."
+                "Desc": "Allow all traffic through ports 22 and 25565."
             }
         ]
     }

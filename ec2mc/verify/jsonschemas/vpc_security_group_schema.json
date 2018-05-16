@@ -1,0 +1,14 @@
+{
+    "type": "object",
+    "properties": {
+        "Ingress": {
+            "type" : "array",
+            "items": {"type": "object"}
+        },
+        "Egress": {
+            "type" : "array",
+            "items": {"type": "object"}
+        }
+    },
+    "required": ["Ingress", "Egress"]
+}

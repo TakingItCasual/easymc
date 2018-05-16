@@ -109,7 +109,7 @@ class IAMGroupSetup(update_template.BaseClass):
 
 
     def create_group(self, group_name):
-        """create a new IAM group on AWS"""
+        """create new IAM group on AWS"""
         self.iam_client.create_group(
             Path=self.path_prefix,
             GroupName=group_name
@@ -118,7 +118,7 @@ class IAMGroupSetup(update_template.BaseClass):
 
 
     def update_group(self, group_name):
-        """update policy attachments for IAM group already on AWS"""
+        """update IAM policy attachments for IAM group already on AWS"""
         self.detach_group_policies(group_name)
         self.attach_group_policies(group_name)
 
@@ -131,7 +131,7 @@ class IAMGroupSetup(update_template.BaseClass):
 
 
     def attach_group_policies(self, group_name):
-        """attach policy(s) described in iam_group_setup to group"""
+        """attach IAM policy(s) described in iam_group_setup to group"""
         local_attachments = next(group["Policies"] for group in
             self.iam_group_setup if group["Name"] == group_name)
         aws_policies = self.iam_client.list_policies(
@@ -175,7 +175,7 @@ class IAMGroupSetup(update_template.BaseClass):
 
 
     def get_iam_groups(self):
-        """returns group(s) on AWS under set namespace"""
+        """returns IAM group(s) on AWS under set namespace"""
         return self.iam_client.list_groups(
             PathPrefix=self.path_prefix)["Groups"]
 

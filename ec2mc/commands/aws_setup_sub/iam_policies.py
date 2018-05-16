@@ -124,11 +124,11 @@ class IAMPolicySetup(update_template.BaseClass):
 
 
     def create_policy(self, policy_name):
-        """create a new IAM policy on AWS"""
+        """create new IAM policy on AWS"""
         local_policy_document = quit_out.parse_json(
             self.policy_dir + policy_name + ".json")
         policy_description = next(
-            policy["Description"] for policy in self.iam_policy_setup
+            policy["Desc"] for policy in self.iam_policy_setup
                 if policy["Name"] == policy_name)
 
         self.iam_client.create_policy(
@@ -201,7 +201,7 @@ class IAMPolicySetup(update_template.BaseClass):
 
 
     def get_iam_policies(self):
-        """returns policy(s) on AWS under set namespace"""
+        """returns IAM policy(s) on AWS under set namespace"""
         return self.iam_client.list_policies(
             Scope="Local",
             OnlyAttached=False,

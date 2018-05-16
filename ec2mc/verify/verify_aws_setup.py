@@ -61,8 +61,8 @@ def cp_aws_setup_to_config(src_aws_setup_dir):
 
 
 def verify_json_schema(config_aws_setup):
-    schema = quit_out.parse_json(os.path.abspath(
-        os.path.join(__file__, os.pardir, "aws_setup_schema.json")))
+    schema = quit_out.parse_json(os.path.abspath(os.path.join(
+        __file__, os.pardir, "jsonschemas", "aws_setup_schema.json")))
     try:
         validate(config_aws_setup, schema)
     except ValidationError as e:
@@ -117,21 +117,31 @@ def verify_vpc_security_groups(config_aws_setup):
         sg["Name"] for sg in config_aws_setup["EC2"]["SecurityGroups"]
     ]
     # Actual SG json files located in aws_setup/vpc_security_groups/
-    vpc_sg_files = [
-        json_file[:-5] for json_file in os.listdir(sg_dir)
-            if json_file.endswith(".json")
+    vpc_sg_json_files = [
+        file[:-5] for file in os.listdir(sg_dir) if file.endswith(".json")
     ]
 
     # Quit if aws_setup.json describes SGs not found in vpc_security_groups
-    if not set(setup_sg_list).issubset(set(vpc_sg_files)):
+    if not set(setup_sg_list).issubset(set(vpc_sg_json_files)):
         quit_out.err([
             "Following SG(s) not found from vpc_security_groups dir:",
             *[(sg + ".json") for sg in setup_sg_list
-                if sg not in vpc_sg_files]
+                if sg not in vpc_sg_json_files]
         ])
 
+    # Quit if any security group missing Ingress and/or Egress tags
+    schema = quit_out.parse_json(os.path.abspath(os.path.join(
+        __file__, os.pardir, "jsonschemas", "vpc_security_group_schema.json")))
+    for sg_file in vpc_sg_json_files:
+        sg_dict = quit_out.parse_json(sg_dir + sg_file + ".json")
+        try:
+            validate(sg_dict, schema)
+        except ValidationError as e:
+            quit_out.err(["SG " + sg_file + " is incorrectly formatted:"] +
+                [str(e).split("\n\n")[0]])
+
     # Warn if vpc_security_groups has SGs not described by aws_setup.json
-    if not set(vpc_sg_files).issubset(set(setup_sg_list)):
+    if not set(vpc_sg_json_files).issubset(set(setup_sg_list)):
         print("Warning: Unused SG(s) found from vpc_security_groups dir.")
 
 

@@ -12,7 +12,7 @@ from ec2mc.stuff import quit_out
 def get_regions(region_filter=None):
     """return list of EC2 regions, or region_filter if not empty and valid
 
-    Requires the ec2:DescribeRegions permission.
+    Requires ec2:DescribeRegions permission.
     """
 
     region_list = []
@@ -51,31 +51,10 @@ def ssm_client():
     )
 
 
-def get_region_vpc(region):
-    """get VPC from region with config's Namespace tag
-
-    Args:
-        region (str): AWS region to search from.
-
-    Returns:
-        list of dict(s): VPC matching filter
-    """
-
-    vpcs = ec2_client(region).describe_vpcs(Filters=[{
-        "Name": "tag:Namespace",
-        "Values": [config.NAMESPACE]
-    }])["Vpcs"]
-
-    if len(vpcs) > 1:
-        quit_out.err("Multiple VPCs with Namespace tag " + config.NAMESPACE +
-            "found from AWS.")
-    return vpcs
-
-
 def security_group_id(region, sg_name=config.SECURITY_GROUP_FILTER):
     """get ID of security group with correct GroupName from AWS
 
-    Requires the ec2:DescribeSecurityGroups permission.
+    Requires ec2:DescribeSecurityGroups permission.
 
     Args:
         region (str): EC2 region to search security group from
@@ -100,19 +79,20 @@ def security_group_id(region, sg_name=config.SECURITY_GROUP_FILTER):
     return security_group[0]["GroupId"]
 
 
+# TODO: Attach tag(s) on resource (e.g. VPC) creation when it becomes supported
 def attach_tags(aws_ec2_client, resource_id, name_tag=None):
-    """attach tag(s) to a resource, including Namespace tag
+    """attach tag(s) to resource, including Namespace tag, and try for 60s
     
-    Requires the ec2:CreateTags permission.
+    Requires ec2:CreateTags permission.
 
     To account for newly created resources, InvalidID exceptions are checked 
-    for and skipped in a loop attempting to create tag(s). Why not use 
-    waiters? Because waiters don't work reliably, that's why.
+    for and passed in a loop attempting to create tag(s). Why not use waiters? 
+    Because waiters don't work reliably, that's why.
 
     Args:
-        aws_ec2_client: Get existing ec2_client so a new one isn't needed.
-        resource_id: The ID of the resource.
-        name_tag: A tag value to assign to the tag key "Name".
+        aws_ec2_client: Get existing EC2 client so a new one isn't needed.
+        resource_id (str): The ID of the resource.
+        name_tag (str): A tag value to assign to the tag key "Name".
     """
 
     new_tags = [{
@@ -125,13 +105,13 @@ def attach_tags(aws_ec2_client, resource_id, name_tag=None):
             "Value": name_tag
         })
 
-    invalid_id_regex = re.compile("Invalid[a-zA-Z]*ID")
+    not_found_regex = re.compile("Invalid[a-zA-Z]*\\.NotFound")
     for _ in range(60):
         try:
             aws_ec2_client.create_tags(Resources=[resource_id], Tags=new_tags)
             return
         except ClientError as e:
-            if invalid_id_regex.search(e.response["Error"]["Code"]) is None:
+            if not_found_regex.search(e.response["Error"]["Code"]) is None:
                 quit_out.err(["Exception when tagging " + resource_id + ":",
                     e.response])
             sleep(1)
@@ -142,8 +122,9 @@ def attach_tags(aws_ec2_client, resource_id, name_tag=None):
 def decode_error_msg(error_response):
     """decode AWS encoded error messages (why are they encoded though?)
 
-    Requires the sts:DecodeAuthorizationMessage permission.
+    Requires sts:DecodeAuthorizationMessage permission.
     """
+
     encoded_message_indication = "Encoded authorization failure message: "
 
     if encoded_message_indication not in error_response["Error"]["Message"]:

@@ -12,9 +12,9 @@
                         "type": "object",
                         "properties": {
                             "Name": {"type" : "string"},
-                            "Description": {"type" : "string"}
+                            "Desc": {"type" : "string"}
                         },
-                        "required": ["Name", "Description"]
+                        "required": ["Name", "Desc"]
                     },
                     "minItems": 1,
                     "uniqueItems": true
@@ -49,9 +49,9 @@
                         "type": "object",
                         "properties": {
                             "Name": {"type": "string"},
-                            "Description": {"type": "string"}
+                            "Desc": {"type": "string"}
                         },
-                        "required": ["Name", "Description"]
+                        "required": ["Name", "Desc"]
                     },
                     "minItems": 1,
                     "uniqueItems": true
