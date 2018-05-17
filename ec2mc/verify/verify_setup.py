@@ -8,26 +8,27 @@ from ec2mc import config
 from ec2mc.stuff import quit_out
 
 def main():
-    """create aws_setup if nonexistant, update if needed and is unmodified"""
+    """verify contents of user's config's aws_setup directory"""
 
-    # Directory path for the distribution's packaged aws_setup
+    # Directory path for distribution's packaged aws_setup
     src_aws_setup_dir = os.path.abspath(
         os.path.join(__file__, os.pardir, os.pardir, "aws_setup_src"))
 
     # If config.AWS_SETUP_DIR nonexistant, copy from ec2mc.aws_setup_src
     if not os.path.isdir(config.AWS_SETUP_DIR):
         cp_aws_setup_to_config(src_aws_setup_dir)
-    config_aws_setup = get_config_dict()
+    config_aws_setup = get_config_aws_setup_dict()
 
-    # The config's aws_setup.json must have the "Modified" and "Namespace" keys
+    # The config's aws_setup.json must have "Modified" and "Namespace" keys
     if not all(key in config_aws_setup for key in ("Modified", "Namespace")):
         cp_aws_setup_to_config(src_aws_setup_dir)
-        config_aws_setup = get_config_dict()
+        config_aws_setup = get_config_aws_setup_dict()
 
     # If "Modified" key is True, prevent overwriting config's aws_setup
     if not config_aws_setup["Modified"]:
         diff = filecmp.cmpfiles(src_aws_setup_dir, config.AWS_SETUP_DIR, [
             "aws_setup.json",
+            "instance_templates.json",
             "iam_policies/admin_permissions.json",
             "iam_policies/basic_permissions.json",
             "vpc_security_groups/ec2mc_sg.json"
@@ -36,9 +37,10 @@ def main():
         # If comparison fails (missing files?), overwrite config aws_setup
         if diff[1] or diff[2]:
             cp_aws_setup_to_config(src_aws_setup_dir)
-            config_aws_setup = get_config_dict()
+            config_aws_setup = get_config_aws_setup_dict()
 
-    verify_json_schema(config_aws_setup)
+    verify_aws_setup(config_aws_setup)
+    verify_instance_templates(config_aws_setup)
 
     config.NAMESPACE = config_aws_setup["Namespace"]
 
@@ -46,12 +48,20 @@ def main():
     verify_vpc_security_groups(config_aws_setup)
 
 
-def get_config_dict():
-    """returns aws_setup.json from config in user's home dir as dict"""
+def get_config_aws_setup_dict():
+    """return aws_setup.json from config in user's home dir as dict"""
     config_aws_setup_file = config.AWS_SETUP_JSON
     if not os.path.isfile(config_aws_setup_file):
         quit_out.err(["aws_setup.json not found from config."])
     return quit_out.parse_json(config_aws_setup_file)
+
+
+def get_config_instance_templates_dict():
+    """return instance_templates.json from config in user's home dir as dict"""
+    config_instance_templates_file = config.INSTANCE_TEMPLATES_JSON
+    if not os.path.isfile(config_instance_templates_file):
+        quit_out.err(["instance_templates.json not found from config."])
+    return quit_out.parse_json(config_instance_templates_file)
 
 
 def cp_aws_setup_to_config(src_aws_setup_dir):
@@ -60,25 +70,46 @@ def cp_aws_setup_to_config(src_aws_setup_dir):
     shutil.copytree(src_aws_setup_dir, config.AWS_SETUP_DIR)
 
 
-def verify_json_schema(config_aws_setup):
+def verify_aws_setup(config_aws_setup):
+    """verify config's aws_setup.json"""
     schema = quit_out.parse_json(os.path.abspath(os.path.join(
         __file__, os.pardir, "jsonschemas", "aws_setup_schema.json")))
     try:
         validate(config_aws_setup, schema)
     except ValidationError as e:
-        quit_out.err(["aws_setup.json is incorrectly formatted:"] +
+        quit_out.err(["aws_setup.json incorrectly formatted:"] +
             [str(e).split("\n\n")[0]])
 
     # TODO: Handle this with jsonschema once it's able to
     if not unique_names(config_aws_setup["IAM"]["Policies"]):
-        quit_out.err(["aws_setup.json is incorrectly formatted:",
+        quit_out.err(["aws_setup.json incorrectly formatted:",
             "IAM policy names must be unique."])
     if not unique_names(config_aws_setup["IAM"]["Groups"]):
-        quit_out.err(["aws_setup.json is incorrectly formatted:",
+        quit_out.err(["aws_setup.json incorrectly formatted:",
             "IAM group names must be unique."])
     if not unique_names(config_aws_setup["EC2"]["SecurityGroups"]):
-        quit_out.err(["aws_setup.json is incorrectly formatted:",
+        quit_out.err(["aws_setup.json incorrectly formatted:",
             "EC2 security group names must be unique."])
+
+
+def verify_instance_templates(config_aws_setup):
+    """verify config's instance_templates.json"""
+    config_instance_templates = get_config_instance_templates_dict()
+    schema = quit_out.parse_json(os.path.abspath(os.path.join(
+        __file__, os.pardir, "jsonschemas", "instance_templates_schema.json")))
+    try:
+        validate(config_instance_templates, schema)
+    except ValidationError as e:
+        quit_out.err(["instance_templates.json incorrectly formatted:"] +
+            [str(e).split("\n\n")[0]])
+
+    # Verify template security group(s) described in aws_setup.json
+    sg_names = [sg["Name"] for sg in config_aws_setup["EC2"]["SecurityGroups"]]
+    for instance_template in config_instance_templates:
+        for security_group in instance_template["SecurityGroups"]:
+            if security_group not in sg_names:
+                quit_out.err(["instance_templates.json incorrectly formatted:",
+                    "SG " + security_group + " not found in aws_setup.json."])
 
 
 def verify_iam_policies(config_aws_setup):
@@ -137,7 +168,7 @@ def verify_vpc_security_groups(config_aws_setup):
         try:
             validate(sg_dict, schema)
         except ValidationError as e:
-            quit_out.err(["SG " + sg_file + " is incorrectly formatted:"] +
+            quit_out.err(["SG " + sg_file + " incorrectly formatted:"] +
                 [str(e).split("\n\n")[0]])
 
     # Warn if vpc_security_groups has SGs not described by aws_setup.json
@@ -146,6 +177,7 @@ def verify_vpc_security_groups(config_aws_setup):
 
 
 def unique_names(dict_list):
+    """verify each Name key value is unique within list of dicts"""
     names = [list_dict["Name"] for list_dict in dict_list]
     if len(names) != len(set(names)):
         return False

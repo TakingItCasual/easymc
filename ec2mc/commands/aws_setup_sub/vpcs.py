@@ -6,9 +6,6 @@ from ec2mc.stuff import aws
 from ec2mc.stuff.threader import Threader
 from ec2mc.stuff import quit_out
 
-import pprint
-pp = pprint.PrettyPrinter(indent=2)
-
 class VPCSetup(update_template.BaseClass):
 
     def verify_component(self, config_aws_setup):
@@ -51,8 +48,8 @@ class VPCSetup(update_template.BaseClass):
         vpc_threader = Threader()
         sg_threader = Threader()
         for region in all_regions:
-            vpc_threader.add_thread(self.get_region_vpc, (region,))
-            sg_threader.add_thread(self.get_region_security_groups, (region,))
+            vpc_threader.add_thread(aws.get_region_vpc, (region,))
+            sg_threader.add_thread(aws.get_region_security_groups, (region,))
         # VPCs already present in AWS regions
         aws_vpcs = vpc_threader.get_results(return_dict=True)
         # VPC security groupss already present in AWS regions
@@ -86,7 +83,6 @@ class VPCSetup(update_template.BaseClass):
         vpc_regions, sg_names = vpc_and_sg_info
 
         total_regions = str(len(aws.get_regions()))
-        print(vpc_regions["Existing"])
         existing = str(len(vpc_regions["Existing"]))
         print("VPC " + self.vpc_name + " exists in " + existing + " of " +
             total_regions + " AWS regions.")
@@ -94,7 +90,7 @@ class VPCSetup(update_template.BaseClass):
         print("")
         for sg_name, sg_regions in sg_names.items():
             up_to_date = str(len(sg_regions["UpToDate"]))
-            print("Local SG " + sg_name + " up to date in " + up_to_date +
+            print("Local SG " + sg_name + " exists in " + up_to_date +
                 " of " + total_regions + " AWS regions.")
 
 
@@ -120,15 +116,24 @@ class VPCSetup(update_template.BaseClass):
         else:
             print("VPC " + self.vpc_name + " already present in all regions.")
 
-        create_threader = Threader()
-        update_threader = Threader()
+        sg_threader = Threader()
         for sg_name, sg_regions in sg_names.items():
             for region in sg_regions["ToCreate"]:
-                create_threader.add_thread(self.create_sg, (region, sg_name))
+                sg_threader.add_thread(self.create_sg, (region, sg_name))
             for region in sg_regions["ToUpdate"]:
-                update_threader.add_thread(self.update_sg, (region, sg_name))
-        created_sgs = len(create_threader.get_results())
-        updated_sgs = len(update_threader.get_results())
+                sg_threader.add_thread(self.update_sg, (region, sg_name))
+        sg_threader.get_results()
+
+        print("")
+        for sg_name, sg_regions in sg_names.items():
+            if sg_regions["ToCreate"]:
+                print("VPC SG " + sg_name + " created in " +
+                    str(len(sg_regions["ToCreate"])) + " region(s).")
+            if sg_regions["ToUpdate"]:
+                print("VPC SG " + sg_name + " updated in " +
+                    str(len(sg_regions["ToUpdate"])) + " region(s).")
+            if not sg_regions["ToCreate"] and not sg_regions["ToUpdate"]:
+                print("VPC SG " + sg_name + " already present in all regions.")
 
 
     def delete_component(self):
@@ -143,19 +148,6 @@ class VPCSetup(update_template.BaseClass):
             print("VPC " + self.vpc_name + " deleted from all AWS regions.")
         else:
             print("No VPCs to delete.")
-
-
-    def get_region_vpc(self, region):
-        """get VPC from region with config's Namespace tag"""
-        vpcs = aws.ec2_client(region).describe_vpcs(Filters=[{
-            "Name": "tag:Namespace",
-            "Values": [config.NAMESPACE]
-        }])["Vpcs"]
-
-        if len(vpcs) > 1:
-            quit_out.err("Multiple VPCs with Namespace tag " + self.vpc_name +
-                " found from AWS.")
-        return vpcs
 
 
     def create_vpc(self, region):
@@ -174,27 +166,11 @@ class VPCSetup(update_template.BaseClass):
         Returns:
             int: Number of VPCs deleted.
         """
-        region_vpcs = self.get_region_vpc(region)
+        region_vpcs = aws.get_region_vpc(region)
         for vpc in region_vpcs:
             self.delete_vpc_sgs(region, vpc["VpcId"])
             aws.ec2_client(region).delete_vpc(VpcId=vpc["VpcId"])
         return len(region_vpcs)
-
-
-    def get_region_security_groups(self, region, vpc_id=None):
-        """get security groups from region with config's Namespace tag"""
-        sg_filter = [{
-            "Name": "tag:Namespace",
-            "Values": [config.NAMESPACE]
-        }]
-        if vpc_id:
-            sg_filter.append({
-                "Name": "vpc-id",
-                "Values": [vpc_id]
-            })
-
-        return aws.ec2_client(region).describe_security_groups(
-            Filters=sg_filter)["SecurityGroups"]
 
 
     def create_sg(self, region, sg_name):
@@ -204,7 +180,7 @@ class VPCSetup(update_template.BaseClass):
             Description=next(sg["Desc"] for sg in self.security_group_setup
                 if sg["Name"] == sg_name),
             GroupName=sg_name,
-            VpcId=self.get_region_vpc(region)[0]["VpcId"]
+            VpcId=aws.get_region_vpc(region)[0]["VpcId"]
         )["GroupId"]
         aws.attach_tags(ec2_client, sg_id, sg_name)
 
@@ -231,7 +207,7 @@ class VPCSetup(update_template.BaseClass):
     def delete_vpc_sgs(self, region, vpc_id):
         """delete EC2 VPC security group(s) from AWS region for VPC"""
         ec2_client = aws.ec2_client(region)
-        aws_sgs = self.get_region_security_groups(region, vpc_id)
+        aws_sgs = aws.get_region_security_groups(region, vpc_id)
         for aws_sg in aws_sgs:
             ec2_client.delete_security_group(GroupId=aws_sg["GroupId"])
 

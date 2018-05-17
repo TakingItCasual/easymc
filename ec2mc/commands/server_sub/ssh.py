@@ -57,7 +57,7 @@ class SSHServer(command_template.BaseClass):
             "-o", "StrictHostKeyChecking=no",
             "-o", "UserKnownHostsFile=/dev/null",
             "-i", private_key_file,
-            "ec2-user@"+instance_dns
+            config.EC2_AMI_DEFAULT_USER_NAME+"@"+instance_dns
         ]
         subprocess.run(ssh_cmd_args)
 

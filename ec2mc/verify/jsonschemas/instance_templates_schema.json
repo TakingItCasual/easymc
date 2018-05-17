@@ -1,0 +1,34 @@
+{
+    "type": "array",
+    "items": {
+        "type": "object",
+        "properties": {
+            "TemplateName": {"type" : "string"},
+            "InstanceType": {"type": "string"},
+            "VolumeSize": {"type": "integer"},
+            "SecurityGroups": {
+                "type" : "array",
+                "items": {"type": "string"},
+                "minItems": 1,
+                "uniqueItems": true
+            },
+            "CrontabScript": {"type": "string"},
+            "ManagementScripts": {
+                "type" : "array",
+                "items": {"type": "string"},
+                "minItems": 1,
+                "uniqueItems": true
+            }
+        },
+        "required": [
+            "TemplateName",
+            "InstanceType",
+            "VolumeSize",
+            "SecurityGroups",
+            "CrontabScript",
+            "ManagementScripts"
+        ]
+    },
+    "minItems": 1,
+    "uniqueItems": true
+}

@@ -1,0 +1,14 @@
+[
+    {
+        "TemplateName": "mc_template",
+        "InstanceType": "t2.small",
+        "VolumeSize": 8,
+        "SecurityGroups": [
+            "ec2mc_sg"
+        ],
+        "CrontabScript": "ec2mc_crontab",
+        "ManagementScripts": [
+            "start-instance"
+        ]
+    }
+]

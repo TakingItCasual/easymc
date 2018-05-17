@@ -51,32 +51,39 @@ def ssm_client():
     )
 
 
-def security_group_id(region, sg_name=config.SECURITY_GROUP_FILTER):
-    """get ID of security group with correct GroupName from AWS
+def get_region_vpc(region):
+    """get VPC from region with config's Namespace tag"""
+    vpcs = ec2_client(region).describe_vpcs(Filters=[{
+        "Name": "tag:Namespace",
+        "Values": [config.NAMESPACE]
+    }])["Vpcs"]
 
-    Requires ec2:DescribeSecurityGroups permission.
+    if len(vpcs) > 1:
+        quit_out.err("Multiple VPCs with Namespace tag " + config.NAMESPACE +
+            " found from AWS.")
+    return vpcs
 
-    Args:
-        region (str): EC2 region to search security group from
-        sg_name (str): Name of security group
 
-    Returns:
-        str: ID for security group used for Minecraft instances
-    """
+def get_region_security_groups(region, vpc_id=None):
+    """get security groups from region with config's Namespace tag"""
+    sg_filter = [{
+        "Name": "tag:Namespace",
+        "Values": [config.NAMESPACE]
+    }]
+    if vpc_id:
+        sg_filter.append({
+            "Name": "vpc-id",
+            "Values": [vpc_id]
+        })
 
-    # TODO: Shift over to the new SG system defined in aws_setup.json
+    vpc_sgs = ec2_client(region).describe_security_groups(
+        Filters=sg_filter)["SecurityGroups"]
 
-    security_groups = ec2_client(
-        region).describe_security_groups()["SecurityGroups"]
-    security_group = [SG for SG in security_groups
-        if sg_name.lower() in SG["GroupName"].lower()]
-
-    if not security_group:
-        quit_out.err(["No security groups matching aws_setup found."])
-    elif len(security_group) > 1:
-        quit_out.err(["Multiple security groups matching filter found."])
-
-    return security_group[0]["GroupId"]
+    sg_group_names = [sg["GroupName"] for sg in vpc_sgs]
+    if len(sg_group_names) > len(set(sg_group_names)):
+        quit_out.err("SGs with duplicate group names in " +
+            region + " region.")
+    return vpc_sgs
 
 
 # TODO: Attach tag(s) on resource (e.g. VPC) creation when it becomes supported

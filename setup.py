@@ -38,7 +38,7 @@ setup(
     package_data={
         'ec2mc': [
             'verify/jsonschemas/*.json',
-            'aws_setup_src/aws_setup.json',
+            'aws_setup_src/*.json',
             'aws_setup_src/iam_policies/*.json',
             'aws_setup_src/vpc_security_groups/*.json'
         ]

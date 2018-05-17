@@ -16,27 +16,37 @@ class CreateServer(command_template.BaseClass):
 
         Args:
             kwargs (dict):
-                "region": EC2 region to create instance in
-                "name": Tag value for instance tag key "Name"
-                "type": EC2 instance type to create
-                "tags": list: Additional instance tag key-value pair(s)
-                "confirm" (bool): Whether to actually create the instance
+                "region" (str): EC2 region to create instance in.
+                "name" (str): Tag value for instance tag key "Name".
+                "tags" (list): Additional instance tag key-value pair(s).
+                "confirm" (bool): Whether to actually create the instance.
         """
 
-        self.check_type_size_permissions(kwargs["type"], kwargs["size"])
+        inst_templates = quit_out.parse_json(config.INSTANCE_TEMPLATES_JSON)
+        try:
+            inst_template = next(template for template in inst_templates
+                if template["TemplateName"] == kwargs["template"])
+        except StopIteration:
+            quit_out.err(["Template " + kwargs["template"] + " not found."])
+
+        self.verify_type_and_size_allowed(
+            inst_template["InstanceType"], inst_template["VolumeSize"])
 
         # Verify the specified region
         aws.get_regions([kwargs["region"]])
         self.ec2_client = aws.ec2_client(kwargs["region"])
 
-        creation_kwargs = self.parse_run_instance_args(kwargs)
+        creation_kwargs = self.parse_run_instance_args(
+            kwargs["region"], kwargs["name"], kwargs["tags"],
+            inst_template["InstanceType"], inst_template["VolumeSize"],
+            inst_template["SecurityGroups"])
 
         # Instance creation dry run to verify IAM permissions
         try:
             self.create_instance(creation_kwargs, dry_run=True)
         except ClientError as e:
             if not e.response["Error"]["Code"] == "DryRunOperation":
-                quit_out.err([e])
+                quit_out.err([str(e)])
 
         # Actual instance creation occurs after this confirmation.
         if not kwargs["confirm"]:
@@ -45,86 +55,82 @@ class CreateServer(command_template.BaseClass):
             quit_out.q(["Please append the -c argument to confirm."])
 
 
-    def parse_run_instance_args(self, kwargs):
+    def parse_run_instance_args(self,
+            region, inst_name, inst_tags, inst_type, vol_size, inst_sgs):
         """parse arguments for run_instances from argparse kwargs
 
         Args:
-            kwargs (dict):
-                "region": EC2 region to create instance in.
-                "name": Tag value for instance tag key "Name".
-                "type": EC2 instance type to create.
-                "size": EC2 instance size in GiB.
-                "tags" (list): Additional instance tag key-value pair(s).
+            "region" (str): EC2 region to create instance in.
+            "inst_name" (str): Tag value for instance tag key "Name".
+            "inst_tags" (list[str]): Additional instance tag key-value pair(s).
+            "inst_type" (str): EC2 instance type to create.
+            "vol_size" (int): EC2 instance volume size (GiB).
+            "inst_sgs" (list[str]): VPC SG(s) to assign to instance.
 
         Returns:
-            dict: Needed args needed for instance creation.
-                "availability_zone": EC2 region's availability zone to create 
-                    instance in.
-                "instance_type": EC2 instance type to create.
-                "storage_size": EC2 instance size in GiB.
-                "tags" (list): Additional instance tag key-value pair(s).
-                "sg_id": ID of VPC security group to attach to instance.
+            dict: Arguments needed for instance creation.
+                "instance_type" (str): EC2 instance type to create.
+                "storage_size" (int): EC2 instance size in GiB.
+                "tags" (list[dict]): All instance tag key-value pair(s).
+                "sg_ids" (list[str]): ID(s) of VPC SG(s) to assign to instance.
         """
 
         creation_kwargs = {}
 
-        # TODO: Figure out some way to filter VPCs
-        vpc_stuff = self.ec2_client.describe_network_interfaces(
-        )["NetworkInterfaces"]
-        if not vpc_stuff:
-            quit_out.err(["Default VPC not found."])
-        elif len(vpc_stuff) > 1:
-            quit_out.err(["Multiple VPCs found."])
-        creation_kwargs["availability_zone"] = vpc_stuff[0]["AvailabilityZone"]
-
-        creation_kwargs["instance_type"] = kwargs["type"]
-        creation_kwargs["storage_size"] = kwargs["size"]
+        creation_kwargs["instance_type"] = inst_type
+        creation_kwargs["storage_size"] = vol_size
 
         creation_kwargs["tags"] = [{
             "Key": "Name",
-            "Value": kwargs["name"]
+            "Value": inst_name
         }]
-        if kwargs["tags"]:
-            for tag_key, tag_value in kwargs["tags"]:
+        if inst_tags:
+            for tag_key, tag_value in inst_tags:
                 creation_kwargs["tags"].append({
                     "Key": tag_key,
                     "Value": tag_value
                 })
 
-        creation_kwargs["sg_id"] = aws.security_group_id(kwargs["region"])
+        vpc_info = aws.get_region_vpc(region)
+        if not vpc_info:
+            quit_out.err(["VPC " + config.NAMESPACE + " not found.",
+                "  Have you uploaded the AWS setup?"])
+        vpc_sgs = aws.get_region_security_groups(region, vpc_info[0]["VpcId"])
+        vpc_sg_ids = [sg["GroupId"] for sg in vpc_sgs
+            if sg["GroupName"] in inst_sgs]
+        creation_kwargs["sg_ids"] = vpc_sg_ids
 
         return creation_kwargs
 
 
-    def create_instance(self, kwargs, *, dry_run=True):
+    def create_instance(self, creation_kwargs, *, dry_run=True):
         """create EC2 instance
 
         Args:
-            kwargs (dict): See what parse_run_instance_args returns
-            dry_run (bool): If true, only test if IAM user is allowed to
+            creation_kwargs (dict): See what parse_run_instance_args returns.
+            dry_run (bool): If true, only test if IAM user is allowed to.
         """
 
         return self.ec2_client.run_instances(
             DryRun=dry_run,
             MinCount=1, MaxCount=1,
             ImageId=config.EC2_OS_AMI,
-            #Placement={"AvailabilityZone": kwargs["availability_zone"]},
-            InstanceType=kwargs["instance_type"],
+            InstanceType=creation_kwargs["instance_type"],
             BlockDeviceMappings=[{
                 "DeviceName": config.DEVICE_NAME,
                 "Ebs": {
-                    "VolumeSize": kwargs["storage_size"]
+                    "VolumeSize": creation_kwargs["storage_size"]
                 }
             }],
             TagSpecifications=[{
                 "ResourceType": "instance",
-                "Tags": kwargs["tags"]
+                "Tags": creation_kwargs["tags"]
             }],
-            SecurityGroupIds=[kwargs["sg_id"]]
+            SecurityGroupIds=creation_kwargs["sg_ids"]
         )
 
 
-    def check_type_size_permissions(self, instance_type, storage_size):
+    def verify_type_and_size_allowed(self, instance_type, storage_size):
         """verify user is allowed to create instance with type and size"""
         if simulate_policy.blocked(actions=["ec2:RunInstances"],
                 resources=["arn:aws:ec2:*:*:instance/*"],
@@ -141,22 +147,17 @@ class CreateServer(command_template.BaseClass):
     def add_documentation(self, argparse_obj):
         cmd_parser = super().add_documentation(argparse_obj)
         cmd_parser.add_argument(
+            "template", help="name of config instance setup template to use")
+        cmd_parser.add_argument(
             "region", help="EC2 region for the instance to be created in")
         cmd_parser.add_argument(
             "name", help="instance Name tag value")
-        cmd_parser.add_argument(
-            "type", help="instance type (larger is more expensive)")
-        cmd_parser.add_argument(
-            "size", help="instance storage amount (in GiB)", type=int)
         cmd_parser.add_argument(
             "-c", "--confirm", action="store_true",
             help="confirm instance creation")
         cmd_parser.add_argument(
             "-t", dest="tags", nargs=2, action="append", metavar="",
             help="instance tag key-value pair to attach to instance")
-        cmd_parser.add_argument(
-            "--sg", dest="sec_grp", metavar="",
-            help="VPC security group to place instance under")
 
 
     def blocked_actions(self, _):
@@ -164,7 +165,7 @@ class CreateServer(command_template.BaseClass):
         denied_actions.extend(simulate_policy.blocked(actions=[
             "ec2:DescribeRegions",
             "ec2:DescribeInstances",
-            "ec2:DescribeNetworkInterfaces",
+            "ec2:DescribeVpcs",
             "ec2:DescribeSecurityGroups",
             "ec2:CreateTags"
         ]))

@@ -16,7 +16,7 @@ class BaseClass(ABC):
 
 
     def blocked_actions(self, kwargs):
-        """return list of denied IAM actions needed for the child's main"""
+        """return list of denied IAM actions needed for child's main"""
         return []
 
 
@@ -26,5 +26,5 @@ class BaseClass(ABC):
 
 
     def docstring(self):
-        """return main's docstring's first line for use in argparse"""
+        """return main's docstring's first line (for use in argparse)"""
         return self.main.__doc__.splitlines()[0]
