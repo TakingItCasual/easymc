@@ -19,7 +19,7 @@ def main():
         cp_aws_setup_to_config(src_aws_setup_dir)
     config_aws_setup = get_config_aws_setup_dict()
 
-    # The config's aws_setup.json must have "Modified" and "Namespace" keys
+    # Config's aws_setup.json must have "Modified" and "Namespace" keys
     if not all(key in config_aws_setup for key in ("Modified", "Namespace")):
         cp_aws_setup_to_config(src_aws_setup_dir)
         config_aws_setup = get_config_aws_setup_dict()

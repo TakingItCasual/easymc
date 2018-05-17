@@ -62,7 +62,7 @@ class CreateServer(command_template.BaseClass):
         Args:
             "region" (str): EC2 region to create instance in.
             "inst_name" (str): Tag value for instance tag key "Name".
-            "inst_tags" (list[str]): Additional instance tag key-value pair(s).
+            "inst_tags" (list): Additional instance tag key-value pair(s).
             "inst_type" (str): EC2 instance type to create.
             "vol_size" (int): EC2 instance volume size (GiB).
             "inst_sgs" (list[str]): VPC SG(s) to assign to instance.
@@ -73,8 +73,10 @@ class CreateServer(command_template.BaseClass):
                 "storage_size" (int): EC2 instance size in GiB.
                 "tags" (list[dict]): All instance tag key-value pair(s).
                 "sg_ids" (list[str]): ID(s) of VPC SG(s) to assign to instance.
+                "subnet_id" (str): ID of VPC subnet to assign to instance.
         """
 
+        ec2_client = aws.ec2_client(region)
         creation_kwargs = {}
 
         creation_kwargs["instance_type"] = inst_type
@@ -95,10 +97,20 @@ class CreateServer(command_template.BaseClass):
         if not vpc_info:
             quit_out.err(["VPC " + config.NAMESPACE + " not found.",
                 "  Have you uploaded the AWS setup?"])
-        vpc_sgs = aws.get_region_security_groups(region, vpc_info[0]["VpcId"])
+        vpc_id = vpc_info[0]["VpcId"]
+        vpc_sgs = aws.get_region_security_groups(region, vpc_id)
         vpc_sg_ids = [sg["GroupId"] for sg in vpc_sgs
             if sg["GroupName"] in inst_sgs]
         creation_kwargs["sg_ids"] = vpc_sg_ids
+
+        vpc_subnets = ec2_client.describe_subnets(
+            Filters=[{
+                "Name": "vpc-id",
+                "Values": [vpc_id]
+            }]
+        )["Subnets"]
+        vpc_subnets.sort(key=lambda x: x["AvailabilityZone"])
+        creation_kwargs["subnet_id"] = vpc_subnets[0]["SubnetId"]
 
         return creation_kwargs
 
@@ -126,7 +138,8 @@ class CreateServer(command_template.BaseClass):
                 "ResourceType": "instance",
                 "Tags": creation_kwargs["tags"]
             }],
-            SecurityGroupIds=creation_kwargs["sg_ids"]
+            SecurityGroupIds=creation_kwargs["sg_ids"],
+            SubnetId=creation_kwargs["subnet_id"]
         )
 
 
@@ -166,6 +179,7 @@ class CreateServer(command_template.BaseClass):
             "ec2:DescribeRegions",
             "ec2:DescribeInstances",
             "ec2:DescribeVpcs",
+            "ec2:DescribeSubnets",
             "ec2:DescribeSecurityGroups",
             "ec2:CreateTags"
         ]))

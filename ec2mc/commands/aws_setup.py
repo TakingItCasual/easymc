@@ -18,7 +18,7 @@ class AWSSetup(command_template.BaseClass):
 
 
     def main(self, kwargs):
-        """check/(re)upload AWS setup files located in ~/.ec2mc/aws_setup
+        """check/(re)upload AWS setup files located in ~/.ec2mc/aws_setup/
 
         Args:
             kwargs (dict):

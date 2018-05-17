@@ -61,6 +61,7 @@ class VPCSetup(update_template.BaseClass):
                     for aws_vpc in aws_vpcs[region]):
                 vpc_regions["ToCreate"].remove(region)
                 vpc_regions["Existing"].append(region)
+        # TODO: Detect and create missing subnets for existing VPCs
 
         # Check each region for SG(s) described by aws_setup.json
         for sg_name, sg_regions in sg_names.items():
@@ -151,17 +152,18 @@ class VPCSetup(update_template.BaseClass):
 
 
     def create_vpc(self, region):
-        """create VPC in region and attach tags (threaded)"""
+        """create VPC with subnet(s) in region and attach tags"""
         ec2_client = aws.ec2_client(region)
         vpc_id = ec2_client.create_vpc(
             CidrBlock="172.31.0.0/16",
             AmazonProvidedIpv6CidrBlock=False
         )["Vpc"]["VpcId"]
         aws.attach_tags(ec2_client, vpc_id, self.vpc_name)
+        self.create_vpc_subnets(region, vpc_id)
 
 
     def delete_region_vpcs(self, region):
-        """delete VPC(s) from AWS region with correct Namespace tag (threaded)
+        """delete VPC(s) from AWS region with correct Namespace tag
 
         Returns:
             int: Number of VPCs deleted.
@@ -169,8 +171,38 @@ class VPCSetup(update_template.BaseClass):
         region_vpcs = aws.get_region_vpc(region)
         for vpc in region_vpcs:
             self.delete_vpc_sgs(region, vpc["VpcId"])
+            self.delete_vpc_subnets(region, vpc["VpcId"])
             aws.ec2_client(region).delete_vpc(VpcId=vpc["VpcId"])
         return len(region_vpcs)
+
+
+    def create_vpc_subnets(self, region, vpc_id):
+        """create EC2 VPC subnets on AWS region in each availability zone"""
+        ec2_client = aws.ec2_client(region)
+        azs = ec2_client.describe_availability_zones()["AvailabilityZones"]
+        for index, az in enumerate(azs):
+            if az["State"] != "available":
+                continue
+            if index*16 >= 256:
+                break
+            ec2_client.create_subnet(
+                AvailabilityZone=az["ZoneName"],
+                CidrBlock="172.31."+str(index*16)+".0/20",
+                VpcId=vpc_id
+            )
+
+
+    def delete_vpc_subnets(self, region, vpc_id):
+        """delete EC2 VPC subnets from AWS region for VPC"""
+        ec2_client = aws.ec2_client(region)
+        vpc_subnets = ec2_client.describe_subnets(
+            Filters=[{
+                "Name": "vpc-id",
+                "Values": [vpc_id]
+            }]
+        )["Subnets"]
+        for vpc_subnet in vpc_subnets:
+            ec2_client.delete_subnet(SubnetId=vpc_subnet["SubnetId"])
 
 
     def create_sg(self, region, sg_name):
@@ -216,10 +248,13 @@ class VPCSetup(update_template.BaseClass):
         self.describe_actions = [
             "ec2:DescribeRegions",
             "ec2:DescribeVpcs",
-            "ec2:DescribeSecurityGroups"
+            "ec2:DescribeSubnets",
+            "ec2:DescribeSecurityGroups",
+            "ec2:DescribeAvailabilityZones"
         ]
         self.upload_actions = [
             "ec2:CreateVpc",
+            "ec2:CreateSubnet",
             "ec2:CreateSecurityGroup",
             "ec2:AuthorizeSecurityGroupIngress",
             "ec2:AuthorizeSecurityGroupEgress",
@@ -227,6 +262,7 @@ class VPCSetup(update_template.BaseClass):
         ]
         self.delete_actions = [
             "ec2:DeleteVpc",
+            "ec2:DeleteSubnet",
             "ec2:DeleteSecurityGroup"
         ]
         return super().blocked_actions(sub_command)
