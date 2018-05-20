@@ -1,3 +1,4 @@
+from ruamel.yaml import YAML
 from botocore.exceptions import ClientError
 
 from ec2mc import config
@@ -113,6 +114,11 @@ class CreateServer(command_template.BaseClass):
         creation_kwargs["subnet_id"] = vpc_subnets[0]["SubnetId"]
 
         return creation_kwargs
+
+
+    def parse_user_data(self):
+        """add b64 bash scripts to config's user_data write_files"""
+        pass
 
 
     def create_instance(self, creation_kwargs, *, dry_run=True):

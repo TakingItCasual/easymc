@@ -1,0 +1,26 @@
+#cloud-config
+# add security patches and bug fixes
+package_update: true
+package_upgrade: true
+
+# Files to create on the instance
+write_files:
+- encoding: b64
+  content: CiMgVGhpcyBmaWxlIGNvbnRyb2xzIHRoZSBzdGF0ZSBvZiBTRUxpbnV4...
+  owner: root:root
+  path: /home/ec2-user/ec2mc-scripts/script.sh
+  permissions: '0775'
+
+# Commands to run on the instance
+runcmd:
+- [ sudo, yum, install, -y, java-1.8.0 ]
+- [ sudo, yum, remove, -y, java-1.7.0-openjdk ]
+
+# Reboot instance after completing setup
+power_state:
+  mode: reboot
+  message: Rebooting
+  timeout: 120
+
+# Capture all subprocess output into a logfile
+output: { all: '| tee -a /var/log/cloud-init-output.log' }

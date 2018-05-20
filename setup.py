@@ -47,6 +47,7 @@ setup(
         'boto3',
         'nbtlib',
         'deepdiff',
+        'ruamel.yaml',
         'jsonschema'
     ]
 )

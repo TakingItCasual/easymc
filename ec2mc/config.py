@@ -40,8 +40,10 @@ DEFAULT_REGION = "us-east-1"
 # AWS Linux AMI (used to decide instance OS on creation).
 # TODO: Update to AWS Linux 2 LTS when it comes out
 EC2_OS_AMI = "ami-5652ce39"
-# Different operating systems can have different default users.
-EC2_AMI_DEFAULT_USER_NAME = "ec2-user"
 # Used during instance creation for setting instance's storage space.
 # I don't know if there's any connection to the AMI so I'll just leave it here.
 DEVICE_NAME = "/dev/xvda"
+# Different operating systems can have different default users.
+EC2_AMI_DEFAULT_USER_NAME = "ec2-user"
+# Path to place management scripts within upon instance creation.
+USER_DATA_SCRIPT_LOCATION = "/home/" + EC2_AMI_DEFAULT_USER_NAME

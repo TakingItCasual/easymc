@@ -23,7 +23,7 @@ class Server(command_template.BaseClass):
         """various subcommands to interact with existing instances
 
         Args:
-            kwargs (dict): See stuff.verify_instances:main for documentation
+            kwargs (dict): See verify.verify_instances:argparse_args
         """
 
         chosen_cmd = next(cmd for cmd in self.sub_commands

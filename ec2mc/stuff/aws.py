@@ -52,7 +52,10 @@ def ssm_client():
 
 
 def get_region_vpc(region):
-    """get VPC from region with config's Namespace tag"""
+    """get VPC from region with config's Namespace tag
+
+    Requires ec2:DescribeVpcs permission.
+    """
     vpcs = ec2_client(region).describe_vpcs(Filters=[{
         "Name": "tag:Namespace",
         "Values": [config.NAMESPACE]

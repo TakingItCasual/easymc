@@ -133,22 +133,22 @@ def probe_region(region, tag_filter=None):
     if tag_filter is None:
         tag_filter = []
 
-    response = aws.ec2_client(region
-    ).describe_instances(Filters=tag_filter)["Reservations"]
+    reservations = aws.ec2_client(
+        region).describe_instances(Filters=tag_filter)["Reservations"]
 
     region_instances = {
         "region": region,
         "instances": []
     }
 
-    for instance in response:
-        instance = instance["Instances"][0]
-        region_instances["instances"].append({
-            "id": instance["InstanceId"],
-            "tags": {
-                tag["Key"]: tag["Value"] for tag in instance["Tags"]
-            }
-        })
+    for reservation in reservations:
+        for instance in reservation["Instances"]:
+            region_instances["instances"].append({
+                "id": instance["InstanceId"],
+                "tags": {
+                    tag["Key"]: tag["Value"] for tag in instance["Tags"]
+                }
+            })
 
     return region_instances
 

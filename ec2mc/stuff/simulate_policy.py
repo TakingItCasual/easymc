@@ -19,6 +19,7 @@ def blocked(*, actions=None, resources=None, context=None):
         raise ValueError("The actions argument is required.")
     elif not actions:
         return []
+    actions = list(set(actions))
 
     if resources is None:
         resources = ["*"]
