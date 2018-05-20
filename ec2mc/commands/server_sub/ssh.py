@@ -9,6 +9,9 @@ from ec2mc.stuff import aws
 from ec2mc.stuff import simulate_policy
 from ec2mc.stuff import quit_out
 
+import pprint
+pp = pprint.PrettyPrinter(indent=2)
+
 class SSHServer(command_template.BaseClass):
 
     def main(self, kwargs):
@@ -42,6 +45,11 @@ class SSHServer(command_template.BaseClass):
         )["Reservations"][0]["Instances"][0]
         instance_state = response["State"]["Name"]
         instance_dns = response["PublicDnsName"]
+        try:
+            default_user = next(pair["Value"] for pair in response["Tags"]
+                if pair["Key"] == "DefaultUser")
+        except StopIteration:
+            quit_out.err(["Instance missing DefaultUser tag key-value pair."])
 
         if instance_state != "running":
             quit_out.err(["Cannot SSH into instance that isn't running."])
@@ -57,7 +65,7 @@ class SSHServer(command_template.BaseClass):
             "-o", "StrictHostKeyChecking=no",
             "-o", "UserKnownHostsFile=/dev/null",
             "-i", private_key_file,
-            config.EC2_AMI_DEFAULT_USER_NAME+"@"+instance_dns
+            default_user+"@"+instance_dns
         ]
         subprocess.run(ssh_cmd_args)
 

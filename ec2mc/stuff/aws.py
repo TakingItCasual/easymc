@@ -64,7 +64,9 @@ def get_region_vpc(region):
     if len(vpcs) > 1:
         quit_out.err("Multiple VPCs with Namespace tag " + config.NAMESPACE +
             " found from AWS.")
-    return vpcs
+    elif vpcs:
+        return vpcs[0]
+    return None
 
 
 def get_region_security_groups(region, vpc_id=None):

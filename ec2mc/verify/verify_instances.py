@@ -98,15 +98,13 @@ def probe_regions(regions, tag_filter=None):
     threader = Threader()
     for region in regions:
         threader.add_thread(probe_region, (region, tag_filter))
-    results = threader.get_results()
+    regions_info = threader.get_results()
 
     all_instances = []
-    for region_instances in results:
-        region = region_instances["region"]
-        region_instances = region_instances["instances"]
-        for instance in region_instances:
+    for region_info in regions_info:
+        for instance in region_info["instances"]:
             all_instances.append({
-                "region": region,
+                "region": region_info["region"],
                 "id": instance["id"],
                 "tags": instance["tags"]
             })

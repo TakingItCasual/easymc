@@ -36,11 +36,14 @@ setup(
         ],
     },
     package_data={
-        'ec2mc': [
-            'verify/jsonschemas/*.json',
-            'aws_setup_src/*.json',
-            'aws_setup_src/iam_policies/*.json',
-            'aws_setup_src/vpc_security_groups/*.json'
+        'ec2mc.verify.jsonschemas': ['*.json'],
+        'ec2mc.aws_setup_src': [
+            '*.json',
+            'iam_policies/*.json',
+            'vpc_security_groups/*.json',
+            'user_data/*.yaml',
+            'instance_scripts/*.sh',
+            'instance_scripts/*.txt'
         ]
     },
     install_requires=[

@@ -5,10 +5,10 @@
             "Sid": "BasicPermissions",
             "Effect": "Allow",
             "Action": [
-                "sts:DecodeAuthorizationMessage",
                 "iam:GetUser",
                 "iam:SimulatePrincipalPolicy",
                 "ec2:DescribeRegions",
+                "ec2:DescribeVpcs",
                 "ec2:DescribeInstances",
                 "ec2:StartInstances"
             ],

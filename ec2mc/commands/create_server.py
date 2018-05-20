@@ -1,4 +1,6 @@
-from ruamel.yaml import YAML
+import os.path
+import base64
+from ruamel import yaml
 from botocore.exceptions import ClientError
 
 from ec2mc import config
@@ -34,17 +36,16 @@ class CreateServer(command_template.BaseClass):
             inst_template["InstanceType"], inst_template["VolumeSize"])
 
         # Verify the specified region
-        aws.get_regions([kwargs["region"]])
-        self.ec2_client = aws.ec2_client(kwargs["region"])
+        self.ec2_client = aws.ec2_client(
+            aws.get_regions([kwargs["region"]])[0])
 
         creation_kwargs = self.parse_run_instance_args(
-            kwargs["region"], kwargs["name"], kwargs["tags"],
-            inst_template["InstanceType"], inst_template["VolumeSize"],
-            inst_template["SecurityGroups"])
+            kwargs["region"], kwargs["name"], kwargs["tags"], inst_template)
+        user_data = self.process_user_data(inst_template)
 
         # Instance creation dry run to verify IAM permissions
         try:
-            self.create_instance(creation_kwargs, dry_run=True)
+            self.create_instance(creation_kwargs, user_data, dry_run=True)
         except ClientError as e:
             if not e.response["Error"]["Code"] == "DryRunOperation":
                 quit_out.err([str(e)])
@@ -57,21 +58,27 @@ class CreateServer(command_template.BaseClass):
 
 
     def parse_run_instance_args(self,
-            region, inst_name, inst_tags, inst_type, vol_size, inst_sgs):
-        """parse arguments for run_instances from argparse kwargs
+            region, inst_name, inst_tags, instance_template):
+        """parse arguments for run_instances from argparse kwargs and template
 
         Args:
-            "region" (str): EC2 region to create instance in.
-            "inst_name" (str): Tag value for instance tag key "Name".
-            "inst_tags" (list): Additional instance tag key-value pair(s).
-            "inst_type" (str): EC2 instance type to create.
-            "vol_size" (int): EC2 instance volume size (GiB).
-            "inst_sgs" (list[str]): VPC SG(s) to assign to instance.
+            region (str): EC2 region to create instance in.
+            inst_name (str): Tag value for instance tag key "Name".
+            inst_tags (list): Additional instance tag key-value pair(s).
+            instance_template (dict):
+                "AmazonMachineImage" (str): EC2 AMI (determines instance OS).
+                "DeviceName" (str): Device Name for operating system (?).
+                "InstanceType" (str): EC2 instance type to create.
+                "VolumeSize" (int): EC2 instance volume size (GiB).
+                "DefaultUser" (str): AMI's default user (for SSH).
+                "SecurityGroups" (list[str]): VPC SG(s) to assign to instance.
 
         Returns:
             dict: Arguments needed for instance creation.
+                "ec2_ami" (str): EC2 AMI (determines instance OS).
+                "device_name" (str): Device Name for operating system (?).
                 "instance_type" (str): EC2 instance type to create.
-                "storage_size" (int): EC2 instance size in GiB.
+                "volume_size" (int): EC2 instance size (GiB).
                 "tags" (list[dict]): All instance tag key-value pair(s).
                 "sg_ids" (list[str]): ID(s) of VPC SG(s) to assign to instance.
                 "subnet_id" (str): ID of VPC subnet to assign to instance.
@@ -80,13 +87,20 @@ class CreateServer(command_template.BaseClass):
         ec2_client = aws.ec2_client(region)
         creation_kwargs = {}
 
-        creation_kwargs["instance_type"] = inst_type
-        creation_kwargs["storage_size"] = vol_size
+        # TODO: Update template AMI to AWS Linux 2 LTS when it comes out
+        creation_kwargs["ec2_ami"] = instance_template["AmazonMachineImage"]
+        creation_kwargs["device_name"] = instance_template["DeviceName"]
+        creation_kwargs["instance_type"] = instance_template["InstanceType"]
+        creation_kwargs["volume_size"] = instance_template["VolumeSize"]
 
         creation_kwargs["tags"] = [{
             "Key": "Name",
             "Value": inst_name
         }]
+        creation_kwargs["tags"].append({
+            "Key": "DefaultUser",
+            "Value": instance_template["DefaultUser"]
+        })
         if inst_tags:
             for tag_key, tag_value in inst_tags:
                 creation_kwargs["tags"].append({
@@ -95,13 +109,13 @@ class CreateServer(command_template.BaseClass):
                 })
 
         vpc_info = aws.get_region_vpc(region)
-        if not vpc_info:
+        if vpc_info is None:
             quit_out.err(["VPC " + config.NAMESPACE + " not found.",
                 "  Have you uploaded the AWS setup?"])
-        vpc_id = vpc_info[0]["VpcId"]
+        vpc_id = vpc_info["VpcId"]
         vpc_sgs = aws.get_region_security_groups(region, vpc_id)
         vpc_sg_ids = [sg["GroupId"] for sg in vpc_sgs
-            if sg["GroupName"] in inst_sgs]
+            if sg["GroupName"] in instance_template["SecurityGroups"]]
         creation_kwargs["sg_ids"] = vpc_sg_ids
 
         vpc_subnets = ec2_client.describe_subnets(
@@ -116,40 +130,68 @@ class CreateServer(command_template.BaseClass):
         return creation_kwargs
 
 
-    def parse_user_data(self):
-        """add b64 bash scripts to config's user_data write_files"""
-        pass
+    def process_user_data(self, template):
+        """add b64 bash scripts to config's user_data write_files
+
+        Args:
+            template (dict):
+                "TemplateName": (str): Name of the user data YAML file.
+                "CrontabScript" (str): Which file to get crontab text from.
+                "ScriptsPath" (str): Where to place scripts on instance.
+
+        Returns:
+            str: YAML file string to initialize instance on first boot.
+        """
+
+        user_data_dir = os.path.join((config.AWS_SETUP_DIR + "user_data"), "")
+        user_data_file = user_data_dir + template["TemplateName"] + ".yaml"
+        with open(user_data_file, encoding="utf-8") as f:
+            user_data_json = yaml.load(f, Loader=yaml.RoundTripLoader)
+
+        scripts_dir = os.path.join(
+            (config.AWS_SETUP_DIR + "instance_scripts"), "")
+
+        for file_info in user_data_json["write_files"]:
+            file_info["encoding"] = "b64"
+            with open(scripts_dir + file_info["path"]) as f:
+                file_info["content"] = base64.b64encode(bytes(
+                    f.read(), "utf-8"))
+            file_info["path"] = template["ScriptsPath"] + file_info["path"]
+            file_info["owner"] = "root:root"
+            file_info["permissions"] = "0775"
+
+        return yaml.dump(user_data_json, Dumper=yaml.RoundTripDumper)
 
 
-    def create_instance(self, creation_kwargs, *, dry_run=True):
+    def create_instance(self, creation_kwargs, user_data, *, dry_run=True):
         """create EC2 instance
 
         Args:
             creation_kwargs (dict): See what parse_run_instance_args returns.
+            user_data (str): YAML file string to initialize instance on boot.
             dry_run (bool): If true, only test if IAM user is allowed to.
         """
 
         return self.ec2_client.run_instances(
             DryRun=dry_run,
             MinCount=1, MaxCount=1,
-            ImageId=config.EC2_OS_AMI,
+            ImageId=creation_kwargs["ec2_ami"],
             InstanceType=creation_kwargs["instance_type"],
             BlockDeviceMappings=[{
-                "DeviceName": config.DEVICE_NAME,
-                "Ebs": {
-                    "VolumeSize": creation_kwargs["storage_size"]
-                }
+                "DeviceName": creation_kwargs["device_name"],
+                "Ebs": {"VolumeSize": creation_kwargs["volume_size"]}
             }],
             TagSpecifications=[{
                 "ResourceType": "instance",
                 "Tags": creation_kwargs["tags"]
             }],
             SecurityGroupIds=creation_kwargs["sg_ids"],
-            SubnetId=creation_kwargs["subnet_id"]
+            SubnetId=creation_kwargs["subnet_id"],
+            UserData=user_data
         )
 
 
-    def verify_type_and_size_allowed(self, instance_type, storage_size):
+    def verify_type_and_size_allowed(self, instance_type, volume_size):
         """verify user is allowed to create instance with type and size"""
         if simulate_policy.blocked(actions=["ec2:RunInstances"],
                 resources=["arn:aws:ec2:*:*:instance/*"],
@@ -158,9 +200,9 @@ class CreateServer(command_template.BaseClass):
                 "Instance type " + instance_type + " not permitted."])
         if simulate_policy.blocked(actions=["ec2:RunInstances"],
                 resources=["arn:aws:ec2:*:*:volume/*"],
-                context={"ec2:VolumeSize": [storage_size]}):
+                context={"ec2:VolumeSize": [volume_size]}):
             quit_out.err([
-                "Storage amount " + str(storage_size) + "GiB too large."])
+                "Volume size " + str(volume_size) + "GiB is too large."])
 
 
     def add_documentation(self, argparse_obj):

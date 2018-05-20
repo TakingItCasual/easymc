@@ -1,6 +1,7 @@
 import os
 import shutil
 import filecmp
+from ruamel import yaml
 from jsonschema import validate
 from jsonschema.exceptions import ValidationError
 
@@ -13,6 +14,8 @@ def main():
     # Directory path for distribution's packaged aws_setup
     src_aws_setup_dir = os.path.abspath(
         os.path.join(__file__, os.pardir, os.pardir, "aws_setup_src"))
+    # Why do I need to do this?
+    src_aws_setup_dir = os.path.join(src_aws_setup_dir, "")
 
     # If config.AWS_SETUP_DIR nonexistant, copy from ec2mc.aws_setup_src
     if not os.path.isdir(config.AWS_SETUP_DIR):
@@ -26,16 +29,10 @@ def main():
 
     # If "Modified" key is True, prevent overwriting config's aws_setup
     if not config_aws_setup["Modified"]:
-        diff = filecmp.cmpfiles(src_aws_setup_dir, config.AWS_SETUP_DIR, [
-            "aws_setup.json",
-            "instance_templates.json",
-            "iam_policies/admin_permissions.json",
-            "iam_policies/basic_permissions.json",
-            "vpc_security_groups/ec2mc_sg.json"
-        ], shallow=False)
+        diff = directories_different(src_aws_setup_dir, config.AWS_SETUP_DIR)
         # If source and config aws_setup differ, overwrite config aws_setup
-        # If comparison fails (missing files?), overwrite config aws_setup
-        if diff[1] or diff[2]:
+        # If config aws_setup missing files, overwrite config aws_setup
+        if diff:
             cp_aws_setup_to_config(src_aws_setup_dir)
             config_aws_setup = get_config_aws_setup_dict()
 
@@ -46,6 +43,7 @@ def main():
 
     verify_iam_policies(config_aws_setup)
     verify_vpc_security_groups(config_aws_setup)
+    verify_user_data_files()
 
 
 def get_config_aws_setup_dict():
@@ -148,9 +146,8 @@ def verify_vpc_security_groups(config_aws_setup):
         sg["Name"] for sg in config_aws_setup["EC2"]["SecurityGroups"]
     ]
     # Actual SG json files located in aws_setup/vpc_security_groups/
-    vpc_sg_json_files = [
-        file[:-5] for file in os.listdir(sg_dir) if file.endswith(".json")
-    ]
+    vpc_sg_json_files = [f[:-5] for f in os.listdir(sg_dir)
+        if f.endswith(".json")]
 
     # Quit if aws_setup.json describes SGs not found in vpc_security_groups
     if not set(setup_sg_list).issubset(set(vpc_sg_json_files)):
@@ -174,6 +171,45 @@ def verify_vpc_security_groups(config_aws_setup):
     # Warn if vpc_security_groups has SGs not described by aws_setup.json
     if not set(vpc_sg_json_files).issubset(set(setup_sg_list)):
         print("Warning: Unused SG(s) found from vpc_security_groups dir.")
+
+
+def verify_user_data_files():
+    """verify write_file path entries in user_data YAML files"""
+    user_data_dir = os.path.join((config.AWS_SETUP_DIR + "user_data"), "")
+    user_data_files = [f for f in os.listdir(user_data_dir)
+        if f.endswith(".yaml")]
+
+    scripts_dir = os.path.join((config.AWS_SETUP_DIR + "instance_scripts"), "")
+    script_files = os.listdir(scripts_dir)
+
+    for user_data_file in user_data_files:
+        with open(user_data_dir + user_data_file, encoding="utf-8") as f:
+            user_data_json = yaml.load(f, Loader=yaml.RoundTripLoader)
+        if "write_files" in user_data_json:
+            for script_file in user_data_json["write_files"]:
+                if script_file["path"] not in script_files:
+                    quit_out.err([script_file["path"] + " described in " +
+                        user_data_file + " not found."])
+
+
+def directories_different(origin_dir, target_dir):
+    """return True if target_dir has missing or different files"""
+    files_to_compare = [f for f in os.listdir(origin_dir)
+        if os.path.isfile(origin_dir + f)]
+
+    sub_dirs = [d for d in os.listdir(origin_dir)
+        if os.path.isdir(origin_dir + d)]
+    if sub_dirs is not None:
+        for sub_dir in sub_dirs:
+            abs_sub_dir = os.path.join((origin_dir + sub_dir), "")
+            files_to_compare.extend([os.path.join(sub_dir, f) for f
+                in os.listdir(abs_sub_dir) if os.path.isfile(abs_sub_dir + f)])
+
+    diff = filecmp.cmpfiles(origin_dir, target_dir, files_to_compare,
+        shallow=False)
+    if diff[1] or diff[2]:
+        return True
+    return False
 
 
 def unique_names(dict_list):

@@ -3,13 +3,9 @@
 package_update: true
 package_upgrade: true
 
-# Files to create on the instance
+# Files taken from AWS setup's instance_scripts and uploaded to instance
 write_files:
-- encoding: b64
-  content: CiMgVGhpcyBmaWxlIGNvbnRyb2xzIHRoZSBzdGF0ZSBvZiBTRUxpbnV4...
-  owner: root:root
-  path: /home/ec2-user/ec2mc-scripts/script.sh
-  permissions: '0775'
+- path: script.sh
 
 # Commands to run on the instance
 runcmd:

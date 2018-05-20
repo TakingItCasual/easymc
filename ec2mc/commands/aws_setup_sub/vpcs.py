@@ -52,29 +52,30 @@ class VPCSetup(update_template.BaseClass):
             sg_threader.add_thread(aws.get_region_security_groups, (region,))
         # VPCs already present in AWS regions
         aws_vpcs = vpc_threader.get_results(return_dict=True)
-        # VPC security groupss already present in AWS regions
+        # VPC security groups already present in AWS regions
         aws_sgs = sg_threader.get_results(return_dict=True)
 
         # Check each region for VPC with with correct Name tag value
         for region in all_regions:
-            if any({"Key": "Name", "Value": self.vpc_name} in aws_vpc["Tags"]
-                    for aws_vpc in aws_vpcs[region]):
-                vpc_regions["ToCreate"].remove(region)
-                vpc_regions["Existing"].append(region)
+            if aws_vpcs[region] is not None:
+                if ({"Key": "Name", "Value": self.vpc_name}
+                        in aws_vpcs[region]["Tags"]):
+                    vpc_regions["ToCreate"].remove(region)
+                    vpc_regions["Existing"].append(region)
         # TODO: Detect and create missing subnets for existing VPCs
 
         # Check each region for SG(s) described by aws_setup.json
         for sg_name, sg_regions in sg_names.items():
             for region in all_regions:
-                if region in vpc_regions["Existing"]:
+                if aws_vpcs[region] is not None:
                     if any(aws_sg["GroupName"] == sg_name and
-                            aws_sg["VpcId"] == aws_vpcs[region][0]["VpcId"]
+                            aws_sg["VpcId"] == aws_vpcs[region]["VpcId"]
                             for aws_sg in aws_sgs[region]):
                         sg_regions["ToCreate"].remove(region)
                         sg_regions["UpToDate"].append(region)
 
                 if region in sg_regions["ToUpdate"]:
-                    # TODO: Detect if security group is out of date
+                    # TODO: Detect if AWS security group should be updated
                     pass
 
         return (vpc_regions, sg_names)
@@ -142,10 +143,10 @@ class VPCSetup(update_template.BaseClass):
 
         threader = Threader()
         for region in aws.get_regions():
-            threader.add_thread(self.delete_region_vpcs, (region,))
-        deleted_vpcs = list(filter(lambda x: x != 0, threader.get_results()))
+            threader.add_thread(self.delete_region_vpc, (region,))
+        deleted_vpcs = threader.get_results()
 
-        if len(deleted_vpcs) > 0:
+        if any(deleted_vpcs):
             print("VPC " + self.vpc_name + " deleted from all AWS regions.")
         else:
             print("No VPCs to delete.")
@@ -162,18 +163,15 @@ class VPCSetup(update_template.BaseClass):
         self.create_vpc_subnets(region, vpc_id)
 
 
-    def delete_region_vpcs(self, region):
-        """delete VPC(s) from AWS region with correct Namespace tag
-
-        Returns:
-            int: Number of VPCs deleted.
-        """
-        region_vpcs = aws.get_region_vpc(region)
-        for vpc in region_vpcs:
-            self.delete_vpc_sgs(region, vpc["VpcId"])
-            self.delete_vpc_subnets(region, vpc["VpcId"])
-            aws.ec2_client(region).delete_vpc(VpcId=vpc["VpcId"])
-        return len(region_vpcs)
+    def delete_region_vpc(self, region):
+        """delete VPC from AWS region with correct Namespace tag"""
+        region_vpc = aws.get_region_vpc(region)
+        if region_vpc is not None:
+            self.delete_vpc_sgs(region, region_vpc["VpcId"])
+            self.delete_vpc_subnets(region, region_vpc["VpcId"])
+            aws.ec2_client(region).delete_vpc(VpcId=region_vpc["VpcId"])
+            return True
+        return False
 
 
     def create_vpc_subnets(self, region, vpc_id):
@@ -212,7 +210,7 @@ class VPCSetup(update_template.BaseClass):
             Description=next(sg["Desc"] for sg in self.security_group_setup
                 if sg["Name"] == sg_name),
             GroupName=sg_name,
-            VpcId=aws.get_region_vpc(region)[0]["VpcId"]
+            VpcId=aws.get_region_vpc(region)["VpcId"]
         )["GroupId"]
         aws.attach_tags(ec2_client, sg_id, sg_name)
 

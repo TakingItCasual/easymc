@@ -4,6 +4,9 @@
         "type": "object",
         "properties": {
             "TemplateName": {"type" : "string"},
+            "AmazonMachineImage": {"type" : "string"},
+            "DeviceName": {"type" : "string"},
+            "DefaultUser": {"type" : "string"},
             "InstanceType": {"type": "string"},
             "VolumeSize": {"type": "integer"},
             "SecurityGroups": {
@@ -13,20 +16,18 @@
                 "uniqueItems": true
             },
             "CrontabScript": {"type": "string"},
-            "ManagementScripts": {
-                "type" : "array",
-                "items": {"type": "string"},
-                "minItems": 1,
-                "uniqueItems": true
-            }
+            "ScriptsPath": {"type": "string"}
         },
         "required": [
             "TemplateName",
+            "AmazonMachineImage",
+            "DeviceName",
+            "DefaultUser",
             "InstanceType",
             "VolumeSize",
             "SecurityGroups",
             "CrontabScript",
-            "ManagementScripts"
+            "ScriptsPath"
         ]
     },
     "minItems": 1,

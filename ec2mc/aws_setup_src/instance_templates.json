@@ -1,14 +1,15 @@
 [
     {
         "TemplateName": "mc_template",
+        "AmazonMachineImage": "ami-5652ce39",
+        "DeviceName": "/dev/xvda",
+        "DefaultUser": "ec2-user",
         "InstanceType": "t2.small",
         "VolumeSize": 8,
         "SecurityGroups": [
             "ec2mc_sg"
         ],
-        "CrontabScript": "ec2mc_crontab",
-        "ManagementScripts": [
-            "start-instance"
-        ]
+        "CrontabScript": "mc_crontab",
+        "ScriptsPath": "/home/ec2-user/manage-scripts/"
     }
 ]
