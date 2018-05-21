@@ -2,9 +2,6 @@ from ec2mc import config
 from ec2mc import update_template
 from ec2mc.stuff import aws
 
-#import pprint
-#pp = pprint.PrettyPrinter(indent=2)
-
 class IAMGroupSetup(update_template.BaseClass):
 
     def verify_component(self, config_aws_setup):

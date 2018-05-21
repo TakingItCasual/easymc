@@ -37,14 +37,11 @@ setup(
     },
     package_data={
         'ec2mc.verify.jsonschemas': ['*.json'],
-        'ec2mc.aws_setup_src': [
-            '*.json',
-            'iam_policies/*.json',
-            'vpc_security_groups/*.json',
-            'user_data/*.yaml',
-            'instance_scripts/*.sh',
-            'instance_scripts/*.txt'
-        ]
+        'ec2mc.aws_setup_src': ['*.json'],
+        'ec2mc.aws_setup_src.iam_policies': ['*.json'],
+        'ec2mc.aws_setup_src.vpc_security_groups': ['*.json'],
+        'ec2mc.aws_setup_src.user_data': ['*.yaml'],
+        'ec2mc.aws_setup_src.user_data.mc_template': ['*.txt', '*.sh']
     },
     install_requires=[
         'boto3',

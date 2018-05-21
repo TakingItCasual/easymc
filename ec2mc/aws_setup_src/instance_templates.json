@@ -9,7 +9,6 @@
         "SecurityGroups": [
             "ec2mc_sg"
         ],
-        "CrontabScript": "mc_crontab",
-        "ScriptsPath": "/home/ec2-user/manage-scripts/"
+        "WriteFilesPath": "/home/ec2-user/manage-scripts/"
     }
 ]

@@ -1,5 +1,6 @@
 import os.path
 import json
+from ruamel import yaml
 
 def assert_empty(blocked_actions):
     """used with simulate_policy, which returns a list of denied AWS actions"""
@@ -11,12 +12,24 @@ def parse_json(file_path):
     """verify that JSON file exists and contains valid JSON"""
     if not os.path.isfile(file_path):
         err([file_path + " not found."])
-    with open(file_path) as f:
+    with open(file_path, encoding="utf-8") as f:
         file_contents = f.read()
     try:
         return json.loads(file_contents)
     except ValueError:
         err([file_path + " is not a valid JSON file."])
+
+
+def parse_yaml(file_path):
+    """verify that YAML file exists and contains valid YAML"""
+    if not os.path.isfile(file_path):
+        err([file_path + " not found."])
+    with open(file_path, encoding="utf-8") as f:
+        file_contents = f.read()
+    try:
+        return yaml.load(file_contents, Loader=yaml.RoundTripLoader)
+    except: # Multiple exceptions are possible. Idk what they all are.
+        err([file_path + " is not a valid YAML file."])
 
 
 def err(quit_message_list):

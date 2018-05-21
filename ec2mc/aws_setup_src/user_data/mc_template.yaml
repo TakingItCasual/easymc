@@ -3,9 +3,8 @@
 package_update: true
 package_upgrade: true
 
-# Files taken from AWS setup's instance_scripts and uploaded to instance
-write_files:
-- path: script.sh
+# Files automatically copied from correct user_data subdirectory to write_files
+# If "crontab.txt" is found from subdir, it is instead created via runcmd
 
 # Commands to run on the instance
 runcmd:

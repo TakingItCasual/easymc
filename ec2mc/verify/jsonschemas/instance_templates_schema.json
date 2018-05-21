@@ -15,8 +15,7 @@
                 "minItems": 1,
                 "uniqueItems": true
             },
-            "CrontabScript": {"type": "string"},
-            "ScriptsPath": {"type": "string"}
+            "WriteFilesPath": {"type": "string"}
         },
         "required": [
             "TemplateName",
@@ -25,9 +24,7 @@
             "DefaultUser",
             "InstanceType",
             "VolumeSize",
-            "SecurityGroups",
-            "CrontabScript",
-            "ScriptsPath"
+            "SecurityGroups"
         ]
     },
     "minItems": 1,

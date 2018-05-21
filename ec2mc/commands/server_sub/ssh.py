@@ -9,9 +9,6 @@ from ec2mc.stuff import aws
 from ec2mc.stuff import simulate_policy
 from ec2mc.stuff import quit_out
 
-import pprint
-pp = pprint.PrettyPrinter(indent=2)
-
 class SSHServer(command_template.BaseClass):
 
     def main(self, kwargs):

@@ -1,4 +1,4 @@
-import os.path
+import os
 import base64
 from ruamel import yaml
 from botocore.exceptions import ClientError
@@ -137,7 +137,7 @@ class CreateServer(command_template.BaseClass):
             template (dict):
                 "TemplateName": (str): Name of the user data YAML file.
                 "CrontabScript" (str): Which file to get crontab text from.
-                "ScriptsPath" (str): Where to place scripts on instance.
+                "WriteFilesPath" (str): Where to place write_files on instance.
 
         Returns:
             str: YAML file string to initialize instance on first boot.
@@ -145,31 +145,42 @@ class CreateServer(command_template.BaseClass):
 
         user_data_dir = os.path.join((config.AWS_SETUP_DIR + "user_data"), "")
         user_data_file = user_data_dir + template["TemplateName"] + ".yaml"
-        with open(user_data_file, encoding="utf-8") as f:
-            user_data_json = yaml.load(f, Loader=yaml.RoundTripLoader)
+        user_data_dict = quit_out.parse_yaml(user_data_file)
 
-        scripts_dir = os.path.join(
-            (config.AWS_SETUP_DIR + "instance_scripts"), "")
+        write_files_dir = os.path.join(
+            (user_data_dir + template["TemplateName"]), "")
+        write_files = []
+        if os.path.isdir(write_files_dir):
+            write_files.extend([f for f in os.listdir(write_files_dir)
+                if os.path.isfile(write_files_dir + f)])
 
-        for file_info in user_data_json["write_files"]:
-            file_info["encoding"] = "b64"
-            with open(scripts_dir + file_info["path"]) as f:
-                file_info["content"] = base64.b64encode(bytes(
-                    f.read(), "utf-8"))
-            file_info["path"] = template["ScriptsPath"] + file_info["path"]
-            file_info["owner"] = "root:root"
-            file_info["permissions"] = "0775"
+        if "crontab.txt" in write_files:
+            # TODO: Append crontab creation command(s) to runcmd
+            write_files.remove("crontab.txt")
+        if "write_files" not in user_data_dict and write_files:
+            user_data_dict["write_files"] = []
 
-        return yaml.dump(user_data_json, Dumper=yaml.RoundTripDumper)
+        for file_name in write_files:
+            with open(write_files_dir + file_name) as f:
+                file_b64 = base64.b64encode(bytes(f.read(), "utf-8"))
+            user_data_dict["write_files"].append({
+                "encoding": "b64",
+                "content": file_b64,
+                "path": template["WriteFilesPath"] + file_name,
+                "owner": "root:root",
+                "permissions": "0775"
+            })
+
+        return yaml.dump(user_data_dict, Dumper=yaml.RoundTripDumper)
 
 
-    def create_instance(self, creation_kwargs, user_data, *, dry_run=True):
+    def create_instance(self, creation_kwargs, user_data, *, dry_run):
         """create EC2 instance
 
         Args:
             creation_kwargs (dict): See what parse_run_instance_args returns.
             user_data (str): YAML file string to initialize instance on boot.
-            dry_run (bool): If true, only test if IAM user is allowed to.
+            dry_run (bool): If True, only test if IAM user is allowed to.
         """
 
         return self.ec2_client.run_instances(

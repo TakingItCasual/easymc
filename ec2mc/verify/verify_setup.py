@@ -1,7 +1,6 @@
 import os
 import shutil
 import filecmp
-from ruamel import yaml
 from jsonschema import validate
 from jsonschema.exceptions import ValidationError
 
@@ -29,10 +28,12 @@ def main():
 
     # If "Modified" key is True, prevent overwriting config's aws_setup
     if not config_aws_setup["Modified"]:
-        diff = directories_different(src_aws_setup_dir, config.AWS_SETUP_DIR)
+        files_to_compare = list_files_with_sub_dirs(src_aws_setup_dir)
+        diff = filecmp.cmpfiles(src_aws_setup_dir, config.AWS_SETUP_DIR,
+            files_to_compare, shallow=False)
         # If source and config aws_setup differ, overwrite config aws_setup
         # If config aws_setup missing files, overwrite config aws_setup
-        if diff:
+        if diff[1] or diff[2]:
             cp_aws_setup_to_config(src_aws_setup_dir)
             config_aws_setup = get_config_aws_setup_dict()
 
@@ -63,6 +64,7 @@ def get_config_instance_templates_dict():
 
 
 def cp_aws_setup_to_config(src_aws_setup_dir):
+    """delete config aws_setup, then copy source aws_setup to config"""
     if os.path.isdir(config.AWS_SETUP_DIR):
         shutil.rmtree(config.AWS_SETUP_DIR)
     shutil.copytree(src_aws_setup_dir, config.AWS_SETUP_DIR)
@@ -179,37 +181,41 @@ def verify_user_data_files():
     user_data_files = [f for f in os.listdir(user_data_dir)
         if f.endswith(".yaml")]
 
-    scripts_dir = os.path.join((config.AWS_SETUP_DIR + "instance_scripts"), "")
-    script_files = os.listdir(scripts_dir)
+    config_instance_templates = get_config_instance_templates_dict()
+    for template in config_instance_templates:
+        # Verify template YAML file in user_data directory
+        template_yaml_file = template["TemplateName"] + ".yaml"
+        if template_yaml_file not in user_data_files:
+            quit_out.err([template_yaml_file + " not found from user_data."])
 
-    for user_data_file in user_data_files:
-        with open(user_data_dir + user_data_file, encoding="utf-8") as f:
-            user_data_json = yaml.load(f, Loader=yaml.RoundTripLoader)
-        if "write_files" in user_data_json:
-            for script_file in user_data_json["write_files"]:
-                if script_file["path"] not in script_files:
-                    quit_out.err([script_file["path"] + " described in " +
-                        user_data_file + " not found."])
+        # Verify template YAML's write_files is disjoin to user_data files
+        user_data_file_dir = os.path.join(
+            (user_data_dir + template["TemplateName"]), "")
+        if os.path.isdir(user_data_file_dir):
+            template_files = [template["WriteFilesPath"] + f for f
+                in os.listdir(user_data_file_dir)
+                if os.path.isfile(user_data_file_dir + f) and
+                f != "crontab.txt"]
+            template_yaml_dict = quit_out.parse_yaml(
+                user_data_dir + template_yaml_file)
+
+            if "WriteFilesPath" not in template and template_files:
+                quit_out.err(["WriteFilesPath key missing from template.",
+                    "  Required when template directory not empty."])
+
+            if "write_files" in template_yaml_dict:
+                for write_file in template_yaml_dict["write_files"]:
+                    if write_file["path"] in template_files:
+                        quit_out.err(["write_files file path collision."])
 
 
-def directories_different(origin_dir, target_dir):
-    """return True if target_dir has missing or different files"""
-    files_to_compare = [f for f in os.listdir(origin_dir)
-        if os.path.isfile(origin_dir + f)]
-
-    sub_dirs = [d for d in os.listdir(origin_dir)
-        if os.path.isdir(origin_dir + d)]
-    if sub_dirs is not None:
-        for sub_dir in sub_dirs:
-            abs_sub_dir = os.path.join((origin_dir + sub_dir), "")
-            files_to_compare.extend([os.path.join(sub_dir, f) for f
-                in os.listdir(abs_sub_dir) if os.path.isfile(abs_sub_dir + f)])
-
-    diff = filecmp.cmpfiles(origin_dir, target_dir, files_to_compare,
-        shallow=False)
-    if diff[1] or diff[2]:
-        return True
-    return False
+def list_files_with_sub_dirs(top_dir):
+    """compile list of files under top_dir for use with filecmp.cmpfiles"""
+    all_files = []
+    for path, _, files in os.walk(top_dir):
+        for f in files:
+            all_files.append(os.path.join(path, f)[len(top_dir):])
+    return all_files
 
 
 def unique_names(dict_list):
