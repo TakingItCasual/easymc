@@ -51,10 +51,13 @@ class CreateServer(command_template.BaseClass):
                 quit_out.err([str(e)])
 
         # Actual instance creation occurs after this confirmation.
-        if not kwargs["confirm"]:
+        if kwargs["confirm"] is False:
             print("")
             print("Specified instance creation args verified as permitted.")
             quit_out.q(["Please append the -c argument to confirm."])
+
+        instance = self.create_instance(
+            creation_kwargs, user_data, dry_run=False)["Instances"][0]
 
 
     def parse_run_instance_args(self,
@@ -136,7 +139,6 @@ class CreateServer(command_template.BaseClass):
         Args:
             template (dict):
                 "TemplateName": (str): Name of the user data YAML file.
-                "CrontabScript" (str): Which file to get crontab text from.
                 "WriteFilesPath" (str): Where to place write_files on instance.
 
         Returns:
@@ -154,9 +156,6 @@ class CreateServer(command_template.BaseClass):
             write_files.extend([f for f in os.listdir(write_files_dir)
                 if os.path.isfile(write_files_dir + f)])
 
-        if "crontab.txt" in write_files:
-            # TODO: Append crontab creation command(s) to runcmd
-            write_files.remove("crontab.txt")
         if "write_files" not in user_data_dict and write_files:
             user_data_dict["write_files"] = []
 

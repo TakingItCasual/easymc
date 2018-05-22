@@ -194,8 +194,7 @@ def verify_user_data_files():
         if os.path.isdir(user_data_file_dir):
             template_files = [template["WriteFilesPath"] + f for f
                 in os.listdir(user_data_file_dir)
-                if os.path.isfile(user_data_file_dir + f) and
-                f != "crontab.txt"]
+                if os.path.isfile(user_data_file_dir + f)]
             template_yaml_dict = quit_out.parse_yaml(
                 user_data_dir + template_yaml_file)
 

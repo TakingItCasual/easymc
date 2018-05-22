@@ -3,8 +3,17 @@
 package_update: true
 package_upgrade: true
 
+# If you want certain packages installed
+packages:
+- screen
+
 # Files automatically copied from correct user_data subdirectory to write_files
-# If "crontab.txt" is found from subdir, it is instead created via runcmd
+write_files:
+- owner: root:root
+  path: /etc/cron.d/mc_cronjob
+  content: |
+    @reboot root ~/manage-scripts/startup_script.sh
+    * * * * * root ~/manage-scripts/connection_listener.sh
 
 # Commands to run on the instance
 runcmd:

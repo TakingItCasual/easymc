@@ -25,7 +25,12 @@ IAM_NAME = None
 # (Optionally) set in ec2mc.verify.verify_config:main
 SERVERS_DAT = None
 
-# The name/group-name/path/etc. given to components uploaded to AWS.
+"""This string is used for the following purposes:
+- Path prefix for IAM groups, policies, and users ("/" on both sides).
+- Name and Namespace tags of VPC created in each region.
+- Name of SSH key pair created in each region.
+- Namespace tag of created instances.
+"""
 # Set in ec2mc.verify.verify_setup:main
 NAMESPACE = None
 

@@ -23,6 +23,7 @@ setup(
     classifiers=[
         'Development Status :: 3 - Alpha',
         'Environment :: Console',
+        'Intended Audience :: System Administrators',
         'License :: OSI Approved :: MIT License',
         'Operating System :: OS Independent',
         'Programming Language :: Python :: 3.6'
@@ -41,12 +42,13 @@ setup(
         'ec2mc.aws_setup_src.iam_policies': ['*.json'],
         'ec2mc.aws_setup_src.vpc_security_groups': ['*.json'],
         'ec2mc.aws_setup_src.user_data': ['*.yaml'],
-        'ec2mc.aws_setup_src.user_data.mc_template': ['*.txt', '*.sh']
+        'ec2mc.aws_setup_src.user_data.mc_template': ['*.sh']
     },
     install_requires=[
         'boto3',
         'nbtlib',
         'deepdiff',
+        'cryptography',
         'ruamel.yaml',
         'jsonschema'
     ]

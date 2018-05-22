@@ -8,6 +8,7 @@ from ec2mc.stuff import quit_out
 from ec2mc.commands.aws_setup_sub import iam_policies
 from ec2mc.commands.aws_setup_sub import iam_groups
 from ec2mc.commands.aws_setup_sub import vpcs
+from ec2mc.commands.aws_setup_sub import ssh_key_pairs
 
 class AWSSetup(command_template.BaseClass):
 
@@ -16,7 +17,8 @@ class AWSSetup(command_template.BaseClass):
         self.aws_components = [
             iam_policies.IAMPolicySetup(),
             iam_groups.IAMGroupSetup(),
-            vpcs.VPCSetup()
+            vpcs.VPCSetup(),
+            ssh_key_pairs.SSHKeyPairs()
         ]
 
 

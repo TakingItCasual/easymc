@@ -51,6 +51,6 @@ class Configure(command_template.BaseClass):
         if servers_dat:
             config_dict["default"]["servers_dat"] = servers_dat
 
-        with open(config_file, "w") as output:
-            config_dict.write(output)
+        with open(config_file, "w", encoding="utf-8") as out_file:
+            config_dict.write(out_file)
         os.chmod(config_file, config.CONFIG_PERMS)

@@ -16,7 +16,7 @@ class VPCSetup(update_template.BaseClass):
 
         Returns:
             tuple:
-                dict: Which regions the namespace VPC exists in.
+                dict: Which regions Namespace VPC exists in.
                     "ToCreate" (list): AWS region(s) to create VPC in.
                     "Existing" (list): AWS region(s) already containing VPC.
                 dict: VPC security group status(es) for each region.
@@ -160,6 +160,14 @@ class VPCSetup(update_template.BaseClass):
             AmazonProvidedIpv6CidrBlock=False
         )["Vpc"]["VpcId"]
         aws.attach_tags(ec2_client, vpc_id, self.vpc_name)
+        ec2_client.modify_vpc_attribute(
+            EnableDnsSupport={"Value": True},
+            VpcId=vpc_id
+        )
+        ec2_client.modify_vpc_attribute(
+            EnableDnsHostnames={"Value": True},
+            VpcId=vpc_id
+        )
         self.create_vpc_subnets(region, vpc_id)
 
 
@@ -252,6 +260,7 @@ class VPCSetup(update_template.BaseClass):
         ]
         self.upload_actions = [
             "ec2:CreateVpc",
+            "ec2:ModifyVpcAttribute",
             "ec2:CreateSubnet",
             "ec2:CreateSecurityGroup",
             "ec2:AuthorizeSecurityGroupIngress",
