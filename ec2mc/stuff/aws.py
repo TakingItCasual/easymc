@@ -7,7 +7,7 @@ import boto3
 from botocore.exceptions import ClientError
 
 from ec2mc import config
-from ec2mc.stuff import quit_out
+from ec2mc.stuff import halt
 
 def get_regions(region_filter=None):
     """return list of EC2 regions, or region_filter if not empty and valid
@@ -23,7 +23,7 @@ def get_regions(region_filter=None):
     if region_filter:
         if set(region_filter).issubset(set(region_list)):
             return list(set(region_filter))
-        quit_out.err(["Following invalid region(s) specified:",
+        halt.err(["Following invalid region(s) specified:",
             *set(region_filter).difference(set(region_list))])
     return region_list
 
@@ -62,8 +62,8 @@ def get_region_vpc(region):
     }])["Vpcs"]
 
     if len(vpcs) > 1:
-        quit_out.err("Multiple VPCs with Namespace tag " + config.NAMESPACE +
-            " found from AWS.")
+        halt.err(["Multiple VPCs with Namespace tag " + config.NAMESPACE +
+            " found from AWS."])
     elif vpcs:
         return vpcs[0]
     return None
@@ -86,8 +86,7 @@ def get_region_security_groups(region, vpc_id=None):
 
     sg_group_names = [sg["GroupName"] for sg in vpc_sgs]
     if len(sg_group_names) > len(set(sg_group_names)):
-        quit_out.err("SGs with duplicate group names in " +
-            region + " region.")
+        halt.err(["SGs with duplicate group names in " + region + " region."])
     return vpc_sgs
 
 
@@ -124,11 +123,11 @@ def attach_tags(aws_ec2_client, resource_id, name_tag=None):
             return
         except ClientError as e:
             if not_found_regex.search(e.response["Error"]["Code"]) is None:
-                quit_out.err(["Exception when tagging " + resource_id + ":",
-                    e.response])
+                halt.err(["Exception when tagging " + resource_id + ":",
+                    str(e)])
             sleep(1)
 
-    quit_out.err([resource_id + " doesn't exist after a minute of wating."])
+    halt.err([resource_id + " doesn't exist after a minute of wating."])
 
 
 def decode_error_msg(error_response):

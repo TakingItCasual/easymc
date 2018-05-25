@@ -3,8 +3,8 @@ import os.path
 from ec2mc import config
 from ec2mc import update_template
 from ec2mc.stuff import aws
+from ec2mc.stuff import os2
 from ec2mc.stuff.threader import Threader
-from ec2mc.stuff import quit_out
 
 class VPCSetup(update_template.BaseClass):
 
@@ -222,7 +222,7 @@ class VPCSetup(update_template.BaseClass):
         )["GroupId"]
         aws.attach_tags(ec2_client, sg_id, sg_name)
 
-        sg_filters = quit_out.parse_json(
+        sg_filters = os2.parse_json(
             self.security_group_dir + sg_name + ".json")
 
         if sg_filters["Ingress"]:

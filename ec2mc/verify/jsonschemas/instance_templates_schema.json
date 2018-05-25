@@ -15,7 +15,21 @@
                 "minItems": 1,
                 "uniqueItems": true
             },
-            "WriteFilesPath": {"type": "string"}
+            "WriteDirectories": {
+                "type" : "array",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "LocalDir": {"type": "string"},
+                        "InstancePath": {"type": "string"},
+                        "Owner": {"type": "string"},
+                        "chmod": {"type": "string"}
+                    },
+                    "required": ["LocalDir", "InstancePath"]
+                },
+                "minItems": 1,
+                "uniqueItems": true
+            }
         },
         "required": [
             "TemplateName",

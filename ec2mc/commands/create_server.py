@@ -6,8 +6,9 @@ from botocore.exceptions import ClientError
 from ec2mc import config
 from ec2mc import command_template
 from ec2mc.stuff import aws
+from ec2mc.stuff import os2
 from ec2mc.stuff import simulate_policy
-from ec2mc.stuff import quit_out
+from ec2mc.stuff import halt
 
 import pprint
 pp = pprint.PrettyPrinter(indent=2)
@@ -25,12 +26,12 @@ class CreateServer(command_template.BaseClass):
                 "confirm" (bool): Whether to actually create the instance.
         """
 
-        inst_templates = quit_out.parse_json(config.INSTANCE_TEMPLATES_JSON)
+        inst_templates = os2.parse_json(config.INSTANCE_TEMPLATES_JSON)
         try:
             inst_template = next(template for template in inst_templates
                 if template["TemplateName"] == kwargs["template"])
         except StopIteration:
-            quit_out.err(["Template " + kwargs["template"] + " not found."])
+            halt.err(["Template " + kwargs["template"] + " not found."])
 
         self.verify_type_and_size_allowed(
             inst_template["InstanceType"], inst_template["VolumeSize"])
@@ -39,8 +40,7 @@ class CreateServer(command_template.BaseClass):
         self.ec2_client = aws.ec2_client(
             aws.get_regions([kwargs["region"]])[0])
 
-        creation_kwargs = self.parse_run_instance_args(
-            kwargs["region"], kwargs["name"], kwargs["tags"], inst_template)
+        creation_kwargs = self.parse_run_instance_args(kwargs, inst_template)
         user_data = self.process_user_data(inst_template)
 
         # Instance creation dry run to verify IAM permissions
@@ -48,26 +48,26 @@ class CreateServer(command_template.BaseClass):
             self.create_instance(creation_kwargs, user_data, dry_run=True)
         except ClientError as e:
             if not e.response["Error"]["Code"] == "DryRunOperation":
-                quit_out.err([str(e)])
+                halt.err([str(e)])
 
         # Actual instance creation occurs after this confirmation.
         if kwargs["confirm"] is False:
             print("")
             print("Specified instance creation args verified as permitted.")
-            quit_out.q(["Please append the -c argument to confirm."])
+            halt.q(["Please append the -c argument to confirm."])
 
         instance = self.create_instance(
             creation_kwargs, user_data, dry_run=False)["Instances"][0]
 
 
-    def parse_run_instance_args(self,
-            region, inst_name, inst_tags, instance_template):
+    def parse_run_instance_args(self, kwargs, instance_template):
         """parse arguments for run_instances from argparse kwargs and template
 
         Args:
-            region (str): EC2 region to create instance in.
-            inst_name (str): Tag value for instance tag key "Name".
-            inst_tags (list): Additional instance tag key-value pair(s).
+            kwargs (dict):
+                "region" (str): EC2 region to create instance in.
+                "name" (str): Tag value for instance tag key "Name".
+                "tags" (list): Additional instance tag key-value pair(s).
             instance_template (dict):
                 "AmazonMachineImage" (str): EC2 AMI (determines instance OS).
                 "DeviceName" (str): Device Name for operating system (?).
@@ -87,6 +87,7 @@ class CreateServer(command_template.BaseClass):
                 "subnet_id" (str): ID of VPC subnet to assign to instance.
         """
 
+        region = kwargs["region"]
         ec2_client = aws.ec2_client(region)
         creation_kwargs = {}
 
@@ -98,14 +99,14 @@ class CreateServer(command_template.BaseClass):
 
         creation_kwargs["tags"] = [{
             "Key": "Name",
-            "Value": inst_name
+            "Value": kwargs["name"]
         }]
         creation_kwargs["tags"].append({
             "Key": "DefaultUser",
             "Value": instance_template["DefaultUser"]
         })
-        if inst_tags:
-            for tag_key, tag_value in inst_tags:
+        if kwargs["tags"]:
+            for tag_key, tag_value in kwargs["tags"]:
                 creation_kwargs["tags"].append({
                     "Key": tag_key,
                     "Value": tag_value
@@ -113,7 +114,7 @@ class CreateServer(command_template.BaseClass):
 
         vpc_info = aws.get_region_vpc(region)
         if vpc_info is None:
-            quit_out.err(["VPC " + config.NAMESPACE + " not found.",
+            halt.err(["VPC " + config.NAMESPACE + " not found.",
                 "  Have you uploaded the AWS setup?"])
         vpc_id = vpc_info["VpcId"]
         vpc_sgs = aws.get_region_security_groups(region, vpc_id)
@@ -146,29 +147,36 @@ class CreateServer(command_template.BaseClass):
         """
 
         user_data_dir = os.path.join((config.AWS_SETUP_DIR + "user_data"), "")
-        user_data_file = user_data_dir + template["TemplateName"] + ".yaml"
-        user_data_dict = quit_out.parse_yaml(user_data_file)
+        user_data_dict = os2.parse_yaml(
+            user_data_dir + template["TemplateName"] + ".yaml")
 
-        write_files_dir = os.path.join(
-            (user_data_dir + template["TemplateName"]), "")
-        write_files = []
-        if os.path.isdir(write_files_dir):
-            write_files.extend([f for f in os.listdir(write_files_dir)
-                if os.path.isfile(write_files_dir + f)])
+        if "WriteDirectories" in template:
+            template_dir = os.path.join(
+                (user_data_dir + template["TemplateName"]), "")
 
-        if "write_files" not in user_data_dict and write_files:
-            user_data_dict["write_files"] = []
+            write_files = []
+            for write_dir in template["WriteDirectories"]:
+                dir_files = os2.list_dir_files(
+                    template_dir + write_dir["LocalDir"])
+                for dir_file in dir_files:
+                    file_path = os.path.join(
+                        (template_dir + write_dir["LocalDir"]), dir_file)
+                    with open(file_path) as f:
+                        file_b64 = base64.b64encode(bytes(f.read(), "utf-8"))
+                    write_files.append({
+                        "encoding": "b64",
+                        "content": file_b64,
+                        "path": template["WriteFilesPath"] + dir_file
+                    })
+                    if "Owner" in write_dir:
+                        write_files[-1]["owner"] = write_dir["Owner"]
+                    if "chmod" in write_dir:
+                        write_files[-1]["permissions"] = write_dir["chmod"]
 
-        for file_name in write_files:
-            with open(write_files_dir + file_name) as f:
-                file_b64 = base64.b64encode(bytes(f.read(), "utf-8"))
-            user_data_dict["write_files"].append({
-                "encoding": "b64",
-                "content": file_b64,
-                "path": template["WriteFilesPath"] + file_name,
-                "owner": "root:root",
-                "permissions": "0775"
-            })
+            if write_files:
+                if "write_files" not in user_data_dict:
+                    user_data_dict["write_files"] = []
+                user_data_dict["write_files"].extend(write_files)
 
         return yaml.dump(user_data_dict, Dumper=yaml.RoundTripDumper)
 
@@ -206,13 +214,11 @@ class CreateServer(command_template.BaseClass):
         if simulate_policy.blocked(actions=["ec2:RunInstances"],
                 resources=["arn:aws:ec2:*:*:instance/*"],
                 context={"ec2:InstanceType": [instance_type]}):
-            quit_out.err([
-                "Instance type " + instance_type + " not permitted."])
+            halt.err(["Instance type " + instance_type + " not permitted."])
         if simulate_policy.blocked(actions=["ec2:RunInstances"],
                 resources=["arn:aws:ec2:*:*:volume/*"],
                 context={"ec2:VolumeSize": [volume_size]}):
-            quit_out.err([
-                "Volume size " + str(volume_size) + "GiB is too large."])
+            halt.err(["Volume size " + str(volume_size) + "GiB is too large."])
 
 
     def add_documentation(self, argparse_obj):

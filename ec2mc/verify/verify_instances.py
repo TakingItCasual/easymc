@@ -1,6 +1,6 @@
 from ec2mc.stuff import aws
 from ec2mc.stuff.threader import Threader
-from ec2mc.stuff import quit_out
+from ec2mc.stuff import halt
 
 def main(kwargs):
     """wrapper for probe_regions() which prints found instances to the CLI
@@ -65,16 +65,16 @@ def main(kwargs):
 
     if not all_instances:
         if region_filter and not tag_filter:
-            quit_out.err(["No instances found from specified region(s).",
+            halt.err(["No instances found from specified region(s).",
                 "  Try removing the region filter."])
         if not region_filter and tag_filter:
-            quit_out.err(["No instances with specified tag(s) found.",
+            halt.err(["No instances with specified tag(s) found.",
                 "  Try removing the tag filter."])
         if region_filter and tag_filter:
-            quit_out.err([("No instances with specified tag(s) "
-                "found from specified region(s)."),
+            halt.err([("No instances with specified tag(s) found "
+                "from specified region(s)."),
                 "  Try removing the region filter and/or the tag filter."])
-        quit_out.err(["No instances found."])
+        halt.err(["No instances found."])
 
     return all_instances
 

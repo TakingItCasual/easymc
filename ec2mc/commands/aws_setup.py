@@ -1,9 +1,10 @@
 from ec2mc import config
 from ec2mc import command_template
 from ec2mc.stuff import aws
+from ec2mc.stuff import os2
 from ec2mc.stuff import simulate_policy
 from ec2mc.stuff.threader import Threader
-from ec2mc.stuff import quit_out
+from ec2mc.stuff import halt
 
 from ec2mc.commands.aws_setup_sub import iam_policies
 from ec2mc.commands.aws_setup_sub import iam_groups
@@ -33,14 +34,14 @@ class AWSSetup(command_template.BaseClass):
         if kwargs["action"] == "delete":
             path_prefix = "/" + config.NAMESPACE + "/"
             if not self.verify_namespace_groups_empty(path_prefix):
-                quit_out.err(["User(s) attached to Namespace group(s)."])
+                halt.err(["User(s) attached to Namespace group(s)."])
             if not self.verify_namespace_policies_empty(path_prefix):
-                quit_out.err(["User(s) attached to Namespace policy(s)."])
+                halt.err(["User(s) attached to Namespace policy(s)."])
             if not self.verify_namespace_vpcs_empty():
-                quit_out.err(["Instance(s) found under Namespace VPC(s)."])
+                halt.err(["Instance(s) found under Namespace VPC(s)."])
 
         # AWS setup JSON config dictionary
-        config_aws_setup = quit_out.parse_json(config.AWS_SETUP_JSON)
+        config_aws_setup = os2.parse_json(config.AWS_SETUP_JSON)
 
         for component in self.aws_components:
             component_info = component.verify_component(config_aws_setup)

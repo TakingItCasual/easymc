@@ -7,13 +7,7 @@ package_upgrade: true
 packages:
 - screen
 
-# Files automatically copied from correct user_data subdirectory to write_files
-write_files:
-- owner: root:root
-  path: /etc/cron.d/mc_cronjob
-  content: |
-    @reboot root ~/manage-scripts/startup_script.sh
-    * * * * * root ~/manage-scripts/connection_listener.sh
+# Files copied from user_data template subdirectory(s) to write_files
 
 # Commands to run on the instance
 runcmd:

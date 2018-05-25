@@ -5,7 +5,7 @@ from botocore.exceptions import ClientError
 from ec2mc import config
 from ec2mc.stuff import aws
 from ec2mc.stuff import simulate_policy
-from ec2mc.stuff import quit_out
+from ec2mc.stuff import halt
 
 def main():
     """verifies existence of config file, and the values therein
@@ -27,7 +27,7 @@ def main():
     # Read the config. Quit out if it doesn't exist.
     config_file = config.CONFIG_DIR + "config"
     if not os.path.isfile(config_file):
-        quit_out.q([
+        halt.q([
             "Configuration is not set. Set with \"ec2mc configure\".",
             "  IAM credentials must be set to access EC2 instances."
         ])
@@ -62,8 +62,7 @@ def verify_user(config_dict):
 
     if not (config_dict.has_option("default", "iam_id") and
             config_dict.has_option("default", "iam_secret")):
-        quit_out.err([
-            "Configuration incomplete. Set with \"ec2mc configure\"."])
+        halt.err(["Configuration incomplete. Set with \"ec2mc configure\"."])
 
     config.IAM_ID = config_dict["default"]["iam_id"]
     config.IAM_SECRET = config_dict["default"]["iam_secret"]
@@ -73,12 +72,12 @@ def verify_user(config_dict):
         iam_user = aws.iam_client().get_user()["User"]
     except ClientError as e:
         if e.response["Error"]["Code"] == "InvalidClientTokenId":
-            quit_out.err(["IAM ID is invalid."])
+            halt.err(["IAM ID is invalid."])
         elif e.response["Error"]["Code"] == "SignatureDoesNotMatch":
-            quit_out.err(["IAM ID is valid, but its secret is invalid."])
+            halt.err(["IAM ID is valid, but its secret is invalid."])
         elif e.response["Error"]["Code"] == "AccessDenied":
-            quit_out.assert_empty(["iam:GetUser"])
-        quit_out.q([e])
+            halt.assert_empty(["iam:GetUser"])
+        halt.q([str(e)])
 
     # This ARN is what is needed for SimulatePrincipalPolicy.
     config.IAM_ARN = iam_user["Arn"]
@@ -89,5 +88,5 @@ def verify_user(config_dict):
         simulate_policy.blocked(actions=["iam:GetUser"])
     except ClientError as e:
         if e.response["Error"]["Code"] == "AccessDenied":
-            quit_out.assert_empty(["iam:SimulatePrincipalPolicy"])
-        quit_out.q([e])
+            halt.assert_empty(["iam:SimulatePrincipalPolicy"])
+        halt.q([str(e)])

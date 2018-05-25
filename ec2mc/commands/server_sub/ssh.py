@@ -7,7 +7,7 @@ from ec2mc import command_template
 from ec2mc.verify import verify_instances
 from ec2mc.stuff import aws
 from ec2mc.stuff import simulate_policy
-from ec2mc.stuff import quit_out
+from ec2mc.stuff import halt
 
 class SSHServer(command_template.BaseClass):
 
@@ -24,14 +24,14 @@ class SSHServer(command_template.BaseClass):
         """
 
         if os.name != "posix":
-            quit_out.err(["ssh command only supported on posix systems.",
+            halt.err(["ssh command only supported on posix systems.",
                 "  Google around for methods of SSHing with your OS."])
 
         private_key_file = self.find_private_key()
 
         instance = verify_instances.main(kwargs)
         if len(instance) > 1:
-            quit_out.err(["Instance query returned multiple results.",
+            halt.err(["Instance query returned multiple results.",
                 "  Narrow filter(s) so that only one instance is found."])
         instance = instance[0]
 
@@ -46,14 +46,14 @@ class SSHServer(command_template.BaseClass):
             default_user = next(pair["Value"] for pair in response["Tags"]
                 if pair["Key"] == "DefaultUser")
         except StopIteration:
-            quit_out.err(["Instance missing DefaultUser tag key-value pair."])
+            halt.err(["Instance missing DefaultUser tag key-value pair."])
 
         if instance_state != "running":
-            quit_out.err(["Cannot SSH into instance that isn't running."])
+            halt.err(["Cannot SSH into instance that isn't running."])
 
         # Detects if the system has the "ssh" command.
         if not shutil.which("ssh"):
-            quit_out.err(["SSH executable not found. Please install it."])
+            halt.err(["SSH executable not found. Please install it."])
 
         print("")
         print("Attempting to SSH into instance...")
@@ -75,9 +75,9 @@ class SSHServer(command_template.BaseClass):
                 private_keys.append(config.CONFIG_DIR + file)
 
         if not private_keys:
-            quit_out.err(["Private key file not found in config."])
+            halt.err(["Private key file not found in config."])
         elif len(private_keys) > 1:
-            quit_out.err(["Multiple private key files found in config."])
+            halt.err(["Multiple private key files found in config."])
 
         os.chmod(private_keys[0], config.PK_PERMS)
         return private_keys[0]

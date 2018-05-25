@@ -5,7 +5,7 @@ from deepdiff import DeepDiff
 from ec2mc import config
 from ec2mc import update_template
 from ec2mc.stuff import aws
-from ec2mc.stuff import quit_out
+from ec2mc.stuff import os2
 
 class IAMPolicySetup(update_template.BaseClass):
 
@@ -58,7 +58,7 @@ class IAMPolicySetup(update_template.BaseClass):
 
         # Check if policy(s) on AWS need to be updated
         for local_policy in policy_names["ToUpdate"][:]:
-            local_policy_document = quit_out.parse_json(
+            local_policy_document = os2.parse_json(
                 self.policy_dir + local_policy + ".json")
 
             aws_policy_desc = next(aws_policy for aws_policy in aws_policies
@@ -125,7 +125,7 @@ class IAMPolicySetup(update_template.BaseClass):
 
     def create_policy(self, policy_name):
         """create new IAM policy on AWS"""
-        local_policy_document = quit_out.parse_json(
+        local_policy_document = os2.parse_json(
             self.policy_dir + policy_name + ".json")
         policy_description = next(
             policy["Desc"] for policy in self.iam_policy_setup
@@ -141,7 +141,7 @@ class IAMPolicySetup(update_template.BaseClass):
 
     def update_policy(self, policy_name, aws_policies):
         """update IAM policy that already exists on AWS"""
-        local_policy_document = quit_out.parse_json(
+        local_policy_document = os2.parse_json(
             self.policy_dir + policy_name + ".json")
 
         aws_policy_desc = next(aws_policy for aws_policy in aws_policies

@@ -12,7 +12,7 @@ sys.dont_write_bytecode = True
 
 from ec2mc.verify import verify_config
 from ec2mc.verify import verify_setup
-from ec2mc.stuff import quit_out
+from ec2mc.stuff import halt
 
 from ec2mc.commands import configure
 from ec2mc.commands import aws_setup
@@ -37,7 +37,7 @@ def main(args=None):
             args = sys.argv[1:]
 
         if sys.version_info < (3, 6):
-            quit_out.err(["Python version 3.6 or greater required."])
+            halt.err(["Python version 3.6 or greater required."])
 
         # Available commands from the ec2mc.commands directory
         commands = [
@@ -56,7 +56,7 @@ def main(args=None):
             config_cmd = next(cmd for cmd in commands
                 if cmd.module_name() == arg_cmd)
             config_cmd.main()
-            quit_out.q()
+            halt.q()
 
         # Load and verify the config (primarily for the IAM credentials)
         verify_config.main()
@@ -68,12 +68,12 @@ def main(args=None):
             if cmd.module_name() == arg_cmd)
 
         # Verify that the IAM user has needed permissions to use the command
-        quit_out.assert_empty(chosen_cmd.blocked_actions(kwargs))
+        halt.assert_empty(chosen_cmd.blocked_actions(kwargs))
 
         # Use the command
         chosen_cmd.main(kwargs)
 
-        quit_out.q(["ec2mc completed without errors."])
+        halt.q(["ec2mc completed without errors."])
     except SystemExit:
         pass
 
@@ -97,7 +97,7 @@ def argv_to_kwargs(args, commands):
 
     if not args:
         parser.print_help()
-        quit_out.q()
+        halt.q()
 
     return vars(parser.parse_args(args))
 

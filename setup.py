@@ -42,7 +42,8 @@ setup(
         'ec2mc.aws_setup_src.iam_policies': ['*.json'],
         'ec2mc.aws_setup_src.vpc_security_groups': ['*.json'],
         'ec2mc.aws_setup_src.user_data': ['*.yaml'],
-        'ec2mc.aws_setup_src.user_data.mc_template': ['*.sh']
+        'ec2mc.aws_setup_src.user_data.mc_template.crontabs': ['*'],
+        'ec2mc.aws_setup_src.user_data.mc_template.manage-scripts': ['*'],
     },
     install_requires=[
         'boto3',

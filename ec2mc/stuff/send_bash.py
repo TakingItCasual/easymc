@@ -1,10 +1,10 @@
 from ec2mc.stuff import aws
 from ec2mc.stuff import simulate_policy
-from ec2mc.stuff import quit_out
+from ec2mc.stuff import halt
 
 def main(instance_id, cmd_list):
     """send bash command(s) to an instance via SSM"""
-    quit_out.assert_empty(simulate_policy.blocked(actions=[
+    halt.assert_empty(simulate_policy.blocked(actions=[
         "ssm:SendCommand",
         "ssm:GetCommandInvocation"
     ]))
