@@ -8,9 +8,6 @@ from ec2mc import config
 from ec2mc.stuff import os2
 from ec2mc.stuff import halt
 
-import pprint
-pp = pprint.PrettyPrinter(indent=2)
-
 def main():
     """verify contents of user's config's aws_setup directory"""
 
@@ -126,7 +123,7 @@ def verify_iam_policies(config_aws_setup):
     # Actual policy JSON files located in aws_setup/iam_policies/
     iam_policy_files = os2.list_dir_files(policy_dir, ext=".json")
 
-    # Quit if aws_setup.json describes policies not found in iam_policies
+    # Halt if aws_setup.json describes policies not found in iam_policies
     if not set(setup_policy_list).issubset(set(iam_policy_files)):
         halt.err([
             "Following policy(s) not found from aws_setup/iam_policies/:",
@@ -149,7 +146,7 @@ def verify_vpc_security_groups(config_aws_setup):
     # Actual SG json files located in aws_setup/vpc_security_groups/
     vpc_sg_json_files = os2.list_dir_files(sg_dir, ext=".json")
 
-    # Quit if aws_setup.json describes SGs not found in vpc_security_groups
+    # Halt if aws_setup.json describes SGs not found in vpc_security_groups
     if not set(setup_sg_list).issubset(set(vpc_sg_json_files)):
         halt.err([
             "Following SG(s) not found from aws_setup/vpc_security_groups/:",
@@ -157,7 +154,7 @@ def verify_vpc_security_groups(config_aws_setup):
                 if sg not in vpc_sg_json_files]
         ])
 
-    # Quit if any security group missing Ingress and/or Egress tags
+    # Halt if any security group missing Ingress and/or Egress tags
     schema = os2.parse_json(os.path.abspath(os.path.join(
         __file__, os.pardir, "jsonschemas", "vpc_security_group_schema.json")))
     for sg_file in vpc_sg_json_files:
@@ -179,7 +176,6 @@ def verify_user_data_files():
     template_yaml_files = os2.list_dir_files(user_data_dir, ext=".yaml")
 
     config_instance_templates = get_config_instance_templates_dict()
-    # Verify 
     for template in config_instance_templates:
         # Verify template YAML file in user_data directory
         template_yaml_file = template["TemplateName"] + ".yaml"
@@ -197,30 +193,11 @@ def verify_user_data_files():
 
         template_subdirs = os2.list_dir_dirs(template_dir)
         if "WriteDirectories" in template:
-            write_file_paths = []
             for write_dir in template["WriteDirectories"]:
                 if write_dir["LocalDir"] not in template_subdirs:
                     halt.err([write_dir["LocalDir"] + " directory not "
                         "found from user_data."])
-
-                template_subdir_path = os.path.join(
-                    (template_dir + write_dir["LocalDir"]), "")
-                write_file_paths.extend(os2.list_dir_files(
-                    template_subdir_path, prefix=write_dir["InstancePath"]))
-
-            if len(write_file_paths) != len(set(write_file_paths)):
-                halt.err(["Duplicate template write_file paths."])
-
-            template_yaml_dict = os2.parse_yaml(
-                user_data_dir + template_yaml_file)
-            #pp.pprint(write_file_paths)
-            #pp.pprint(template_yaml_dict)
-            if "write_files" in template_yaml_dict:
-                for write_file in template_yaml_dict["write_files"]:
-                    pp.pprint(write_file["path"])
-                    pp.pprint(write_file_paths)
-                    if write_file["path"] in write_file_paths:
-                        halt.err(["Duplicate template write_file paths."])
+        # write_files uniqueness verified in create_server:process_user_data
 
 
 def unique_names(dict_list):

@@ -24,7 +24,7 @@ def main():
     if not os.path.isdir(config.CONFIG_DIR):
         os.mkdir(config.CONFIG_DIR)
 
-    # Read the config. Quit out if it doesn't exist.
+    # Read the config. Halt if it doesn't exist.
     config_file = config.CONFIG_DIR + "config"
     if not os.path.isfile(config_file):
         halt.q([

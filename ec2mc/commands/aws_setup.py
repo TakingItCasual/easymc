@@ -24,7 +24,7 @@ class AWSSetup(command_template.BaseClass):
 
 
     def main(self, kwargs):
-        """check/(re)upload AWS setup files located in ~/.ec2mc/aws_setup/
+        """manage AWS account setup with ~/.ec2mc/aws_setup/
 
         Args:
             kwargs (dict):
@@ -56,8 +56,11 @@ class AWSSetup(command_template.BaseClass):
 
     def verify_namespace_groups_empty(self, path_prefix):
         """return False if any users attached to Namespace groups"""
-        if aws.iam_client().list_users(PathPrefix=path_prefix)["Users"]:
-            return False
+        iam_client = aws.iam_client()
+        aws_groups = iam_client.list_groups(PathPrefix=path_prefix)["Groups"]
+        for aws_group in aws_groups:
+            if iam_client.get_group(GroupName=aws_group["GroupName"])["Users"]:
+                return False
         return True
 
 
@@ -83,14 +86,14 @@ class AWSSetup(command_template.BaseClass):
         """return False if any instances within Namespace VPCs found"""
         threader = Threader()
         for region in aws.get_regions():
-            threader.add_thread(self.region_vpc_has_instances, (region,))
-        if any(threader.get_results()):
+            threader.add_thread(self.region_vpc_is_empty, (region,))
+        if not all(threader.get_results()):
             return False
         return True
 
 
-    def region_vpc_has_instances(self, region):
-        """return True if any instances found in region's Namespace VPC"""
+    def region_vpc_is_empty(self, region):
+        """return False if any instances found in region's Namespace VPC"""
         ec2_client = aws.ec2_client(region)
         namespace_vpc = aws.get_region_vpc(region)
         if namespace_vpc is not None:
@@ -99,8 +102,8 @@ class AWSSetup(command_template.BaseClass):
                 "Values": [namespace_vpc["VpcId"]]
             }])["Reservations"]
             if vpc_reservations:
-                return True
-        return False
+                return False
+        return True
 
 
     def add_documentation(self, argparse_obj):
@@ -108,18 +111,19 @@ class AWSSetup(command_template.BaseClass):
         actions = cmd_parser.add_subparsers(metavar="{action}", dest="action")
         actions.required = True
         actions.add_parser(
-            "check", help="check differences between local and AWS config")
+            "check", help="check differences between local and AWS setup")
         actions.add_parser(
             "upload", help="configure AWS with ~/.ec2mc/aws_setup/")
         actions.add_parser(
-            "delete", help="delete ec2mc configuration from AWS")
+            "delete", help="delete Namespace configuration from AWS")
 
 
     def blocked_actions(self, kwargs):
         denied_actions = []
         if kwargs["action"] == "delete":
             denied_actions.extend(simulate_policy.blocked(actions=[
-                "iam:ListUsers",
+                "iam:ListGroups",
+                "iam:GetGroup",
                 "iam:ListPolicies",
                 "iam:ListEntitiesForPolicy",
                 "ec2:DescribeRegions",

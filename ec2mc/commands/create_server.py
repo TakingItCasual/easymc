@@ -147,7 +147,7 @@ class CreateServer(command_template.BaseClass):
         """
 
         user_data_dir = os.path.join((config.AWS_SETUP_DIR + "user_data"), "")
-        user_data_dict = os2.parse_yaml(
+        user_data_yaml = os2.parse_yaml(
             user_data_dir + template["TemplateName"] + ".yaml")
 
         if "WriteDirectories" in template:
@@ -156,8 +156,8 @@ class CreateServer(command_template.BaseClass):
 
             write_files = []
             for write_dir in template["WriteDirectories"]:
-                dir_files = os2.list_dir_files(
-                    template_dir + write_dir["LocalDir"])
+                dir_files = os2.list_dir_files(os.path.join(
+                    (template_dir + write_dir["LocalDir"]), ""))
                 for dir_file in dir_files:
                     file_path = os.path.join(
                         (template_dir + write_dir["LocalDir"]), dir_file)
@@ -166,7 +166,7 @@ class CreateServer(command_template.BaseClass):
                     write_files.append({
                         "encoding": "b64",
                         "content": file_b64,
-                        "path": template["WriteFilesPath"] + dir_file
+                        "path": write_dir["InstancePath"] + dir_file
                     })
                     if "Owner" in write_dir:
                         write_files[-1]["owner"] = write_dir["Owner"]
@@ -174,11 +174,18 @@ class CreateServer(command_template.BaseClass):
                         write_files[-1]["permissions"] = write_dir["chmod"]
 
             if write_files:
-                if "write_files" not in user_data_dict:
-                    user_data_dict["write_files"] = []
-                user_data_dict["write_files"].extend(write_files)
+                if "write_files" not in user_data_yaml:
+                    user_data_yaml["write_files"] = []
+                user_data_yaml["write_files"].extend(write_files)
 
-        return yaml.dump(user_data_dict, Dumper=yaml.RoundTripDumper)
+        # Halt if there are duplicate write_file paths
+        if "write_files" in user_data_yaml:
+            write_file_paths = [entry["path"] for entry
+                in user_data_yaml["write_files"]]
+            if len(write_file_paths) != len(set(write_file_paths)):
+                halt.err(["Duplicate template write_file paths."])
+
+        return yaml.dump(user_data_yaml, Dumper=yaml.RoundTripDumper)
 
 
     def create_instance(self, creation_kwargs, user_data, *, dry_run):
@@ -228,7 +235,7 @@ class CreateServer(command_template.BaseClass):
         cmd_parser.add_argument(
             "region", help="EC2 region for the instance to be created in")
         cmd_parser.add_argument(
-            "name", help="instance Name tag value")
+            "name", help="value for instance tag key \"Name\"")
         cmd_parser.add_argument(
             "-c", "--confirm", action="store_true",
             help="confirm instance creation")

@@ -3,43 +3,41 @@ from ec2mc.stuff.threader import Threader
 from ec2mc.stuff import halt
 
 def main(kwargs):
-    """wrapper for probe_regions() which prints found instances to the CLI
+    """wrapper for probe_regions which prints found instances to the CLI
 
     Requires ec2:DescribeRegions and ec2:DescribeInstances permissions.
 
-    Quits out if no instances are found. This functionality is relied upon.
+    Halts if no instances found. This functionality is relied upon.
 
     Args:
         kwargs (dict):
-            "region": list: AWS region(s) to probe. If None, probe all.
-            "tagfilter": Instance tag key-value pair(s) to filter by. If None, 
-                don't filter. If only a key is given, filter by key.
+            "region" (list[str]): AWS region(s) to probe. If None, probe all.
+            "tagfilters" (list[list[str]]): Instance tag key-value(s) 
+                filter(s). For inner lists with one item, filter by key.
+            "namefilter" (list[str]): Instance tag value(s) filter for 
+                tag key "Name".
 
-    Returns:
-        list of dict(s): Found instance(s).
-            "region": AWS region that an instance is in.
-            "id": ID of instance.
-            "tags": dict: Instance tag key-value pairs.
+    Returns: See what probe_regions returns.
     """
 
     region_filter = kwargs["regions"]
     regions = aws.get_regions(region_filter)
 
     tag_filter = []
-    if kwargs["tagfilter"]:
+    if kwargs["tagfilters"]:
         # Convert dict(s) list to what describe_instances' Filters expects.
-        for tag_kv_pair in kwargs["tagfilter"]:
-            # Filter instances based on tag key-value(s) pair.
-            if len(tag_kv_pair) > 1:
+        for filter_elements in kwargs["tagfilters"]:
+            # Filter instances based on tag key-value(s).
+            if len(filter_elements) > 1:
                 tag_filter.append({
-                    "Name": "tag:"+tag_kv_pair[0],
-                    "Values": tag_kv_pair[1:]
+                    "Name": "tag:"+filter_elements[0],
+                    "Values": filter_elements[1:]
                 })
-            # If filter tag value(s) not specified, filter by the tag key.
-            else:
+            # If filter tag values not given, filter by just the tag key.
+            elif filter_elements:
                 tag_filter.append({
                     "Name": "tag-key",
-                    "Values": [tag_kv_pair[0]]
+                    "Values": [filter_elements[0]]
                 })
     if kwargs["namefilter"]:
         tag_filter.append({
@@ -82,17 +80,19 @@ def main(kwargs):
 def probe_regions(regions, tag_filter=None):
     """probe EC2 region(s) for instances, and return dict(s) of instance(s)
 
+    Requires ec2:DescribeInstances permission.
+
     Uses multithreading to probe all regions simultaneously.
 
     Args:
-        regions (list): List of EC2 regions to probe.
-        tag_filter (dict): Passed to probe_region
+        regions (list[str]): EC2 region(s) to probe.
+        tag_filter (list[dict]): Passed to probe_region
 
     Returns:
-        list of dict(s): Found instance(s).
-            "region": AWS region that an instance is in.
-            "id": ID of instance.
-            "tags": dict: Instance tag key-value pairs.
+        list[dict]: Found instance(s).
+            "region" (str): AWS region that an instance is in.
+            "id" (str): ID of instance.
+            "tags" (dict): Instance tag key-value pair(s).
     """
 
     threader = Threader()
@@ -113,19 +113,21 @@ def probe_regions(regions, tag_filter=None):
 
 
 def probe_region(region, tag_filter=None):
-    """probe a single EC2 region for instances (threaded)
+    """probe a single EC2 region for instances
+
+    Requires ec2:DescribeInstances permission.
 
     Args:
         region (str): EC2 region to probe.
-        tag_filter (dict): Filter out instances that don't have tags matching
-            the filter. If None, filter not used.
+        tag_filter (list[dict]): Filter out instances that don't have tags 
+            matching the filter. If None, filter not used.
 
     Returns:
         dict: Instance(s) found in region.
-            "region": Probed EC2 region.
-            "instances": list of dict(s): Instance(s) found.
-                "id": ID of instance.
-                "tags": Instance tags.
+            "region" (str): Probed EC2 region.
+            "instances" (list[dict]): Instance(s) found.
+                "id" (str): ID of instance.
+                "tags" (dict): Instance tag key-value pair(s).
     """
 
     if tag_filter is None:
@@ -167,7 +169,7 @@ def argparse_args(cmd_parser):
         help=("AWS EC2 region(s) to probe for instances. If not set, all "
             "regions will be probed."))
     cmd_parser.add_argument(
-        "-t", dest="tagfilter", nargs="+", action="append", metavar="",
+        "-t", dest="tagfilters", nargs="+", action="append", metavar="",
         help=("Instance tag value filter. First value is the tag key, with "
             "proceeding value(s) as the tag value(s). If not set, no filter "
             "will be applied. If only 1 value given, the tag key itself will "

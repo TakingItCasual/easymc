@@ -23,7 +23,10 @@
                         "LocalDir": {"type": "string"},
                         "InstancePath": {"type": "string"},
                         "Owner": {"type": "string"},
-                        "chmod": {"type": "string"}
+                        "chmod": {
+                            "type": "string",
+                            "pattern": "^[0-7][0-7][0-7][0-7]$"
+                        }
                     },
                     "required": ["LocalDir", "InstancePath"]
                 },
