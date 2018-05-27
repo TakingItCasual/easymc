@@ -10,7 +10,7 @@ from ec2mc import config
 from ec2mc.stuff import halt
 
 def get_regions(region_filter=None):
-    """return list of EC2 regions, or region_filter if not empty and valid
+    """return list of AWS regions, or region_filter if not empty and valid
 
     Requires ec2:DescribeRegions permission.
     """

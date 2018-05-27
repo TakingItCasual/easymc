@@ -1,4 +1,4 @@
-import os
+import os.path
 import shutil
 import filecmp
 from jsonschema import validate
@@ -12,10 +12,7 @@ def main():
     """verify contents of user's config's aws_setup directory"""
 
     # Directory path for distribution's packaged aws_setup
-    src_aws_setup_dir = os.path.abspath(
-        os.path.join(__file__, os.pardir, os.pardir, "aws_setup_src"))
-    # Why do I need to do this?
-    src_aws_setup_dir = os.path.join(src_aws_setup_dir, "")
+    src_aws_setup_dir = os.path.join((config.DIST_DIR + "aws_setup_src"), "")
 
     # If config.AWS_SETUP_DIR nonexistant, copy from ec2mc.aws_setup_src
     if not os.path.isdir(config.AWS_SETUP_DIR):
@@ -73,13 +70,8 @@ def cp_aws_setup_to_config(src_aws_setup_dir):
 
 def verify_aws_setup(config_aws_setup):
     """verify config's aws_setup.json"""
-    schema = os2.parse_json(os.path.abspath(os.path.join(
-        __file__, os.pardir, "jsonschemas", "aws_setup_schema.json")))
-    try:
-        validate(config_aws_setup, schema)
-    except ValidationError as e:
-        halt.err(["aws_setup.json incorrectly formatted:"] +
-            [str(e).split("\n\n")[0]])
+    schema = os2.get_json_schema("aws_setup")
+    os2.validate_dict(config_aws_setup, schema, "aws_setup.json")
 
     # TODO: Handle this with jsonschema once it's able to
     if not unique_names(config_aws_setup["IAM"]["Policies"]):
@@ -96,15 +88,11 @@ def verify_aws_setup(config_aws_setup):
 def verify_instance_templates(config_aws_setup):
     """verify config's instance_templates.json"""
     config_instance_templates = get_config_instance_templates_dict()
-    schema = os2.parse_json(os.path.abspath(os.path.join(
-        __file__, os.pardir, "jsonschemas", "instance_templates_schema.json")))
-    try:
-        validate(config_instance_templates, schema)
-    except ValidationError as e:
-        halt.err(["instance_templates.json incorrectly formatted:"] +
-            [str(e).split("\n\n")[0]])
+    schema = os2.get_json_schema("instance_templates")
+    os2.validate_dict(
+        config_instance_templates, schema, "instance_templates.json")
 
-    # Verify template security group(s) described in aws_setup.json
+    # Verify template security group(s) also described in aws_setup.json
     sg_names = [sg["Name"] for sg in config_aws_setup["EC2"]["SecurityGroups"]]
     for instance_template in config_instance_templates:
         for security_group in instance_template["SecurityGroups"]:
@@ -155,15 +143,10 @@ def verify_vpc_security_groups(config_aws_setup):
         ])
 
     # Halt if any security group missing Ingress and/or Egress tags
-    schema = os2.parse_json(os.path.abspath(os.path.join(
-        __file__, os.pardir, "jsonschemas", "vpc_security_group_schema.json")))
+    schema = os2.get_json_schema("vpc_security_groups")
     for sg_file in vpc_sg_json_files:
         sg_dict = os2.parse_json(sg_dir + sg_file)
-        try:
-            validate(sg_dict, schema)
-        except ValidationError as e:
-            halt.err(["SG " + sg_file + " incorrectly formatted:"] +
-                [str(e).split("\n\n")[0]])
+        os2.validate_dict(sg_dict, schema, "SG " + sg_file)
 
     # Warn if vpc_security_groups has SGs not described by aws_setup.json
     if not set(vpc_sg_json_files).issubset(set(setup_sg_list)):
@@ -197,7 +180,7 @@ def verify_user_data_files():
                 if write_dir["LocalDir"] not in template_subdirs:
                     halt.err([write_dir["LocalDir"] + " directory not "
                         "found from user_data."])
-        # write_files uniqueness verified in create_server:process_user_data
+    # write_files path uniqueness verified in create_server:process_user_data
 
 
 def unique_names(dict_list):

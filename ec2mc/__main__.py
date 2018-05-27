@@ -58,7 +58,7 @@ def main(args=None):
             config_cmd.main()
             halt.q()
 
-        # Load and verify the config (primarily for the IAM credentials)
+        # Verify config's config.json and server_titles.json
         verify_config.main()
         # Verify config's aws_setup.json and instance_templates.json
         verify_setup.main()

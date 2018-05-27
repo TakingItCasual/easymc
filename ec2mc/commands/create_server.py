@@ -20,7 +20,7 @@ class CreateServer(command_template.BaseClass):
 
         Args:
             kwargs (dict):
-                "region" (str): EC2 region to create instance in.
+                "region" (str): AWS region to create instance in.
                 "name" (str): Tag value for instance tag key "Name".
                 "tags" (list): Additional instance tag key-value pair(s).
                 "confirm" (bool): Whether to actually create the instance.
@@ -65,7 +65,7 @@ class CreateServer(command_template.BaseClass):
 
         Args:
             kwargs (dict):
-                "region" (str): EC2 region to create instance in.
+                "region" (str): AWS region to create instance in.
                 "name" (str): Tag value for instance tag key "Name".
                 "tags" (list): Additional instance tag key-value pair(s).
             instance_template (dict):
@@ -178,7 +178,7 @@ class CreateServer(command_template.BaseClass):
                     user_data_yaml["write_files"] = []
                 user_data_yaml["write_files"].extend(write_files)
 
-        # Halt if there are duplicate write_file paths
+        # Halt if there are duplicate write_files paths
         if "write_files" in user_data_yaml:
             write_file_paths = [entry["path"] for entry
                 in user_data_yaml["write_files"]]
@@ -233,7 +233,7 @@ class CreateServer(command_template.BaseClass):
         cmd_parser.add_argument(
             "template", help="name of config instance setup template to use")
         cmd_parser.add_argument(
-            "region", help="EC2 region for the instance to be created in")
+            "region", help="AWS region for the instance to be created in")
         cmd_parser.add_argument(
             "name", help="value for instance tag key \"Name\"")
         cmd_parser.add_argument(

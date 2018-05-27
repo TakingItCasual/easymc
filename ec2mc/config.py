@@ -5,9 +5,17 @@ Variables initialized as None are set *once* elsewhere.
 
 import os.path
 
-# Location where ec2mc finds/creates its configuration file(s).
+# Path of the distribution's inner ec2mc directory
+DIST_DIR = os.path.join(os.path.dirname(__file__), "")
+
+# Directory where ec2mc finds/creates its configuration file(s).
 CONFIG_DIR = os.path.join(os.path.expanduser("~"), ".ec2mc", "")
-# Location where ec2mc finds AWS setup files to upload to AWS.
+# JSON file containing IAM credentials, servers.dat path, and region whitelist.
+CONFIG_JSON = CONFIG_DIR + "config.json"
+# JSON file containing instance title(s) for Minecraft server list.
+SERVER_TITLES_JSON = CONFIG_DIR + "server_titles.json"
+
+# Directory where ec2mc finds AWS setup files to upload to AWS.
 AWS_SETUP_DIR = os.path.join((CONFIG_DIR + "aws_setup"), "")
 # JSON file containing AWS setup instructions.
 AWS_SETUP_JSON = AWS_SETUP_DIR + "aws_setup.json"
@@ -41,3 +49,6 @@ PK_PERMS = 0o400
 
 # Creating an EC2 client requires a region, even for listing all regions.
 DEFAULT_REGION = "us-east-1"
+# Restrict AWS regions the script interacts with, if not None.
+# Set in ec2mc.verify.verify_config:main (not yet implemented)
+REGION_WHITELIST = None

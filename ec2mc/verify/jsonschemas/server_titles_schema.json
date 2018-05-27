@@ -1,0 +1,20 @@
+{
+    "type": "object",
+    "properties": {
+        "Instances": {
+            "type" : "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "region": {"type": "string"},
+                    "id": {"type": "string"},
+                    "title": {"type": "string"}
+                },
+                "required": ["region", "id", "title"]
+            },
+            "minItems": 0,
+            "uniqueItems": true
+        }
+    },
+    "required": ["Instances"]
+}

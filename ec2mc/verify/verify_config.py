@@ -1,9 +1,9 @@
 import os
-import configparser
 from botocore.exceptions import ClientError
 
 from ec2mc import config
 from ec2mc.stuff import aws
+from ec2mc.stuff import os2
 from ec2mc.stuff import simulate_policy
 from ec2mc.stuff import halt
 
@@ -16,29 +16,35 @@ def main():
     (AWS Secret Access Key), and optionally servers_dat (file path for 
     servers.dat). IAM_ID, IAM_SECRET, IAM_ARN, IAM_NAME, and (optionally) 
     SERVERS_DAT from ec2mc.config will be modified by this function.
-
-    server_titles.json is verified/managed separately by manage_titles.py.
     """
 
     # If config directory doesn't already exist, create it.
     if not os.path.isdir(config.CONFIG_DIR):
         os.mkdir(config.CONFIG_DIR)
 
-    # Read the config. Halt if it doesn't exist.
-    config_file = config.CONFIG_DIR + "config"
-    if not os.path.isfile(config_file):
-        halt.q([
+    # Retrieve the configuration. Halt if it doesn't exist.
+    if not os.path.isfile(config.CONFIG_JSON):
+        halt.err([
             "Configuration is not set. Set with \"ec2mc configure\".",
-            "  IAM credentials must be set to access EC2 instances."
+            "  IAM credentials needed to interact with AWS."
         ])
-    config_dict = configparser.ConfigParser()
-    config_dict.read(config_file)
+    config_dict = os2.parse_json(config.CONFIG_JSON)
 
-    # Verify IAM user credentials that should be in the config.
+    # Verify config.json adheres to its schema.
+    schema = os2.get_json_schema("config")
+    os2.validate_dict(config_dict, schema, "config.json")
+
+    # Verify server_titles.json adheres to its schema.
+    if os.path.isfile(config.SERVER_TITLES_JSON):
+        server_titles_dict = os2.parse_json(config.SERVER_TITLES_JSON)
+        schema = os2.get_json_schema("server_titles")
+        os2.validate_dict(server_titles_dict, schema, "server_titles.json")
+
+    # Verify configuration's IAM user credentials.
     verify_user(config_dict)
 
-    if config_dict.has_option("default", "servers_dat"):
-        servers_dat = config_dict["default"]["servers_dat"]
+    if "servers_dat" in config_dict:
+        servers_dat = config_dict["servers_dat"]
         if os.path.isfile(servers_dat) and servers_dat.endswith("servers.dat"):
             config.SERVERS_DAT = servers_dat
 
@@ -60,12 +66,11 @@ def verify_user(config_dict):
         config_dict (configparser): IAM user credentials needed.
     """
 
-    if not (config_dict.has_option("default", "iam_id") and
-            config_dict.has_option("default", "iam_secret")):
+    if "iam_id" not in config_dict or "iam_secret" not in config_dict:
         halt.err(["Configuration incomplete. Set with \"ec2mc configure\"."])
 
-    config.IAM_ID = config_dict["default"]["iam_id"]
-    config.IAM_SECRET = config_dict["default"]["iam_secret"]
+    config.IAM_ID = config_dict["iam_id"]
+    config.IAM_SECRET = config_dict["iam_secret"]
 
     # Test access to iam:GetUser, as SimulatePrincipalPolicy can't be used yet.
     try:
@@ -77,7 +82,7 @@ def verify_user(config_dict):
             halt.err(["IAM ID is valid, but its secret is invalid."])
         elif e.response["Error"]["Code"] == "AccessDenied":
             halt.assert_empty(["iam:GetUser"])
-        halt.q([str(e)])
+        halt.err([str(e)])
 
     # This ARN is what is needed for SimulatePrincipalPolicy.
     config.IAM_ARN = iam_user["Arn"]
@@ -89,4 +94,4 @@ def verify_user(config_dict):
     except ClientError as e:
         if e.response["Error"]["Code"] == "AccessDenied":
             halt.assert_empty(["iam:SimulatePrincipalPolicy"])
-        halt.q([str(e)])
+        halt.err([str(e)])

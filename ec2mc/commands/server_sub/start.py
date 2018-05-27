@@ -57,7 +57,7 @@ class StartServer(command_template.BaseClass):
 
             print("  Instance DNS: " + instance_dns)
             if config.SERVERS_DAT is not None:
-                manage_titles.update_dns(
+                manage_titles.update_title_dns(
                     instance["region"], instance["id"], instance_dns)
 
 

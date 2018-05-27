@@ -5,10 +5,12 @@ from setuptools import setup, find_packages
 
 VERSION = "0.1.3"
 
-HERE = os.path.abspath(os.path.dirname(__file__))
-with open(os.path.join(HERE, 'README.rst'), encoding='utf-8') as f:
+readme_path = os.path.join(
+    os.path.abspath(os.path.dirname(__file__)), "README.rst")
+with open(readme_path, encoding='utf-8') as f:
     LONG_DESC = f.read()
 
+# The OS restrictions are due to the cryptography package.
 setup(
     name='ec2mc',
     version=VERSION,
@@ -18,14 +20,20 @@ setup(
     author_email='takingitcasual+gh@gmail.com',
     url='https://github.com/TakingItCasual/ec2mc',
     download_url='https://github.com/TakingItCasual/ec2mc/archive/v'+VERSION+'.tar.gz',
-    platforms=['any'],
     license='MIT',
     classifiers=[
         'Development Status :: 3 - Alpha',
         'Environment :: Console',
         'Intended Audience :: System Administrators',
         'License :: OSI Approved :: MIT License',
-        'Operating System :: OS Independent',
+        'Natural Language :: English',
+        'Operating System :: MacOS :: MacOS X',
+        'Operating System :: Microsoft :: Windows',
+        'Operating System :: POSIX',
+        'Operating System :: POSIX :: BSD',
+        'Operating System :: POSIX :: Linux',
+        'Programming Language :: Python',
+        'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.6'
     ],
     keywords='mc minecraft server aws ec2 iam',

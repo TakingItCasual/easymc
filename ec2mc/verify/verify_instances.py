@@ -78,14 +78,14 @@ def main(kwargs):
 
 
 def probe_regions(regions, tag_filter=None):
-    """probe EC2 region(s) for instances, and return dict(s) of instance(s)
+    """probe AWS region(s) for instances, and return dict(s) of instance(s)
 
     Requires ec2:DescribeInstances permission.
 
     Uses multithreading to probe all regions simultaneously.
 
     Args:
-        regions (list[str]): EC2 region(s) to probe.
+        regions (list[str]): AWS region(s) to probe.
         tag_filter (list[dict]): Passed to probe_region
 
     Returns:
@@ -113,18 +113,18 @@ def probe_regions(regions, tag_filter=None):
 
 
 def probe_region(region, tag_filter=None):
-    """probe a single EC2 region for instances
+    """probe a single AWS region for instances
 
     Requires ec2:DescribeInstances permission.
 
     Args:
-        region (str): EC2 region to probe.
+        region (str): AWS region to probe.
         tag_filter (list[dict]): Filter out instances that don't have tags 
             matching the filter. If None, filter not used.
 
     Returns:
         dict: Instance(s) found in region.
-            "region" (str): Probed EC2 region.
+            "region" (str): Probed AWS region.
             "instances" (list[dict]): Instance(s) found.
                 "id" (str): ID of instance.
                 "tags" (dict): Instance tag key-value pair(s).
@@ -166,8 +166,8 @@ def argparse_args(cmd_parser):
     """initialize arguments for argparse that verify_instances:main needs"""
     cmd_parser.add_argument(
         "-r", dest="regions", nargs="+", metavar="",
-        help=("AWS EC2 region(s) to probe for instances. If not set, all "
-            "regions will be probed."))
+        help=("AWS region(s) to probe for instances. If not set, all regions "
+            "will be probed."))
     cmd_parser.add_argument(
         "-t", dest="tagfilters", nargs="+", action="append", metavar="",
         help=("Instance tag value filter. First value is the tag key, with "
