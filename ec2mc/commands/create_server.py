@@ -20,28 +20,29 @@ class CreateServer(command_template.BaseClass):
 
         Args:
             kwargs (dict):
+                "template" (str): Config instance setup template name.
                 "region" (str): AWS region to create instance in.
                 "name" (str): Tag value for instance tag key "Name".
                 "tags" (list): Additional instance tag key-value pair(s).
                 "confirm" (bool): Whether to actually create the instance.
         """
 
-        inst_templates = os2.parse_json(config.INSTANCE_TEMPLATES_JSON)
-        try:
-            inst_template = next(template for template in inst_templates
-                if template["TemplateName"] == kwargs["template"])
-        except StopIteration:
+        template_yaml_files = os2.list_dir_files(config.USER_DATA_DIR)
+        if kwargs["template"] + ".yaml" not in template_yaml_files:
             halt.err(["Template " + kwargs["template"] + " not found."])
 
+        inst_template = os2.parse_yaml(config.USER_DATA_DIR +
+            kwargs["template"] + ".yaml")["ec2mc_template_info"]
+
         self.verify_type_and_size_allowed(
-            inst_template["InstanceType"], inst_template["VolumeSize"])
+            inst_template["instance_type"], inst_template["volume_size"])
 
         # Verify the specified region
         self.ec2_client = aws.ec2_client(
             aws.get_regions([kwargs["region"]])[0])
 
         creation_kwargs = self.parse_run_instance_args(kwargs, inst_template)
-        user_data = self.process_user_data(inst_template)
+        user_data = self.process_user_data(kwargs["template"], inst_template)
 
         # Instance creation dry run to verify IAM permissions
         try:
@@ -69,12 +70,14 @@ class CreateServer(command_template.BaseClass):
                 "name" (str): Tag value for instance tag key "Name".
                 "tags" (list): Additional instance tag key-value pair(s).
             instance_template (dict):
-                "AmazonMachineImage" (str): EC2 AMI (determines instance OS).
-                "DeviceName" (str): Device Name for operating system (?).
-                "InstanceType" (str): EC2 instance type to create.
-                "VolumeSize" (int): EC2 instance volume size (GiB).
-                "DefaultUser" (str): AMI's default user (for SSH).
-                "SecurityGroups" (list[str]): VPC SG(s) to assign to instance.
+                "AMI_info" (dict):
+                    "AMI_ID" (str): EC2 AMI (determines instance OS).
+                    "device_name" (str): Device Name for operating system (?).
+                    "default_user" (str): AMI's default user (for SSH).
+                "instance_type" (str): EC2 instance type to create.
+                "volume_size" (int): EC2 instance volume size (GiB).
+                "elastic_address" (bool): Whether to associate elastic IP.
+                "security_groups" (list[str]): VPC SG(s) to assign to instance.
 
         Returns:
             dict: Arguments needed for instance creation.
@@ -92,10 +95,12 @@ class CreateServer(command_template.BaseClass):
         creation_kwargs = {}
 
         # TODO: Update template AMI to AWS Linux 2 LTS when it comes out
-        creation_kwargs["ec2_ami"] = instance_template["AmazonMachineImage"]
-        creation_kwargs["device_name"] = instance_template["DeviceName"]
-        creation_kwargs["instance_type"] = instance_template["InstanceType"]
-        creation_kwargs["volume_size"] = instance_template["VolumeSize"]
+        creation_kwargs.update({
+            "ec2_ami": instance_template["AMI_info"]["AMI_ID"],
+            "device_name": instance_template["AMI_info"]["device_name"],
+            "instance_type": instance_template["instance_type"],
+            "volume_size": instance_template["volume_size"]
+        })
 
         creation_kwargs["tags"] = [{
             "Key": "Name",
@@ -103,7 +108,7 @@ class CreateServer(command_template.BaseClass):
         }]
         creation_kwargs["tags"].append({
             "Key": "DefaultUser",
-            "Value": instance_template["DefaultUser"]
+            "Value": instance_template["AMI_info"]["default_user"]
         })
         if kwargs["tags"]:
             for tag_key, tag_value in kwargs["tags"]:
@@ -119,7 +124,7 @@ class CreateServer(command_template.BaseClass):
         vpc_id = vpc_info["VpcId"]
         vpc_sgs = aws.get_region_security_groups(region, vpc_id)
         vpc_sg_ids = [sg["GroupId"] for sg in vpc_sgs
-            if sg["GroupName"] in instance_template["SecurityGroups"]]
+            if sg["GroupName"] in instance_template["security_groups"]]
         creation_kwargs["sg_ids"] = vpc_sg_ids
 
         vpc_subnets = ec2_client.describe_subnets(
@@ -134,62 +139,64 @@ class CreateServer(command_template.BaseClass):
         return creation_kwargs
 
 
-    def process_user_data(self, template):
+    def process_user_data(self, template_name, template):
         """add b64 bash scripts to config's user_data write_files
 
         Args:
+            template_name (str): Name of the YAML instance template.
             template (dict):
-                "TemplateName": (str): Name of the user data YAML file.
-                "WriteFilesPath" (str): Where to place write_files on instance.
+                "write_directories" (str): Info on directory(s) to copy files 
+                    from to user_data's write_files.
 
         Returns:
             str: YAML file string to initialize instance on first boot.
         """
 
-        user_data_dir = os.path.join((config.AWS_SETUP_DIR + "user_data"), "")
-        user_data_yaml = os2.parse_yaml(
-            user_data_dir + template["TemplateName"] + ".yaml")
+        user_data = os2.parse_yaml(
+            config.USER_DATA_DIR + template_name + ".yaml")
 
-        if "WriteDirectories" in template:
+        if "write_directories" in template:
             template_dir = os.path.join(
-                (user_data_dir + template["TemplateName"]), "")
+                (config.USER_DATA_DIR + template_name), "")
 
             write_files = []
-            for write_dir in template["WriteDirectories"]:
+            for write_dir in template["write_directories"]:
                 dir_files = os2.list_dir_files(os.path.join(
-                    (template_dir + write_dir["LocalDir"]), ""))
+                    (template_dir + write_dir["local_dir"]), ""))
                 for dir_file in dir_files:
                     file_path = os.path.join(
-                        (template_dir + write_dir["LocalDir"]), dir_file)
+                        (template_dir + write_dir["local_dir"]), dir_file)
                     with open(file_path) as f:
                         file_b64 = base64.b64encode(bytes(f.read(), "utf-8"))
                     write_files.append({
                         "encoding": "b64",
                         "content": file_b64,
-                        "path": write_dir["InstancePath"] + dir_file
+                        "path": write_dir["instance_path"] + dir_file
                     })
-                    if "Owner" in write_dir:
-                        write_files[-1]["owner"] = write_dir["Owner"]
+                    if "owner" in write_dir:
+                        write_files[-1]["owner"] = write_dir["owner"]
                     if "chmod" in write_dir:
                         write_files[-1]["permissions"] = write_dir["chmod"]
 
             if write_files:
-                if "write_files" not in user_data_yaml:
-                    user_data_yaml["write_files"] = []
-                user_data_yaml["write_files"].extend(write_files)
+                if "write_files" not in user_data:
+                    user_data["write_files"] = []
+                user_data["write_files"].extend(write_files)
 
-        # Halt if there are duplicate write_files paths
-        if "write_files" in user_data_yaml:
+        # Halt if write_files has duplicate paths
+        if "write_files" in user_data:
             write_file_paths = [entry["path"] for entry
-                in user_data_yaml["write_files"]]
+                in user_data["write_files"]]
             if len(write_file_paths) != len(set(write_file_paths)):
-                halt.err(["Duplicate template write_file paths."])
+                halt.err(["Duplicate template write_files paths."])
 
-        return yaml.dump(user_data_yaml, Dumper=yaml.RoundTripDumper)
+        # Make user_data valid cloud-config by removing additional setup info
+        del user_data["ec2mc_template_info"]
+        return yaml.dump(user_data, Dumper=yaml.RoundTripDumper)
 
 
     def create_instance(self, creation_kwargs, user_data, *, dry_run):
-        """create EC2 instance
+        """create EC2 instance and initialize with user_data
 
         Args:
             creation_kwargs (dict): See what parse_run_instance_args returns.

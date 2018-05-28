@@ -1,4 +1,23 @@
 #cloud-config
+
+# Other setup info for template (removed once processed)
+ec2mc_template_info:
+  AMI_info:
+    AMI_ID: ami-5652ce39
+    device_name: /dev/xvda
+    default_user: ec2-user
+  instance_type: t2.small
+  volume_size: 8
+  elastic_address: false
+  security_groups:
+  - ec2mc_sg
+  write_directories:
+  - local_dir: manage_scripts
+    instance_path: /home/ec2-user/manage-scripts/
+    chmod: '0775'
+  - local_dir: crontabs
+    instance_path: /etc/cron.d/
+
 # add security patches and bug fixes
 package_update: true
 package_upgrade: true

@@ -103,7 +103,6 @@ class VPCSetup(update_template.BaseClass):
             vpc_and_sg_info (dict): See what verify_component returns.
         """
 
-        all_regions = aws.get_regions()
         vpc_regions, sg_names = vpc_and_sg_info
 
         vpc_threader = Threader()

@@ -12,15 +12,16 @@ DIST_DIR = os.path.join(os.path.dirname(__file__), "")
 CONFIG_DIR = os.path.join(os.path.expanduser("~"), ".ec2mc", "")
 # JSON file containing IAM credentials, servers.dat path, and region whitelist.
 CONFIG_JSON = CONFIG_DIR + "config.json"
-# JSON file containing instance title(s) for Minecraft server list.
+# JSON file containing instance title(s) for the MC client's server list.
 SERVER_TITLES_JSON = CONFIG_DIR + "server_titles.json"
 
 # Directory where ec2mc finds AWS setup files to upload to AWS.
 AWS_SETUP_DIR = os.path.join((CONFIG_DIR + "aws_setup"), "")
 # JSON file containing AWS setup instructions.
 AWS_SETUP_JSON = AWS_SETUP_DIR + "aws_setup.json"
-# JSON file containing EC2 instance setup instructions.
-INSTANCE_TEMPLATES_JSON = AWS_SETUP_DIR + "instance_templates.json"
+
+# Directory where ec2mc finds YAML instance templates
+USER_DATA_DIR = os.path.join((AWS_SETUP_DIR + "user_data"), "")
 
 # IAM user data needed for AWS programmatic access.
 # Set in ec2mc.verify.verify_config:verify_user

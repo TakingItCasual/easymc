@@ -1,8 +1,6 @@
 import os.path
 import shutil
 import filecmp
-from jsonschema import validate
-from jsonschema.exceptions import ValidationError
 
 from ec2mc import config
 from ec2mc.stuff import os2
@@ -42,7 +40,6 @@ def main():
 
     verify_iam_policies(config_aws_setup)
     verify_vpc_security_groups(config_aws_setup)
-    verify_user_data_files()
 
 
 def get_config_aws_setup_dict():
@@ -51,14 +48,6 @@ def get_config_aws_setup_dict():
     if not os.path.isfile(config_aws_setup_file):
         halt.err(["aws_setup.json not found from config."])
     return os2.parse_json(config_aws_setup_file)
-
-
-def get_config_instance_templates_dict():
-    """return instance_templates.json from config in user's home dir as dict"""
-    config_instance_templates_file = config.INSTANCE_TEMPLATES_JSON
-    if not os.path.isfile(config_instance_templates_file):
-        halt.err(["instance_templates.json not found from config."])
-    return os2.parse_json(config_instance_templates_file)
 
 
 def cp_aws_setup_to_config(src_aws_setup_dir):
@@ -86,19 +75,38 @@ def verify_aws_setup(config_aws_setup):
 
 
 def verify_instance_templates(config_aws_setup):
-    """verify config's instance_templates.json"""
-    config_instance_templates = get_config_instance_templates_dict()
-    schema = os2.get_json_schema("instance_templates")
-    os2.validate_dict(
-        config_instance_templates, schema, "instance_templates.json")
+    """verify config aws_setup user_data YAML instance templates"""
+    template_yaml_files = os2.list_dir_files(config.USER_DATA_DIR, ext=".yaml")
 
-    # Verify template security group(s) also described in aws_setup.json
+    schema = os2.get_json_schema("instance_templates")
     sg_names = [sg["Name"] for sg in config_aws_setup["EC2"]["SecurityGroups"]]
-    for instance_template in config_instance_templates:
-        for security_group in instance_template["SecurityGroups"]:
+    for template_yaml_file in template_yaml_files:
+        user_data = os2.parse_yaml(config.USER_DATA_DIR + template_yaml_file)
+        os2.validate_dict(user_data, schema, template_yaml_file)
+
+        template_info = user_data["ec2mc_template_info"]
+        # Verify template security group(s) also described in aws_setup.json
+        for security_group in template_info["security_groups"]:
             if security_group not in sg_names:
-                halt.err(["instance_templates.json incorrectly formatted:",
+                halt.err([template_yaml_file + " incorrectly formatted:",
                     "SG " + security_group + " not found in aws_setup.json."])
+
+        template_name = os.path.splitext(template_yaml_file)[0]
+        template_dir = os.path.join((config.USER_DATA_DIR + template_name), "")
+        # If write_directories not empty, verify template directory exists
+        if not os.path.isdir(template_dir):
+            if ("write_directories" in template_info
+                    and template_info["write_directories"]):
+                halt.err([template_name + " template directory not found."])
+        # Verify existance of write_directories subdir(s) in template directory
+        else:
+            template_subdirs = os2.list_dir_dirs(template_dir)
+            if "write_directories" in template_info:
+                for write_dir in template_info["write_directories"]:
+                    if write_dir["local_dir"] not in template_subdirs:
+                        halt.err([write_dir["local_dir"] + " subdirectory not "
+                            "found from user_data."])
+    # write_files path uniqueness verified in create_server:process_user_data
 
 
 def verify_iam_policies(config_aws_setup):
@@ -151,36 +159,6 @@ def verify_vpc_security_groups(config_aws_setup):
     # Warn if vpc_security_groups has SGs not described by aws_setup.json
     if not set(vpc_sg_json_files).issubset(set(setup_sg_list)):
         print("Warning: Unused SG(s) found from vpc_security_groups dir.")
-
-
-def verify_user_data_files():
-    """verify instance_templates and template YAML write_files paths"""
-    user_data_dir = os.path.join((config.AWS_SETUP_DIR + "user_data"), "")
-    template_yaml_files = os2.list_dir_files(user_data_dir, ext=".yaml")
-
-    config_instance_templates = get_config_instance_templates_dict()
-    for template in config_instance_templates:
-        # Verify template YAML file in user_data directory
-        template_yaml_file = template["TemplateName"] + ".yaml"
-        if template_yaml_file not in template_yaml_files:
-            halt.err([template_yaml_file + " not found from user_data."])
-
-        # Verify template YAML's write_files is disjoin to user_data files
-        template_dir = os.path.join(
-            (user_data_dir + template["TemplateName"]), "")
-        if not os.path.isdir(template_dir):
-            if "WriteDirectories" in template and template["WriteDirectories"]:
-                halt.err([template["TemplateName"] + " template "
-                    "directory not found."])
-            continue
-
-        template_subdirs = os2.list_dir_dirs(template_dir)
-        if "WriteDirectories" in template:
-            for write_dir in template["WriteDirectories"]:
-                if write_dir["LocalDir"] not in template_subdirs:
-                    halt.err([write_dir["LocalDir"] + " directory not "
-                        "found from user_data."])
-    # write_files path uniqueness verified in create_server:process_user_data
 
 
 def unique_names(dict_list):

@@ -8,23 +8,39 @@
                 "ssm:SendCommand",
                 "ssm:GetCommandInvocation",
                 "ec2:DescribeSecurityGroups",
+                "ec2:DescribeAddresses",
                 "ec2:CreateTags",
                 "ec2:StopInstances"
             ],
             "Resource": "*"
         },
         {
-            "Sid": "RunInstanceResourcePermissions",
+            "Sid": "CreateInstancePermissions",
             "Effect": "Allow",
-            "Action": [
-                "ec2:RunInstances"
-            ],
+            "Action": ["ec2:RunInstances"],
             "Resource": [
                 "arn:aws:ec2:*:*:network-interface/*",
                 "arn:aws:ec2:*:*:security-group/*",
                 "arn:aws:ec2:*:*:subnet/*",
                 "arn:aws:ec2:*::image/*"
             ]
+        },
+        {
+            "Sid": "DeleteInstancePermissions",
+            "Effect": "Allow",
+            "Action": ["ec2:TerminateInstances"],
+            "Resource": "*"
+        },
+        {
+            "Sid": "ElasticAddressPermissions",
+            "Effect": "Deny",
+            "Action": [
+                "ec2:AllocateAddress",
+                "ec2:AssociateAddress",
+                "ec2:DisassociateAddress",
+                "ec2:ReleaseAddress"
+            ],
+            "Resource": "*"
         },
         {
             "Sid": "LimitInstanceVolumeSize",

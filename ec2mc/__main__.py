@@ -60,7 +60,7 @@ def main(args=None):
 
         # Verify config's config.json and server_titles.json
         verify_config.main()
-        # Verify config's aws_setup.json and instance_templates.json
+        # Verify config's aws_setup.json and YAML instance templates
         verify_setup.main()
 
         # Get the command class object from the commands list

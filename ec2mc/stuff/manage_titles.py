@@ -1,5 +1,4 @@
 import os.path
-import json
 import nbtlib
 
 from ec2mc import config

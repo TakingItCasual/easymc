@@ -1,49 +1,54 @@
 {
-    "type": "array",
-    "items": {
-        "type": "object",
-        "properties": {
-            "TemplateName": {"type" : "string"},
-            "AmazonMachineImage": {"type" : "string"},
-            "DeviceName": {"type" : "string"},
-            "DefaultUser": {"type" : "string"},
-            "InstanceType": {"type": "string"},
-            "VolumeSize": {"type": "integer"},
-            "SecurityGroups": {
-                "type" : "array",
-                "items": {"type": "string"},
-                "minItems": 1,
-                "uniqueItems": true
-            },
-            "WriteDirectories": {
-                "type" : "array",
-                "items": {
+    "type": "object",
+    "properties": {
+        "ec2mc_template_info": {
+            "type": "object",
+            "properties": {
+                "AMI_info": {
                     "type": "object",
                     "properties": {
-                        "LocalDir": {"type": "string"},
-                        "InstancePath": {"type": "string"},
-                        "Owner": {"type": "string"},
-                        "chmod": {
-                            "type": "string",
-                            "pattern": "^[0-7][0-7][0-7][0-7]$"
-                        }
+                        "AMI_ID": {"type" : "string"},
+                        "device_name": {"type" : "string"},
+                        "default_user": {"type" : "string"}
                     },
-                    "required": ["LocalDir", "InstancePath"]
+                    "required": ["AMI_ID", "device_name", "default_user"]
                 },
-                "minItems": 1,
-                "uniqueItems": true
-            }
-        },
-        "required": [
-            "TemplateName",
-            "AmazonMachineImage",
-            "DeviceName",
-            "DefaultUser",
-            "InstanceType",
-            "VolumeSize",
-            "SecurityGroups"
-        ]
+                "instance_type": {"type": "string"},
+                "volume_size": {"type": "integer"},
+                "elastic_address": {"type": "boolean"},
+                "security_groups": {
+                    "type" : "array",
+                    "items": {"type": "string"},
+                    "minItems": 1,
+                    "uniqueItems": true
+                },
+                "write_directories": {
+                    "type" : "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "local_dir": {"type": "string"},
+                            "instance_path": {"type": "string"},
+                            "owner": {"type": "string"},
+                            "chmod": {
+                                "type": "string",
+                                "pattern": "^[0-7]{4}$"
+                            }
+                        },
+                        "required": ["local_dir", "instance_path"]
+                    },
+                    "minItems": 1,
+                    "uniqueItems": true
+                }
+            },
+            "required": [
+                "AMI_info",
+                "instance_type",
+                "volume_size",
+                "elastic_address",
+                "security_groups"
+            ]
+        }
     },
-    "minItems": 1,
-    "uniqueItems": true
+    "required": ["ec2mc_template_info"]
 }
