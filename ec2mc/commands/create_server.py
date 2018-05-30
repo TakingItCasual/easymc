@@ -5,10 +5,10 @@ from botocore.exceptions import ClientError
 
 from ec2mc import config
 from ec2mc import command_template
-from ec2mc.stuff import aws
-from ec2mc.stuff import os2
-from ec2mc.stuff import simulate_policy
-from ec2mc.stuff import halt
+from ec2mc.utils import aws
+from ec2mc.utils import halt
+from ec2mc.utils import os2
+from ec2mc.verify import verify_perms
 
 import pprint
 pp = pprint.PrettyPrinter(indent=2)
@@ -89,6 +89,7 @@ class CreateServer(command_template.BaseClass):
                 "tags" (list[dict]): All instance tag key-value pair(s).
                 "sg_ids" (list[str]): ID(s) of VPC SG(s) to assign to instance.
                 "subnet_id" (str): ID of VPC subnet to assign to instance.
+                "key_name" (str): Name of EC2 key pair to assign (for SSH).
         """
 
         region = kwargs["region"]
@@ -136,6 +137,15 @@ class CreateServer(command_template.BaseClass):
         )["Subnets"]
         vpc_subnets.sort(key=lambda x: x["AvailabilityZone"])
         creation_kwargs["subnet_id"] = vpc_subnets[0]["SubnetId"]
+
+        ec2_key_pairs = ec2_client.describe_key_pairs(Filters=[{
+            "Name": "key-name",
+            "Values": [config.NAMESPACE]
+        }])["KeyPairs"]
+        if not ec2_key_pairs:
+            halt.err(["EC2 key pair " + config.NAMESPACE + " not found.",
+                "  Have you uploaded the AWS setup?"])
+        creation_kwargs["key_name"] = ec2_key_pairs[0]["KeyName"]
 
         return creation_kwargs
 
@@ -207,6 +217,7 @@ class CreateServer(command_template.BaseClass):
 
         return self.ec2_client.run_instances(
             DryRun=dry_run,
+            KeyName=creation_kwargs["key_name"],
             MinCount=1, MaxCount=1,
             ImageId=creation_kwargs["ec2_ami"],
             InstanceType=creation_kwargs["instance_type"],
@@ -226,11 +237,11 @@ class CreateServer(command_template.BaseClass):
 
     def verify_type_and_size_allowed(self, instance_type, volume_size):
         """verify user is allowed to create instance with type and size"""
-        if simulate_policy.blocked(actions=["ec2:RunInstances"],
+        if verify_perms.blocked(actions=["ec2:RunInstances"],
                 resources=["arn:aws:ec2:*:*:instance/*"],
                 context={"ec2:InstanceType": [instance_type]}):
             halt.err(["Instance type " + instance_type + " not permitted."])
-        if simulate_policy.blocked(actions=["ec2:RunInstances"],
+        if verify_perms.blocked(actions=["ec2:RunInstances"],
                 resources=["arn:aws:ec2:*:*:volume/*"],
                 context={"ec2:VolumeSize": [volume_size]}):
             halt.err(["Volume size " + str(volume_size) + "GiB is too large."])
@@ -254,15 +265,16 @@ class CreateServer(command_template.BaseClass):
 
     def blocked_actions(self, _):
         denied_actions = []
-        denied_actions.extend(simulate_policy.blocked(actions=[
+        denied_actions.extend(verify_perms.blocked(actions=[
             "ec2:DescribeRegions",
             "ec2:DescribeInstances",
             "ec2:DescribeVpcs",
             "ec2:DescribeSubnets",
             "ec2:DescribeSecurityGroups",
+            "ec2:DescribeKeyPairs",
             "ec2:CreateTags"
         ]))
-        denied_actions.extend(simulate_policy.blocked(actions=[
+        denied_actions.extend(verify_perms.blocked(actions=[
             "ec2:RunInstances"
         ], resources=[
             "arn:aws:ec2:*:*:instance/*"

@@ -2,7 +2,7 @@ from time import sleep
 from random import randint
 import pytest
 
-from ec2mc.stuff.threader import Threader
+from ec2mc.utils.threader import Threader
 
 def test_threader_dict_return():
     """test that functions' first args set as function returns' dict keys"""

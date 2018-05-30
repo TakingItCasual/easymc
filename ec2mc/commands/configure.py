@@ -2,12 +2,12 @@ import os
 
 from ec2mc import config
 from ec2mc import command_template
-from ec2mc.stuff import os2
+from ec2mc.utils import os2
 
 class Configure(command_template.BaseClass):
 
     def main(self):
-        """set IAM user's credentials and servers.dat file path"""
+        """set IAM credentials, servers.dat path, and region whitelist"""
 
         # verify_config:main normally does this, but it wasn't called.
         if not os.path.isdir(config.CONFIG_DIR):
@@ -20,16 +20,17 @@ class Configure(command_template.BaseClass):
         whitelist_str = "All"
 
         if os.path.isfile(config.CONFIG_JSON):
+            schema = os2.get_json_schema("config")
             config_dict = os2.parse_json(config.CONFIG_JSON)
+            os2.validate_dict(config_dict, schema, "config.json")
             if "iam_id" in config_dict:
-                iam_id_str = (
-                    "*"*16 + config_dict["iam_id"][-4:])
+                iam_id_str = "*"*16 + config_dict["iam_id"][-4:]
             if "iam_secret" in config_dict:
-                iam_secret_str = (
-                    "*"*16 + config_dict["iam_secret"][-4:])
+                iam_secret_str = "*"*16 + config_dict["iam_secret"][-4:]
             if "servers_dat" in config_dict:
                 servers_dat_str = config_dict["servers_dat"]
-            if "region_whitelist" in config_dict:
+            if ("region_whitelist" in config_dict
+                    and config_dict["region_whitelist"]):
                 whitelist_str = ",".join(config_dict["region_whitelist"])
 
         iam_id = input(

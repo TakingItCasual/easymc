@@ -1,16 +1,18 @@
+import os
+import hashlib
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.backends import default_backend
 
 from ec2mc import config
 from ec2mc import update_template
-from ec2mc.stuff import aws
-from ec2mc.stuff.threader import Threader
+from ec2mc.utils import aws
+from ec2mc.utils.threader import Threader
 
 import pprint
 pp = pprint.PrettyPrinter(indent=2)
 
-class SSHKeyPairs(update_template.BaseClass):
+class SSHKeyPairSetup(update_template.BaseClass):
 
     def verify_component(self, _):
         """determine which regions need Namespace RSA key pairs created
@@ -20,12 +22,14 @@ class SSHKeyPairs(update_template.BaseClass):
                 Region name (str/None): Public key fingerprint, if pair exists.
         """
 
-        all_regions = aws.get_regions()
         self.key_pair_name = config.NAMESPACE
+        self.pem_file = self.key_pair_name + ".pem"
+        self.pem_file_path = config.CONFIG_DIR + self.pem_file
 
         threader = Threader()
-        for region in all_regions:
-            threader.add_thread(self.region_key_fingerprint, (region,))
+        for region in aws.get_regions():
+            threader.add_thread(
+                self.region_namespace_key_fingerprint, (region,))
         return threader.get_results(return_dict=True)
 
 
@@ -46,20 +50,49 @@ class SSHKeyPairs(update_template.BaseClass):
 
         all_regions = aws.get_regions()
 
+        if os.path.isfile(self.pem_file_path):
+            with open(self.pem_file_path, encoding="utf-8") as f:
+                priv_key_str = f.read()
+                pub_key_str = self.pem_to_public_key(priv_key_str)
         # If SSH key pair doesn't exist in any regions, create a new one
-        if not [fp for fp in fingerprint_regions.values() if fp is not None]:
+        elif not [fp for fp in fingerprint_regions.values() if fp is not None]:
             priv_key_str, pub_key_str = self.generate_rsa_key_pair()
-            pem_file_path = config.CONFIG_DIR + self.key_pair_name + ".pem"
-            with open(pem_file_path, "w", encoding="utf-8") as f:
+            with open(self.pem_file_path, "w", encoding="utf-8") as f:
                 f.write(priv_key_str)
+        # No private key file, and there are existing EC2 key pairs
+        else:
+            halt.err(["RSA private key file " + self.pem_file + " not found.",
+                "  Additional pairs must be created from same private key."])
+
+        for region in fingerprint_regions:
+            if fingerprint_regions[region] is None:
+                self.create_region_key_pair(region, pub_key_str)
 
 
     def delete_component(self):
         """remove Namespace RSA key pairs from all AWS regions"""
-        pass
+
+        threader = Threader()
+        for region in aws.get_regions():
+            threader.add_thread(self.delete_region_key_pair, (region,))
+        deleted_key_pairs = threader.get_results()
+
+        if any(deleted_key_pairs):
+            print("EC2 key pair " + self.key_pair_name +
+                " deleted from all AWS regions.")
+        else:
+            print("No EC2 key pairs to delete.")
 
 
-    def region_key_fingerprint(self, region):
+    def fingerprints_match(self, fingerprint_regions):
+        """warn if EC2 key pair fingerprints differ from each other or .pem"""
+        fingerprints = [fp for fp in fingerprint_regions.values()
+            if fp is not None]
+        if len(set(fingerprints)) > 1:
+            print("Warning: EC2 key pair fingerprints not all equal.")
+
+
+    def region_namespace_key_fingerprint(self, region):
         """return key fingerprint if region has Namespace RSA key pair"""
         key_pairs = aws.ec2_client(region).describe_key_pairs(Filters=[{
             "Name": "key-name",
@@ -80,7 +113,7 @@ class SSHKeyPairs(update_template.BaseClass):
 
     def delete_region_key_pair(self, region):
         """delete SSH key pair from region"""
-        if self.region_key_fingerprint(region) is not None:
+        if self.region_namespace_key_fingerprint(region) is not None:
             aws.ec2_client(region).delete_key_pair(KeyName=self.key_pair_name)
             return True
         return False
@@ -117,7 +150,7 @@ class SSHKeyPairs(update_template.BaseClass):
 
         # decode to printable strings
         private_key_str = pem.decode("utf-8")
-        public_key_str = public_key.decode("utf-8").replace("ssh-rsa ", "")
+        public_key_str = public_key.decode("utf-8")
 
         return (private_key_str, public_key_str)
 
@@ -131,7 +164,13 @@ class SSHKeyPairs(update_template.BaseClass):
         ).public_key().public_bytes(
             serialization.Encoding.OpenSSH,
             serialization.PublicFormat.OpenSSH
-        ).decode("utf-8").replace("ssh-rsa ", "")
+        ).decode("utf-8")
+
+
+    def public_key_fingerprint(self, public_key_str):
+        """return MD5 public key fingerprint (":" every 2 characters)"""
+        md5digest = hashlib.md5(public_key_str).hexdigest()
+        return ":".join(a+b for a,b in zip(md5digest[::2], md5digest[1::2]))
 
 
     def blocked_actions(self, sub_command):

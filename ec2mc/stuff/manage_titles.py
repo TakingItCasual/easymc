@@ -2,7 +2,7 @@ import os.path
 import nbtlib
 
 from ec2mc import config
-from ec2mc.stuff import os2
+from ec2mc.utils import os2
 
 def update_title_dns(aws_region, instance_id, new_dns):
     """update MC client's server list with specified instance's DNS
@@ -33,7 +33,7 @@ def update_title_dns(aws_region, instance_id, new_dns):
 
 
 def update_servers_dat(servers_dat_path, server_title, new_dns):
-    """update server_title in server list with new_dns
+    """update IP of server_title in server list with new_dns
 
     Args:
         servers_dat_path (str): File path for MC client's servers.dat.

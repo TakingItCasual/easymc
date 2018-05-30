@@ -4,10 +4,10 @@ import shutil
 
 from ec2mc import config
 from ec2mc import command_template
+from ec2mc.utils import aws
+from ec2mc.utils import halt
 from ec2mc.verify import verify_instances
-from ec2mc.stuff import aws
-from ec2mc.stuff import simulate_policy
-from ec2mc.stuff import halt
+from ec2mc.verify import verify_perms
 
 class SSHServer(command_template.BaseClass):
 
@@ -89,7 +89,7 @@ class SSHServer(command_template.BaseClass):
 
 
     def blocked_actions(self):
-        return simulate_policy.blocked(actions=[
+        return verify_perms.blocked(actions=[
             "ec2:DescribeRegions",
             "ec2:DescribeInstances"
         ])

@@ -6,7 +6,7 @@ import boto3
 from botocore.exceptions import ClientError
 
 from ec2mc import config
-from ec2mc.stuff import halt
+from ec2mc.utils import halt
 
 def get_regions():
     """return list of AWS regions, or config's region whitelist if defined
@@ -90,7 +90,7 @@ def get_region_security_groups(region, vpc_id=None):
 
 # TODO: Attach tag(s) on resource (e.g. VPC) creation when it becomes supported
 def attach_tags(aws_ec2_client, resource_id, name_tag=None):
-    """attach tag(s) to resource, including Namespace tag, and try for 60s
+    """attempt to attach tag(s) to resource (including Namespace tag) for 60s
     
     Requires ec2:CreateTags permission.
 

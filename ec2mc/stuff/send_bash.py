@@ -1,10 +1,10 @@
-from ec2mc.stuff import aws
-from ec2mc.stuff import simulate_policy
-from ec2mc.stuff import halt
+from ec2mc.utils import aws
+from ec2mc.utils import halt
+from ec2mc.verify import verify_perms
 
 def main(instance_id, cmd_list):
     """send bash command(s) to an instance via SSM"""
-    halt.assert_empty(simulate_policy.blocked(actions=[
+    halt.assert_empty(verify_perms.blocked(actions=[
         "ssm:SendCommand",
         "ssm:GetCommandInvocation"
     ]))

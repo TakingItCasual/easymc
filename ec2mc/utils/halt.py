@@ -1,7 +1,7 @@
 """provides functions to kill the script by raising SystemExit"""
 
 def assert_empty(blocked_actions):
-    """used with simulate_policy, which returns a list of denied AWS actions"""
+    """used with verify_perms, which returns list of denied AWS actions"""
     if blocked_actions:
         err(["Missing following IAM permission(s):"] + blocked_actions)
 

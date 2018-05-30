@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-from ec2mc.stuff import simulate_policy
+from ec2mc.verify import verify_perms
 
 class BaseClass(ABC):
     """template for aws_setup component verifying/uploading/deleting"""
@@ -46,4 +46,4 @@ class BaseClass(ABC):
             needed_actions.extend(self.upload_actions)
         elif sub_command == "delete":
             needed_actions.extend(self.delete_actions)
-        return simulate_policy.blocked(actions=needed_actions)
+        return verify_perms.blocked(actions=needed_actions)

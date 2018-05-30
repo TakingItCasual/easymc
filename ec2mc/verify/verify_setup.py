@@ -3,8 +3,8 @@ import shutil
 import filecmp
 
 from ec2mc import config
-from ec2mc.stuff import os2
-from ec2mc.stuff import halt
+from ec2mc.utils import os2
+from ec2mc.utils import halt
 
 def main():
     """verify contents of user's config's aws_setup directory"""

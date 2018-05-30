@@ -1,10 +1,10 @@
 from ec2mc import config
 from ec2mc import command_template
-from ec2mc.stuff import aws
-from ec2mc.stuff import os2
-from ec2mc.stuff import simulate_policy
-from ec2mc.stuff.threader import Threader
-from ec2mc.stuff import halt
+from ec2mc.utils import aws
+from ec2mc.utils import halt
+from ec2mc.utils import os2
+from ec2mc.utils.threader import Threader
+from ec2mc.verify import verify_perms
 
 from ec2mc.commands.aws_setup_sub import iam_policies
 from ec2mc.commands.aws_setup_sub import iam_groups
@@ -19,7 +19,7 @@ class AWSSetup(command_template.BaseClass):
             iam_policies.IAMPolicySetup(),
             iam_groups.IAMGroupSetup(),
             vpcs.VPCSetup(),
-            ssh_key_pairs.SSHKeyPairs()
+            ssh_key_pairs.SSHKeyPairSetup()
         ]
 
 
@@ -121,7 +121,7 @@ class AWSSetup(command_template.BaseClass):
     def blocked_actions(self, kwargs):
         denied_actions = []
         if kwargs["action"] == "delete":
-            denied_actions.extend(simulate_policy.blocked(actions=[
+            denied_actions.extend(verify_perms.blocked(actions=[
                 "iam:ListGroups",
                 "iam:GetGroup",
                 "iam:ListPolicies",

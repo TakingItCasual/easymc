@@ -4,8 +4,8 @@ from deepdiff import DeepDiff
 
 from ec2mc import config
 from ec2mc import update_template
-from ec2mc.stuff import aws
-from ec2mc.stuff import os2
+from ec2mc.utils import aws
+from ec2mc.utils import os2
 
 class IAMPolicySetup(update_template.BaseClass):
 

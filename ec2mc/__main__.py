@@ -12,7 +12,7 @@ sys.dont_write_bytecode = True
 
 from ec2mc.verify import verify_config
 from ec2mc.verify import verify_setup
-from ec2mc.stuff import halt
+from ec2mc.utils import halt
 
 from ec2mc.commands import configure
 from ec2mc.commands import aws_setup
@@ -24,9 +24,6 @@ from ec2mc.commands import create_server
 
 def main(args=None):
     """ec2mc's entry point
-
-    The config is verified, the CLI arguments are parsed, and if all goes
-    well, ec2mc will interact with the specified AWS EC2 instance(s).
 
     Args:
         args (list): Args for argparse. If None, use CLI's args.
@@ -47,7 +44,7 @@ def main(args=None):
             create_server.CreateServer()
         ]
 
-        # Use argparse to turn sys.argv into a dict of arguments
+        # Use argparse to turn args into dict of arguments
         kwargs = argv_to_kwargs(args, commands)
         # Get the command class object from the commands list
         chosen_cmd = next(cmd for cmd in commands
@@ -65,7 +62,6 @@ def main(args=None):
 
         # Verify that the IAM user has needed permissions to use the command
         halt.assert_empty(chosen_cmd.blocked_actions(kwargs))
-
         # Use the command
         chosen_cmd.main(kwargs)
 

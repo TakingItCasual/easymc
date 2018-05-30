@@ -7,7 +7,7 @@ from jsonschema.exceptions import ValidationError
 from ruamel import yaml
 
 from ec2mc import config
-from ec2mc.stuff import halt
+from ec2mc.utils import halt
 
 def list_dir_files(target_dir, *, prefix="", ext=""):
     """return list of files in directory"""
@@ -15,10 +15,9 @@ def list_dir_files(target_dir, *, prefix="", ext=""):
         if os.path.isfile(target_dir + f) and f.endswith(ext)]
 
 
-def list_dir_dirs(target_dir, *, prefix=""):
+def list_dir_dirs(target_dir):
     """return list of directories in directory"""
-    return [prefix + d for d in os.listdir(target_dir)
-        if os.path.isdir(target_dir + d)]
+    return [d for d in os.listdir(target_dir) if os.path.isdir(target_dir + d)]
 
 
 def get_json_schema(schema_name):
@@ -66,7 +65,7 @@ def parse_yaml(file_path):
 
 
 def list_files_with_sub_dirs(top_dir):
-    """recursively list files under top_dir for use with filecmp.cmpfiles"""
+    """recursively list files under top_dir (used with filecmp.cmpfiles)"""
     all_files = []
     for path, _, files in os.walk(top_dir):
         for f in files:

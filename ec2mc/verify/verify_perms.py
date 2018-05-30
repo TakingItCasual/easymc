@@ -1,7 +1,7 @@
 from ec2mc import config
-from ec2mc.stuff import aws
+from ec2mc.utils import aws
 
-def blocked(*, actions=None, resources=None, context=None):
+def blocked(actions, resources=None, context=None):
     """test whether IAM user is able to use specified AWS action(s)
 
     Args:
@@ -15,9 +15,7 @@ def blocked(*, actions=None, resources=None, context=None):
         list: Actions denied by IAM due to insufficient permissions.
     """
 
-    if actions is None:
-        raise ValueError("The actions argument is required.")
-    elif not actions:
+    if not actions:
         return []
     actions = list(set(actions))
 

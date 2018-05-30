@@ -1,6 +1,6 @@
-from ec2mc.stuff import aws
-from ec2mc.stuff.threader import Threader
-from ec2mc.stuff import halt
+from ec2mc.utils import aws
+from ec2mc.utils import halt
+from ec2mc.utils.threader import Threader
 
 def main(kwargs):
     """wrapper for probe_regions which prints found instances to the CLI
