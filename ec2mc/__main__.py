@@ -49,23 +49,19 @@ def main(args=None):
 
         # Use argparse to turn sys.argv into a dict of arguments
         kwargs = argv_to_kwargs(args, commands)
-        arg_cmd = kwargs["command"]
+        # Get the command class object from the commands list
+        chosen_cmd = next(cmd for cmd in commands
+            if cmd.module_name() == kwargs["command"])
 
         # If the "configure" command was used, skip configuration verification
-        if arg_cmd == "configure":
-            config_cmd = next(cmd for cmd in commands
-                if cmd.module_name() == arg_cmd)
-            config_cmd.main()
+        if chosen_cmd.module_name() == "configure":
+            chosen_cmd.main()
             halt.q()
 
         # Verify config's config.json and server_titles.json
         verify_config.main()
         # Verify config's aws_setup.json and YAML instance templates
         verify_setup.main()
-
-        # Get the command class object from the commands list
-        chosen_cmd = next(cmd for cmd in commands
-            if cmd.module_name() == arg_cmd)
 
         # Verify that the IAM user has needed permissions to use the command
         halt.assert_empty(chosen_cmd.blocked_actions(kwargs))

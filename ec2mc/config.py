@@ -50,6 +50,6 @@ PK_PERMS = 0o400
 
 # Creating an EC2 client requires a region, even for listing all regions.
 DEFAULT_REGION = "us-east-1"
-# Restrict AWS regions the script interacts with, if not None.
-# Set in ec2mc.verify.verify_config:main (not yet implemented)
+# Restrict AWS regions the script interacts with (if not None).
+# (Optionally) set in ec2mc.verify.verify_config:main
 REGION_WHITELIST = None

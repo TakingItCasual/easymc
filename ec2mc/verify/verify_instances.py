@@ -11,22 +11,29 @@ def main(kwargs):
 
     Args:
         kwargs (dict):
-            "region" (list[str]): AWS region(s) to probe. If None, probe all.
-            "tagfilters" (list[list[str]]): Instance tag key-value(s) 
+            "region_filter" (list[str]): AWS region(s) to probe. If None, 
+                probe all regions (in whitelist, if defined).
+            "tag_filters" (list[list[str]]): Instance tag key-value(s) 
                 filter(s). For inner lists with one item, filter by key.
-            "namefilter" (list[str]): Instance tag value(s) filter for 
+            "name_filter" (list[str]): Instance tag value(s) filter for 
                 tag key "Name".
 
     Returns: See what probe_regions returns.
     """
 
-    region_filter = kwargs["regions"]
-    regions = aws.get_regions(region_filter)
+    regions = aws.get_regions()
+    if kwargs["region_filter"] is not None:
+        region_filter = set(kwargs["region_filter"])
+        # Verify region filter is valid
+        if not region_filter.issubset(set(regions)):
+            halt.err(["Following invalid region(s) specified:",
+                *(region_filter - set(regions))])
+        regions = list(region_filter)
 
     tag_filter = []
-    if kwargs["tagfilters"]:
+    if kwargs["tag_filters"]:
         # Convert dict(s) list to what describe_instances' Filters expects.
-        for filter_elements in kwargs["tagfilters"]:
+        for filter_elements in kwargs["tag_filters"]:
             # Filter instances based on tag key-value(s).
             if len(filter_elements) > 1:
                 tag_filter.append({
@@ -39,10 +46,10 @@ def main(kwargs):
                     "Name": "tag-key",
                     "Values": [filter_elements[0]]
                 })
-    if kwargs["namefilter"]:
+    if kwargs["name_filter"]:
         tag_filter.append({
             "Name": "tag:Name",
-            "Values": kwargs["namefilter"]
+            "Values": kwargs["name_filter"]
         })
 
     print("")
@@ -165,15 +172,15 @@ def get_all_tags():
 def argparse_args(cmd_parser):
     """initialize arguments for argparse that verify_instances:main needs"""
     cmd_parser.add_argument(
-        "-r", dest="regions", nargs="+", metavar="",
+        "-r", dest="region_filter", nargs="+", metavar="",
         help=("AWS region(s) to probe for instances. If not set, all regions "
             "will be probed."))
     cmd_parser.add_argument(
-        "-t", dest="tagfilters", nargs="+", action="append", metavar="",
+        "-t", dest="tag_filters", nargs="+", action="append", metavar="",
         help=("Instance tag value filter. First value is the tag key, with "
             "proceeding value(s) as the tag value(s). If not set, no filter "
             "will be applied. If only 1 value given, the tag key itself will "
             "be filtered for instead."))
     cmd_parser.add_argument(
-        "-n", dest="namefilter", nargs="+", metavar="",
+        "-n", dest="name_filter", nargs="+", metavar="",
         help="Instance tag value filter for the tag key \"Name\".")

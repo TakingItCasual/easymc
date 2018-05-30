@@ -38,8 +38,9 @@ class CreateServer(command_template.BaseClass):
             inst_template["instance_type"], inst_template["volume_size"])
 
         # Verify the specified region
-        self.ec2_client = aws.ec2_client(
-            aws.get_regions([kwargs["region"]])[0])
+        if kwargs["region"] not in aws.get_regions():
+            halt.err([kwargs["region"] + " is not a valid region."])
+        self.ec2_client = aws.ec2_client(kwargs["region"])
 
         creation_kwargs = self.parse_run_instance_args(kwargs, inst_template)
         user_data = self.process_user_data(kwargs["template"], inst_template)

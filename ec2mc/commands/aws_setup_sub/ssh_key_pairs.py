@@ -18,7 +18,6 @@ class SSHKeyPairs(update_template.BaseClass):
         Returns:
             dict: Which regions Namespace EC2 key pair exists in.
                 Region name (str/None): Public key fingerprint, if pair exists.
-
         """
 
         all_regions = aws.get_regions()
@@ -26,7 +25,7 @@ class SSHKeyPairs(update_template.BaseClass):
 
         threader = Threader()
         for region in all_regions:
-            threader.add_thread(self.region_has_namespace_key_pair, (region,))
+            threader.add_thread(self.region_key_fingerprint, (region,))
         return threader.get_results(return_dict=True)
 
 
@@ -60,7 +59,7 @@ class SSHKeyPairs(update_template.BaseClass):
         pass
 
 
-    def region_has_namespace_key_pair(self, region):
+    def region_key_fingerprint(self, region):
         """return key fingerprint if region has Namespace RSA key pair"""
         key_pairs = aws.ec2_client(region).describe_key_pairs(Filters=[{
             "Name": "key-name",
@@ -81,14 +80,14 @@ class SSHKeyPairs(update_template.BaseClass):
 
     def delete_region_key_pair(self, region):
         """delete SSH key pair from region"""
-        if self.region_has_namespace_key_pair(region) is not None:
+        if self.region_key_fingerprint(region) is not None:
             aws.ec2_client(region).delete_key_pair(KeyName=self.key_pair_name)
             return True
         return False
 
 
     def generate_rsa_key_pair(self):
-        """generate and return RSA private/public key pair
+        """generate and return RSA private/public key pair strings
 
         Returns:
             tuple:

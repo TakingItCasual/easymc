@@ -34,6 +34,19 @@ def main():
     schema = os2.get_json_schema("config")
     os2.validate_dict(config_dict, schema, "config.json")
 
+    # Verify config's region whitelist is valid.
+    if "region_whitelist" in config_dict:
+        config.REGION_WHITELIST = config_dict["region_whitelist"]
+        if len(aws.get_regions()) != len(config.REGION_WHITELIST):
+            halt.err(["Following invalid region(s) in config whitelist:",
+                *(set(config.REGION_WHITELIST) - set(aws.get_regions()))])
+
+    # Assign config.SERVERS_DAT if config's servers.dat path is valid.
+    if "servers_dat" in config_dict:
+        servers_dat = config_dict["servers_dat"]
+        if os.path.isfile(servers_dat) and servers_dat.endswith("servers.dat"):
+            config.SERVERS_DAT = servers_dat
+
     # Verify server_titles.json adheres to its schema.
     if os.path.isfile(config.SERVER_TITLES_JSON):
         server_titles_dict = os2.parse_json(config.SERVER_TITLES_JSON)
@@ -42,11 +55,6 @@ def main():
 
     # Verify configuration's IAM user credentials.
     verify_user(config_dict)
-
-    if "servers_dat" in config_dict:
-        servers_dat = config_dict["servers_dat"]
-        if os.path.isfile(servers_dat) and servers_dat.endswith("servers.dat"):
-            config.SERVERS_DAT = servers_dat
 
     if config.SERVERS_DAT is None:
         print("Config doesn't have a valid path for MC client's servers.dat.")
