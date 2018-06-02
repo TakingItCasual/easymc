@@ -64,8 +64,7 @@ def main(args=None):
         halt.assert_empty(chosen_cmd.blocked_actions(kwargs))
         # Use the command
         chosen_cmd.main(kwargs)
-
-        halt.q(["ec2mc completed without errors."])
+        print("")
     except SystemExit:
         pass
 

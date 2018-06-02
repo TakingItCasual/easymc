@@ -86,10 +86,9 @@ class VPCSetup(update_template.BaseClass):
 
         total_regions = str(len(aws.get_regions()))
         existing = str(len(vpc_regions["Existing"]))
-        print("VPC " + self.vpc_name + " exists in " + existing + " of " +
-            total_regions + " AWS regions.")
+        print("VPC " + self.vpc_name + " exists in " + existing +
+            " of " + total_regions + " AWS regions.")
 
-        print("")
         for sg_name, sg_regions in sg_names.items():
             up_to_date = str(len(sg_regions["UpToDate"]))
             print("Local SG " + sg_name + " exists in " + up_to_date +
@@ -125,7 +124,6 @@ class VPCSetup(update_template.BaseClass):
                 sg_threader.add_thread(self.update_sg, (region, sg_name))
         sg_threader.get_results()
 
-        print("")
         for sg_name, sg_regions in sg_names.items():
             if sg_regions["ToCreate"]:
                 print("VPC SG " + sg_name + " created in " +
