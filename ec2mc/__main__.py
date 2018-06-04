@@ -34,7 +34,7 @@ def main(args=None):
             args = sys.argv[1:]
 
         if sys.version_info < (3, 6):
-            halt.err(["Python version 3.6 or greater required."])
+            halt.err("Python version 3.6 or greater required.")
 
         # Available commands from the ec2mc.commands directory
         commands = [

@@ -36,7 +36,7 @@ setup(
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.6'
     ],
-    keywords='mc minecraft server aws ec2 iam',
+    keywords='mc minecraft ssh server aws ec2 iam',
     packages=find_packages(exclude=['docs', 'tests']),
     python_requires='~=3.6',
     entry_points={

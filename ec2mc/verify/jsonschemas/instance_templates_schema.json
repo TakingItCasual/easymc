@@ -28,14 +28,14 @@
                         "type": "object",
                         "properties": {
                             "local_dir": {"type": "string"},
-                            "instance_path": {"type": "string"},
+                            "instance_dir": {"type": "string"},
                             "owner": {"type": "string"},
                             "chmod": {
                                 "type": "string",
                                 "pattern": "^[0-7]{4}$"
                             }
                         },
-                        "required": ["local_dir", "instance_path"]
+                        "required": ["local_dir", "instance_dir"]
                     },
                     "minItems": 1,
                     "uniqueItems": true

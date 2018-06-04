@@ -8,19 +8,22 @@ import os.path
 # Path of the distribution's inner ec2mc directory
 DIST_DIR = os.path.join(os.path.dirname(__file__), "")
 
-# Directory where ec2mc finds/creates its configuration file(s).
+# Directory for ec2mc to find/create its configuration file(s).
 CONFIG_DIR = os.path.join(os.path.expanduser("~"), ".ec2mc", "")
 # JSON file containing IAM credentials, servers.dat path, and region whitelist.
 CONFIG_JSON = CONFIG_DIR + "config.json"
 # JSON file containing instance title(s) for the MC client's server list.
 SERVER_TITLES_JSON = CONFIG_DIR + "server_titles.json"
+# PEM file containing RSA private key for SSHing into instances.
+# Set in ec2mc.verify.verify_setup:main (Namespace used as file name)
+RSA_PRIV_KEY_PEM = None
 
-# Directory where ec2mc finds AWS setup files to upload to AWS.
+# Directory for ec2mc to find AWS setup files to upload to AWS.
 AWS_SETUP_DIR = os.path.join((CONFIG_DIR + "aws_setup"), "")
 # JSON file containing AWS setup instructions.
 AWS_SETUP_JSON = AWS_SETUP_DIR + "aws_setup.json"
 
-# Directory where ec2mc finds YAML instance templates
+# Directory for ec2mc to find YAML instance templates
 USER_DATA_DIR = os.path.join((AWS_SETUP_DIR + "user_data"), "")
 
 # IAM user data needed for AWS programmatic access.

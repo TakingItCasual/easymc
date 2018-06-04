@@ -29,7 +29,7 @@ class CreateServer(command_template.BaseClass):
 
         template_yaml_files = os2.list_dir_files(config.USER_DATA_DIR)
         if kwargs["template"] + ".yaml" not in template_yaml_files:
-            halt.err(["Template " + kwargs["template"] + " not found."])
+            halt.err("Template " + kwargs["template"] + " not found.")
 
         inst_template = os2.parse_yaml(config.USER_DATA_DIR +
             kwargs["template"] + ".yaml")["ec2mc_template_info"]
@@ -39,7 +39,7 @@ class CreateServer(command_template.BaseClass):
 
         # Verify the specified region
         if kwargs["region"] not in aws.get_regions():
-            halt.err([kwargs["region"] + " is not a valid region."])
+            halt.err(kwargs["region"] + " is not a valid region.")
         self.ec2_client = aws.ec2_client(kwargs["region"])
 
         creation_kwargs = self.parse_run_instance_args(kwargs, inst_template)
@@ -50,13 +50,13 @@ class CreateServer(command_template.BaseClass):
             self.create_instance(creation_kwargs, user_data, dry_run=True)
         except ClientError as e:
             if not e.response["Error"]["Code"] == "DryRunOperation":
-                halt.err([str(e)])
+                halt.err(str(e))
 
         # Actual instance creation occurs after this confirmation.
         if kwargs["confirm"] is False:
             print("")
             print("Specified instance creation args verified as permitted.")
-            halt.q(["Please append the -c argument to confirm."])
+            halt.q("Please append the -c argument to confirm.")
 
         instance = self.create_instance(
             creation_kwargs, user_data, dry_run=False)["Instances"][0]
@@ -121,8 +121,8 @@ class CreateServer(command_template.BaseClass):
 
         vpc_info = aws.get_region_vpc(region)
         if vpc_info is None:
-            halt.err(["VPC " + config.NAMESPACE + " not found.",
-                "  Have you uploaded the AWS setup?"])
+            halt.err("VPC " + config.NAMESPACE + " not found.",
+                "  Have you uploaded the AWS setup?")
         vpc_id = vpc_info["VpcId"]
         vpc_sgs = aws.get_region_security_groups(region, vpc_id)
         vpc_sg_ids = [sg["GroupId"] for sg in vpc_sgs
@@ -143,8 +143,8 @@ class CreateServer(command_template.BaseClass):
             "Values": [config.NAMESPACE]
         }])["KeyPairs"]
         if not ec2_key_pairs:
-            halt.err(["EC2 key pair " + config.NAMESPACE + " not found.",
-                "  Have you uploaded the AWS setup?"])
+            halt.err("EC2 key pair " + config.NAMESPACE + " not found.",
+                "  Have you uploaded the AWS setup?")
         creation_kwargs["key_name"] = ec2_key_pairs[0]["KeyName"]
 
         return creation_kwargs
@@ -182,7 +182,7 @@ class CreateServer(command_template.BaseClass):
                     write_files.append({
                         "encoding": "b64",
                         "content": file_b64,
-                        "path": write_dir["instance_path"] + dir_file
+                        "path": write_dir["instance_dir"] + dir_file
                     })
                     if "owner" in write_dir:
                         write_files[-1]["owner"] = write_dir["owner"]
@@ -199,7 +199,7 @@ class CreateServer(command_template.BaseClass):
             write_file_paths = [entry["path"] for entry
                 in user_data["write_files"]]
             if len(write_file_paths) != len(set(write_file_paths)):
-                halt.err(["Duplicate template write_files paths."])
+                halt.err("Duplicate template write_files paths.")
 
         # Make user_data valid cloud-config by removing additional setup info
         del user_data["ec2mc_template_info"]
@@ -240,11 +240,11 @@ class CreateServer(command_template.BaseClass):
         if verify_perms.blocked(actions=["ec2:RunInstances"],
                 resources=["arn:aws:ec2:*:*:instance/*"],
                 context={"ec2:InstanceType": [instance_type]}):
-            halt.err(["Instance type " + instance_type + " not permitted."])
+            halt.err("Instance type " + instance_type + " not permitted.")
         if verify_perms.blocked(actions=["ec2:RunInstances"],
                 resources=["arn:aws:ec2:*:*:volume/*"],
                 context={"ec2:VolumeSize": [volume_size]}):
-            halt.err(["Volume size " + str(volume_size) + "GiB is too large."])
+            halt.err("Volume size " + str(volume_size) + "GiB is too large.")
 
 
     def add_documentation(self, argparse_obj):

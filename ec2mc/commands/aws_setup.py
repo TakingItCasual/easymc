@@ -34,11 +34,11 @@ class AWSSetup(command_template.BaseClass):
         if kwargs["action"] == "delete":
             path_prefix = "/" + config.NAMESPACE + "/"
             if not self.verify_namespace_groups_empty(path_prefix):
-                halt.err(["User(s) attached to Namespace group(s)."])
+                halt.err("User(s) attached to Namespace group(s).")
             if not self.verify_namespace_policies_empty(path_prefix):
-                halt.err(["User(s) attached to Namespace policy(s)."])
+                halt.err("User(s) attached to Namespace policy(s).")
             if not self.verify_namespace_vpcs_empty():
-                halt.err(["Instance(s) found under Namespace VPC(s)."])
+                halt.err("Instance(s) found under Namespace VPC(s).")
 
         # AWS setup JSON config dictionary
         config_aws_setup = os2.parse_json(config.AWS_SETUP_JSON)

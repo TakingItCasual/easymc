@@ -60,8 +60,8 @@ def get_region_vpc(region):
     }])["Vpcs"]
 
     if len(vpcs) > 1:
-        halt.err(["Multiple VPCs with Namespace tag " + config.NAMESPACE +
-            " found from AWS."])
+        halt.err("Multiple VPCs with Namespace tag " + config.NAMESPACE +
+            " found from AWS.")
     elif vpcs:
         return vpcs[0]
     return None
@@ -84,7 +84,7 @@ def get_region_security_groups(region, vpc_id=None):
 
     sg_group_names = [sg["GroupName"] for sg in vpc_sgs]
     if len(sg_group_names) > len(set(sg_group_names)):
-        halt.err(["SGs with duplicate group names in " + region + " region."])
+        halt.err("SGs with duplicate group names in " + region + " region.")
     return vpc_sgs
 
 
@@ -118,11 +118,11 @@ def attach_tags(aws_ec2_client, resource_id, name_tag=None):
     for _ in range(60):
         try:
             aws_ec2_client.create_tags(Resources=[resource_id], Tags=new_tags)
-            return
+            break
         except ClientError as e:
             if not_found_regex.search(e.response["Error"]["Code"]) is None:
-                halt.err(["Exception when tagging " + resource_id + ":",
-                    str(e)])
+                halt.err("Exception when tagging " + resource_id + ":",
+                    str(e))
             sleep(1)
-
-    halt.err([resource_id + " doesn't exist after a minute of wating."])
+    else:
+        halt.err(resource_id + " doesn't exist after a minute of waiting.")

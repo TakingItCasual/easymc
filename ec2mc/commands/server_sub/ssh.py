@@ -24,16 +24,20 @@ class SSHServer(command_template.BaseClass):
         """
 
         if os.name != "posix":
-            halt.err(["ssh command only supported on posix systems.",
-                "  Google around for methods of SSHing with your OS."])
-
-        private_key_file = self.find_private_key()
+            halt.err("ssh command only supported on posix systems.",
+                "  Google for a method of SSHing with your OS.")
 
         instance = verify_instances.main(kwargs)
         if len(instance) > 1:
-            halt.err(["Instance query returned multiple results.",
-                "  Narrow filter(s) so that only one instance is found."])
+            halt.err("Instance query returned multiple results.",
+                "  Narrow filter(s) so that only one instance is returned.")
         instance = instance[0]
+
+        # Verify RSA private key file path and permissions
+        if not os.path.isfile(config.RSA_PRIV_KEY_PEM):
+            halt.err(config.RSA_PRIV_KEY_PEM + " not found.",
+                "  Namespace RSA private key PEM file required to SSH.")
+        os.chmod(config.RSA_PRIV_KEY_PEM, config.PK_PERMS)
 
         ec2_client = aws.ec2_client(instance["region"])
 
@@ -46,14 +50,14 @@ class SSHServer(command_template.BaseClass):
             default_user = next(pair["Value"] for pair in response["Tags"]
                 if pair["Key"] == "DefaultUser")
         except StopIteration:
-            halt.err(["Instance missing DefaultUser tag key-value pair."])
+            halt.err("Instance missing DefaultUser tag key-value pair.")
 
         if instance_state != "running":
-            halt.err(["Cannot SSH into instance that isn't running."])
+            halt.err("Cannot SSH into an instance that isn't running.")
 
         # Detects if the system has the "ssh" command.
         if not shutil.which("ssh"):
-            halt.err(["SSH executable not found. Please install it."])
+            halt.err("SSH executable not found. Please install it.")
 
         print("")
         print("Attempting to SSH into instance...")
@@ -61,26 +65,10 @@ class SSHServer(command_template.BaseClass):
             "ssh", "-q",
             "-o", "StrictHostKeyChecking=no",
             "-o", "UserKnownHostsFile=/dev/null",
-            "-i", private_key_file,
+            "-i", config.RSA_PRIV_KEY_PEM,
             default_user+"@"+instance_dns
         ]
         subprocess.run(ssh_cmd_args)
-
-
-    def find_private_key(self):
-        """return config's private key file path, if only one exists"""
-        private_keys = []
-        for file in os.listdir(config.CONFIG_DIR):
-            if file.endswith(".pem"):
-                private_keys.append(config.CONFIG_DIR + file)
-
-        if not private_keys:
-            halt.err(["Private key file not found in config."])
-        elif len(private_keys) > 1:
-            halt.err(["Multiple private key files found in config."])
-
-        os.chmod(private_keys[0], config.PK_PERMS)
-        return private_keys[0]
 
 
     def add_documentation(self, argparse_obj):

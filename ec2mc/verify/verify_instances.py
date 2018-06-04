@@ -26,8 +26,8 @@ def main(kwargs):
         region_filter = set(kwargs["region_filter"])
         # Verify region filter is valid
         if not region_filter.issubset(set(regions)):
-            halt.err(["Following invalid region(s) specified:",
-                *(region_filter - set(regions))])
+            halt.err("Following invalid region(s) specified:",
+                *(region_filter - set(regions)))
         regions = list(region_filter)
 
     tag_filter = []
@@ -70,16 +70,16 @@ def main(kwargs):
 
     if not all_instances:
         if region_filter and not tag_filter:
-            halt.err(["No instances found from specified region(s).",
-                "  Try removing the region filter."])
+            halt.err("No instances found from specified region(s).",
+                "  Try removing the region filter.")
         if not region_filter and tag_filter:
-            halt.err(["No instances with specified tag(s) found.",
-                "  Try removing the tag filter."])
+            halt.err("No instances with specified tag(s) found.",
+                "  Try removing the tag filter.")
         if region_filter and tag_filter:
-            halt.err([("No instances with specified tag(s) found "
+            halt.err(("No instances with specified tag(s) found "
                 "from specified region(s)."),
-                "  Try removing the region filter and/or the tag filter."])
-        halt.err(["No instances found."])
+                "  Try removing the region filter and/or the tag filter.")
+        halt.err("No instances found.")
 
     return all_instances
 

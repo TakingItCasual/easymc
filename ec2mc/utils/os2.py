@@ -31,19 +31,19 @@ def validate_dict(input_dict, schema_dict, input_dict_source):
     try:
         jsonschema.validate(input_dict, schema_dict)
     except ValidationError as e:
-        halt.err([input_dict_source + " incorrectly formatted:"] + [e.message])
+        halt.err(input_dict_source + " incorrectly formatted:", e.message)
 
 
 def parse_json(file_path):
     """verify that JSON file exists and contains valid JSON"""
     if not os.path.isfile(file_path):
-        halt.err([file_path + " not found."])
+        halt.err(file_path + " not found.")
     with open(file_path, encoding="utf-8") as f:
         file_contents = f.read()
     try:
         return json.loads(file_contents)
     except ValueError:
-        halt.err([file_path + " is not a valid JSON file."])
+        halt.err(file_path + " is not a valid JSON file.")
 
 
 def save_json(input_dict, file_path):
@@ -55,13 +55,13 @@ def save_json(input_dict, file_path):
 def parse_yaml(file_path):
     """verify that YAML file exists and contains valid YAML"""
     if not os.path.isfile(file_path):
-        halt.err([file_path + " not found."])
+        halt.err(file_path + " not found.")
     with open(file_path, encoding="utf-8") as f:
         file_contents = f.read()
     try:
         return yaml.load(file_contents, Loader=yaml.RoundTripLoader)
     except: # Multiple exceptions are possible. Idk what they all are.
-        halt.err([file_path + " is not a valid YAML file."])
+        halt.err(file_path + " is not a valid YAML file.")
 
 
 def list_files_with_sub_dirs(top_dir):

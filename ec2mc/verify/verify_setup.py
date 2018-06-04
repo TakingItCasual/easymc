@@ -37,6 +37,7 @@ def main():
     verify_instance_templates(config_aws_setup)
 
     config.NAMESPACE = config_aws_setup["Namespace"]
+    config.RSA_PRIV_KEY_PEM = config.CONFIG_DIR + config.NAMESPACE + ".pem"
 
     verify_iam_policies(config_aws_setup)
     verify_vpc_security_groups(config_aws_setup)
@@ -46,7 +47,7 @@ def get_config_aws_setup_dict():
     """return aws_setup.json from config in user's home dir as dict"""
     config_aws_setup_file = config.AWS_SETUP_JSON
     if not os.path.isfile(config_aws_setup_file):
-        halt.err(["aws_setup.json not found from config."])
+        halt.err("aws_setup.json not found from config.")
     return os2.parse_json(config_aws_setup_file)
 
 
@@ -64,14 +65,14 @@ def verify_aws_setup(config_aws_setup):
 
     # TODO: Handle this with jsonschema once it's able to
     if not unique_names(config_aws_setup["IAM"]["Policies"]):
-        halt.err(["aws_setup.json incorrectly formatted:",
-            "IAM policy names must be unique."])
+        halt.err("aws_setup.json incorrectly formatted:",
+            "IAM policy names must be unique.")
     if not unique_names(config_aws_setup["IAM"]["Groups"]):
-        halt.err(["aws_setup.json incorrectly formatted:",
-            "IAM group names must be unique."])
+        halt.err("aws_setup.json incorrectly formatted:",
+            "IAM group names must be unique.")
     if not unique_names(config_aws_setup["EC2"]["SecurityGroups"]):
-        halt.err(["aws_setup.json incorrectly formatted:",
-            "EC2 security group names must be unique."])
+        halt.err("aws_setup.json incorrectly formatted:",
+            "EC2 security group names must be unique.")
 
 
 def verify_instance_templates(config_aws_setup):
@@ -88,8 +89,8 @@ def verify_instance_templates(config_aws_setup):
         # Verify template security group(s) also described in aws_setup.json
         for security_group in template_info["security_groups"]:
             if security_group not in sg_names:
-                halt.err([template_yaml_file + " incorrectly formatted:",
-                    "SG " + security_group + " not found in aws_setup.json."])
+                halt.err(template_yaml_file + " incorrectly formatted:",
+                    "SG " + security_group + " not found in aws_setup.json.")
 
         template_name = os.path.splitext(template_yaml_file)[0]
         template_dir = os.path.join((config.USER_DATA_DIR + template_name), "")
@@ -97,15 +98,15 @@ def verify_instance_templates(config_aws_setup):
         if not os.path.isdir(template_dir):
             if ("write_directories" in template_info
                     and template_info["write_directories"]):
-                halt.err([template_name + " template directory not found."])
+                halt.err(template_name + " template directory not found.")
         # Verify existance of write_directories subdir(s) in template directory
         else:
             template_subdirs = os2.list_dir_dirs(template_dir)
             if "write_directories" in template_info:
                 for write_dir in template_info["write_directories"]:
                     if write_dir["local_dir"] not in template_subdirs:
-                        halt.err([write_dir["local_dir"] + " subdirectory not "
-                            "found from user_data."])
+                        halt.err(write_dir["local_dir"] + " subdirectory not "
+                            "found from user_data.")
     # write_files path uniqueness verified in create_server:process_user_data
 
 
@@ -121,11 +122,11 @@ def verify_iam_policies(config_aws_setup):
 
     # Halt if aws_setup.json describes policies not found in iam_policies
     if not set(setup_policy_list).issubset(set(iam_policy_files)):
-        halt.err([
+        halt.err(
             "Following policy(s) not found from aws_setup/iam_policies/:",
             *[policy for policy in setup_policy_list
                 if policy not in iam_policy_files]
-        ])
+        )
 
     # Warn if iam_policies has policies not described by aws_setup.json
     if not set(iam_policy_files).issubset(set(setup_policy_list)):
@@ -144,11 +145,11 @@ def verify_vpc_security_groups(config_aws_setup):
 
     # Halt if aws_setup.json describes SGs not found in vpc_security_groups
     if not set(setup_sg_list).issubset(set(vpc_sg_json_files)):
-        halt.err([
+        halt.err(
             "Following SG(s) not found from aws_setup/vpc_security_groups/:",
             *[sg for sg in setup_sg_list
                 if sg not in vpc_sg_json_files]
-        ])
+        )
 
     # Halt if any security group missing Ingress and/or Egress tags
     schema = os2.get_json_schema("vpc_security_groups")
