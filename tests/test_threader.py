@@ -7,7 +7,7 @@ from ec2mc.utils.threader import Threader
 def test_threader_dict_return():
     """test that functions' first args set as function returns' dict keys"""
     def func(dict_key, multiplier):
-        return dict_key*multiplier
+        return dict_key * multiplier
 
     threader = Threader()
     for index in range(5):
@@ -20,7 +20,7 @@ def test_threader_dict_return():
 def test_threader_fifo():
     """test that threader is first-in, first-out"""
     def func(index):
-        sleep(randint(5, 25)/100)
+        sleep(randint(5, 25) / 100)
         return index
 
     threader = Threader()

@@ -35,12 +35,12 @@ class StopServer(command_template.BaseClass):
 
             try:
                 ec2_client.get_waiter("instance_stopped").wait(
-                    InstanceIds=[instance["id"]], WaiterConfig={
-                        "Delay": 5, "MaxAttempts": 12
-                    })
+                    InstanceIds=[instance["id"]],
+                    WaiterConfig={"Delay": 5, "MaxAttempts": 12}
+                )
             except WaiterError:
                 print("  Instance not stopped after waiting 1 minute.")
-                print("    Check the instance's state in a minute.")
+                print("    Check instance's state in a minute.")
                 continue
 
             print("  Instance stopped.")

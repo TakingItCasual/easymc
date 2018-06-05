@@ -101,6 +101,7 @@ def verify_instance_templates(config_aws_setup):
                 halt.err(template_name + " template directory not found.")
         # Verify existance of write_directories subdir(s) in template directory
         else:
+            # TODO: Be more specific about missing subdirectories
             template_subdirs = os2.list_dir_dirs(template_dir)
             if "write_directories" in template_info:
                 for write_dir in template_info["write_directories"]:

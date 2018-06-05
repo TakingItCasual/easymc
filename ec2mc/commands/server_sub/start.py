@@ -39,12 +39,12 @@ class StartServer(command_template.BaseClass):
 
                 try:
                     ec2_client.get_waiter("instance_running").wait(
-                        InstanceIds=[instance["id"]], WaiterConfig={
-                            "Delay": 5, "MaxAttempts": 12
-                        })
+                        InstanceIds=[instance["id"]],
+                        WaiterConfig={"Delay": 5, "MaxAttempts": 12}
+                    )
                 except WaiterError:
                     print("  Instance not running after waiting 1 minute.")
-                    print("    Check the instance's state in a minute.")
+                    print("    Check instance's state in a minute.")
                     continue
 
                 print("  Instance started. The server will be available soon.")

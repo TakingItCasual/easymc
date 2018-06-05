@@ -14,18 +14,18 @@ class SSHServer(command_template.BaseClass):
     def main(self, kwargs):
         """SSH into an EC2 instance using its .pem private key
 
-        The private key is expected to exist within config.CONFIG_DIR
-
-        Currently SSH is only supported with a .pem private key, and using 
-        multiple keys is not supported. Only posix systems are supported.
+        The private key is expected at config.RSA_PRIV_KEY_PEM (file path). 
+        File's name is linked to the Namespace. If not a POSIX system, just 
+        print out instance's username@hostname.
 
         Args:
             kwargs (dict): See verify.verify_instances:argparse_args
         """
 
         if os.name != "posix":
-            halt.err("ssh command only supported on posix systems.",
-                "  Google for a method of SSHing with your OS.")
+            print("")
+            print("Notice: This command is not fully implemented for your OS.")
+            print("  Interactive SSH session will not be opened.")
 
         instance = verify_instances.main(kwargs)
         if len(instance) > 1:
@@ -33,7 +33,7 @@ class SSHServer(command_template.BaseClass):
                 "  Narrow filter(s) so that only one instance is returned.")
         instance = instance[0]
 
-        # Verify RSA private key file path and permissions
+        # Verify RSA private key file exists and set permissions
         if not os.path.isfile(config.RSA_PRIV_KEY_PEM):
             halt.err(config.RSA_PRIV_KEY_PEM + " not found.",
                 "  Namespace RSA private key PEM file required to SSH.")
@@ -55,20 +55,29 @@ class SSHServer(command_template.BaseClass):
         if instance_state != "running":
             halt.err("Cannot SSH into an instance that isn't running.")
 
-        # Detects if the system has the "ssh" command.
-        if not shutil.which("ssh"):
-            halt.err("SSH executable not found. Please install it.")
+        username_and_hostname = default_user + "@" + instance_dns
 
         print("")
-        print("Attempting to SSH into instance...")
-        ssh_cmd_args = [
-            "ssh", "-q",
-            "-o", "StrictHostKeyChecking=no",
-            "-o", "UserKnownHostsFile=/dev/null",
-            "-i", config.RSA_PRIV_KEY_PEM,
-            default_user+"@"+instance_dns
-        ]
-        subprocess.run(ssh_cmd_args)
+        print("Instance's user and hostname are the following:")
+        print(username_and_hostname)
+
+        if os.name == "posix":
+            # Detect if system has the "ssh" command.
+            if shutil.which("ssh") is None:
+                halt.err("OpenSSH SSH client executable not found.",
+                    "  Please install it.")
+
+            print("")
+            print("Attempting to SSH into instance...")
+            ssh_cmd_args = [
+                "ssh",
+                "-o", "LogLevel=ERROR",
+                "-o", "StrictHostKeyChecking=no",
+                "-o", "UserKnownHostsFile=/dev/null",
+                "-i", config.RSA_PRIV_KEY_PEM,
+                username_and_hostname
+            ]
+            subprocess.run(ssh_cmd_args)
 
 
     def add_documentation(self, argparse_obj):
