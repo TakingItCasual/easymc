@@ -108,7 +108,7 @@ def verify_instance_templates(config_aws_setup):
                     if write_dir["local_dir"] not in template_subdirs:
                         halt.err(write_dir["local_dir"] + " subdirectory not "
                             "found from user_data.")
-    # write_files path uniqueness verified in create_server:process_user_data
+    # write_files path uniqueness verified in create:process_user_data
 
 
 def verify_iam_policies(config_aws_setup):
@@ -120,6 +120,10 @@ def verify_iam_policies(config_aws_setup):
         in config_aws_setup["IAM"]["Policies"]]
     # Actual policy JSON files located in aws_setup/iam_policies/
     iam_policy_files = os2.list_dir_files(policy_dir, ext=".json")
+
+    # Halt if any IAM policy file contains invalid JSON
+    for iam_policy_file in iam_policy_files:
+        os2.parse_json(policy_dir + iam_policy_file)
 
     # Halt if aws_setup.json describes policies not found in iam_policies
     if not set(setup_policy_list).issubset(set(iam_policy_files)):

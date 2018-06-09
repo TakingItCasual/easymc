@@ -17,7 +17,7 @@ from ec2mc.utils import halt
 from ec2mc.commands import configure
 from ec2mc.commands import aws_setup
 from ec2mc.commands import server
-from ec2mc.commands import create_server
+from ec2mc.commands import servers
 
 #import pprint
 #pp = pprint.PrettyPrinter(indent=2)
@@ -41,7 +41,7 @@ def main(args=None):
             configure.Configure(),
             aws_setup.AWSSetup(),
             server.Server(),
-            create_server.CreateServer()
+            servers.Servers()
         ]
 
         # Use argparse to turn args into dict of arguments
@@ -80,7 +80,7 @@ def argv_to_kwargs(args, commands):
     """
 
     parser = argparse.ArgumentParser(description=__doc__)
-    cmd_args = parser.add_subparsers(metavar="{command}"+" "*6, dest="command")
+    cmd_args = parser.add_subparsers(metavar="{command}"+" "*2, dest="command")
     cmd_args.required = True
 
     for command in commands:

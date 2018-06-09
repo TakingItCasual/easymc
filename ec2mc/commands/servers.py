@@ -1,23 +1,25 @@
 from ec2mc import command_template
 
-from ec2mc.commands.server_sub import create
-from ec2mc.commands.server_sub import ssh
+from ec2mc.commands.servers_sub import check
+from ec2mc.commands.servers_sub import start
+from ec2mc.commands.servers_sub import stop
 
-class Server(command_template.BaseClass):
+class Servers(command_template.BaseClass):
 
     def __init__(self):
         super().__init__()
         self.sub_commands = [
-            create.CreateServer(),
-            ssh.SSHServer()
+            check.CheckServer(),
+            start.StartServer(),
+            stop.StopServer()
         ]
 
 
     def main(self, kwargs):
-        """commands to interact with a single instance
+        """commands to interact with a one or more existing instances
 
         Args:
-            kwargs (dict): Command's argparse arguments
+            kwargs (dict): See verify.verify_instances:argparse_args
         """
 
         chosen_cmd = next(cmd for cmd in self.sub_commands

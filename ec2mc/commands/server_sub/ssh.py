@@ -27,11 +27,11 @@ class SSHServer(command_template.BaseClass):
             print("Notice: This command is not fully implemented for your OS.")
             print("  Interactive SSH session will not be opened.")
 
-        instance = verify_instances.main(kwargs)
-        if len(instance) > 1:
+        instances = verify_instances.main(kwargs)
+        if len(instances) > 1:
             halt.err("Instance query returned multiple results.",
                 "  Narrow filter(s) so that only one instance is returned.")
-        instance = instance[0]
+        instance = instances[0]
 
         # Verify RSA private key file exists and set permissions
         if not os.path.isfile(config.RSA_PRIV_KEY_PEM):

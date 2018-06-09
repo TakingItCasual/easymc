@@ -16,10 +16,13 @@ def main():
 
     # Retrieve the configuration. Halt if it doesn't exist.
     if not os.path.isfile(config.CONFIG_JSON):
-        halt.err(
-            "Configuration is not set. Set with \"ec2mc configure\".",
-            "  IAM credentials needed to interact with AWS."
-        )
+        credentials_csv = config.CONFIG_DIR + "credentials.csv"
+        if not os.path.isfile(credentials_csv):
+            halt.err(
+                "Configuration is not set. Set with \"ec2mc configure\".",
+                "  IAM credentials needed to interact with AWS."
+            )
+        create_config_from_credentials_csv(credentials_csv)
     config_dict = os2.parse_json(config.CONFIG_JSON)
 
     # Verify config.json adheres to its schema.
@@ -79,6 +82,7 @@ def verify_user(config_dict):
     try:
         iam_user = aws.iam_client().get_user()["User"]
     except ClientError as e:
+        # TODO: Use client exceptions instead once they're documented
         if e.response["Error"]["Code"] == "InvalidClientTokenId":
             halt.err("IAM ID is invalid.")
         elif e.response["Error"]["Code"] == "SignatureDoesNotMatch":
@@ -101,3 +105,15 @@ def verify_user(config_dict):
 
     # Verify IAM user can use ec2:DescribeRegions action.
     halt.assert_empty(verify_perms.blocked(actions=["ec2:DescribeRegions"]))
+
+
+def create_config_from_credentials_csv(file_path):
+    """create JSON config file from IAM user's credentials.csv file"""
+    with open(file_path, encoding="utf-8") as csv_file:
+        iam_user_info = csv_file.readlines()[1].strip().split(",")
+    config_dict = {
+        "iam_id": iam_user_info[2],
+        "iam_secret": iam_user_info[3]
+    }
+    os2.save_json(config_dict, config.CONFIG_JSON)
+    os.chmod(config.CONFIG_JSON, config.CONFIG_PERMS)

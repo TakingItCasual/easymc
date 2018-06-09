@@ -16,7 +16,7 @@ pp = pprint.PrettyPrinter(indent=2)
 class CreateServer(command_template.BaseClass):
 
     def main(self, kwargs):
-        """create and initialize a new Minecraft instance/server
+        """create and initialize a new EC2 instance
 
         Args:
             kwargs (dict):
@@ -252,7 +252,7 @@ class CreateServer(command_template.BaseClass):
         cmd_parser.add_argument(
             "template", help="name of config instance setup template to use")
         cmd_parser.add_argument(
-            "region", help="AWS region for the instance to be created in")
+            "region", help="AWS region to create the instance in")
         cmd_parser.add_argument(
             "name", help="value for instance tag key \"Name\"")
         cmd_parser.add_argument(
