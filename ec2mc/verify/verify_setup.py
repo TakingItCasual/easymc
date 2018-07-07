@@ -6,6 +6,7 @@ from ec2mc import config
 from ec2mc.utils import os2
 from ec2mc.utils import halt
 
+# TODO: Verify appropriate stuff against AWS, rather than local setup
 def main():
     """verify contents of user's config's aws_setup directory"""
 

@@ -47,7 +47,7 @@ Upload the default setup included with the script with the following command::
 
     ec2mc aws_setup upload
 
-To make changes to the setup to be uploaded to AWS, see Customization_.
+(To make changes to the setup to be uploaded to AWS, see Customization_.)
 
 The administrator access given to the temporary IAM user is potentially dangerous, so create a (WIP...)
 

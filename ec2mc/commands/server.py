@@ -1,6 +1,7 @@
 from ec2mc import command_template
 
 from ec2mc.commands.server_sub import create
+from ec2mc.commands.server_sub import delete
 from ec2mc.commands.server_sub import ssh
 
 class Server(command_template.BaseClass):
@@ -9,6 +10,7 @@ class Server(command_template.BaseClass):
         super().__init__()
         self.sub_commands = [
             create.CreateServer(),
+            delete.DeleteServer(),
             ssh.SSHServer()
         ]
 

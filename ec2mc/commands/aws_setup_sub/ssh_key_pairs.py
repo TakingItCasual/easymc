@@ -152,7 +152,7 @@ def generate_rsa_key_pair():
     Returns:
         tuple:
             str: Private key string
-            str: Public key bytes
+            bytes: Public key bytes
     """
 
     # Generate private/public key pair

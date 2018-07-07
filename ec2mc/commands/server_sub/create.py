@@ -1,5 +1,6 @@
 import os
 import base64
+from time import sleep
 from ruamel import yaml
 from botocore.exceptions import ClientError
 
@@ -58,8 +59,18 @@ class CreateServer(command_template.BaseClass):
             print("Specified instance creation args verified as permitted.")
             halt.q("Please append the -c argument to confirm.")
 
+        print("")
         instance = self.create_instance(
             creation_kwargs, user_data, dry_run=False)["Instances"][0]
+        print("Instance created.")
+
+        if kwargs["elastic_ip"] is True:
+            halt.assert_empty(verify_perms.blocked(actions=[
+                "ec2:AllocateAddress",
+                "ec2:AssociateAddress"
+            ]))
+            self.create_and_associate_elastic_ip(instance["InstanceId"])
+            print("New elastic IP associated with created instance.")
 
 
     def parse_run_instance_args(self, kwargs, instance_template):
@@ -125,9 +136,8 @@ class CreateServer(command_template.BaseClass):
                 "  Have you uploaded the AWS setup?")
         vpc_id = vpc_info["VpcId"]
         vpc_sgs = aws.get_region_security_groups(region, vpc_id)
-        vpc_sg_ids = [sg["GroupId"] for sg in vpc_sgs
+        creation_kwargs["sg_ids"] = [sg["GroupId"] for sg in vpc_sgs
             if sg["GroupName"] in instance_template["security_groups"]]
-        creation_kwargs["sg_ids"] = vpc_sg_ids
 
         vpc_subnets = ec2_client.describe_subnets(
             Filters=[{
@@ -235,6 +245,25 @@ class CreateServer(command_template.BaseClass):
         )
 
 
+    def create_and_associate_elastic_ip(self, instance_id):
+        """attempt to assign elastic IP to instance for 60 seconds"""
+        allocation_id = self.ec2_client.allocate_address(
+            Domain="vpc")["AllocationId"]
+        for _ in range(60):
+            try:
+                self.ec2_client.associate_address(
+                    AllocationId=allocation_id,
+                    InstanceId=instance_id
+                )
+                break
+            except ClientError as e:
+                if e.response["Error"]["Code"] != "InvalidInstanceID":
+                    halt.err(str(e))
+                sleep(1)
+        else:
+            halt.err("Couldn't assign elastic IP to instance.")
+
+
     def verify_type_and_size_allowed(self, instance_type, volume_size):
         """verify user is allowed to create instance with type and size"""
         if verify_perms.blocked(actions=["ec2:RunInstances"],
@@ -259,11 +288,14 @@ class CreateServer(command_template.BaseClass):
             "-c", "--confirm", action="store_true",
             help="confirm instance creation")
         cmd_parser.add_argument(
+            "-e", "--elastic_ip", action="store_true",
+            help="create and associate elastic IP")
+        cmd_parser.add_argument(
             "-t", dest="tags", nargs=2, action="append", metavar="",
             help="instance tag key-value pair to attach to instance")
 
 
-    def blocked_actions(self, _):
+    def blocked_actions(self):
         denied_actions = []
         denied_actions.extend(verify_perms.blocked(actions=[
             "ec2:DescribeRegions",
