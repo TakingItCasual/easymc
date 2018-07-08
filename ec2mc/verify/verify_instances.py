@@ -2,6 +2,9 @@ from ec2mc.utils import aws
 from ec2mc.utils import halt
 from ec2mc.utils.threader import Threader
 
+import pprint
+pp = pprint.PrettyPrinter(indent=2)
+
 def main(kwargs):
     """wrapper for probe_regions which prints found instances to the CLI
 
@@ -19,6 +22,139 @@ def main(kwargs):
                 tag key "Name".
 
     Returns: See what probe_regions returns.
+    """
+
+    regions, tag_filter = parse_filters(kwargs)
+
+    print("")
+    print("Probing " + str(len(regions)) + " AWS region(s) for instances...")
+
+    all_instances = probe_regions(regions, tag_filter)
+
+    for region in regions:
+        instances = [instance for instance in all_instances
+            if instance["region"] == region]
+        if not instances:
+            continue
+
+        print(region + ": " + str(len(instances)) + " instance(s) found:")
+        for instance in instances:
+            if instance["name"] is not None:
+                print("  " + instance["name"] + " (" + instance["id"] + ")")
+            else:
+                print("  " + instance["id"])
+
+            for tag_key, tag_value in instance["tags"].items():
+                print("    " + tag_key + ": " + tag_value)
+
+    if not all_instances:
+        if kwargs["region_filter"] and not tag_filter:
+            halt.err("No instances found from specified region(s).",
+                "  Try removing the region filter.")
+        if not kwargs["region_filter"] and tag_filter:
+            halt.err("No instances with specified tag(s) found.",
+                "  Try removing the tag filter.")
+        if kwargs["region_filter"] and tag_filter:
+            halt.err(("No instances with specified tag(s) found "
+                "from specified region(s)."),
+                "  Try removing the region filter and/or the tag filter.")
+        halt.err("No instances found.")
+
+    return all_instances
+
+
+def probe_regions(regions, tag_filter=None):
+    """probe AWS region(s) for instances, and return dict(s) of instance(s)
+
+    Requires ec2:DescribeInstances permission.
+
+    Uses multithreading to probe all regions simultaneously.
+
+    Args:
+        regions (list[str]): AWS region(s) to probe.
+        tag_filter (list[dict]): Passed to probe_region
+
+    Returns:
+        list[dict]: Found instance(s).
+            "region" (str): AWS region that an instance is in.
+            For other key-value pairs, see what probe_region returns.
+    """
+
+    threader = Threader()
+    for region in regions:
+        threader.add_thread(probe_region, (region, tag_filter))
+    regions_instances = threader.get_results(return_dict=True)
+
+    all_instances = []
+    for region, instances in regions_instances.items():
+        for instance in instances:
+            all_instances.append({
+                "region": region,
+                **instance
+            })
+
+    return all_instances
+
+
+def probe_region(region, tag_filter=None):
+    """probe a single AWS region for instances
+
+    Requires ec2:DescribeInstances permission.
+
+    Args:
+        region (str): AWS region to probe.
+        tag_filter (list[dict]): Filter out instances that don't have tags 
+            matching the filter. If None/empty, filter not used.
+
+    Returns:
+        list[dict]: Instance(s) found in region.
+            "id" (str): ID of instance.
+            "name" (str/None): Tag value for instance tag key "Name".
+            "tags" (dict): Instance tag key-value pair(s).
+    """
+
+    if tag_filter is None:
+        tag_filter = []
+
+    reservations = aws.ec2_client(region).describe_instances(
+        Filters=tag_filter)["Reservations"]
+
+    region_instances = []
+    for reservation in reservations:
+        for instance in reservation["Instances"]:
+            region_instances.append({
+                "id": instance["InstanceId"],
+                "name": None,
+                "tags": {tag["Key"]: tag["Value"] for tag in instance["Tags"]}
+            })
+
+    for instance in region_instances:
+        if "Name" in instance["tags"]:
+            instance["name"] = instance["tags"]["Name"]
+            del instance["tags"]["Name"]
+
+    return region_instances
+
+
+def get_all_tags():
+    """get instance tags from all instances in all regions"""
+    tags = []
+    all_instances = probe_regions(aws.get_regions())
+    for instance in all_instances:
+        tags.append(instance["tags"])
+    return tags
+
+
+def parse_filters(kwargs):
+    """parses region and tag filters
+
+    Args:
+        kwargs (dict): See main's arguments.
+
+    Returns:
+        tuple:
+            list[str]: Regions to probe.
+            list[dict]: Filter to pass to EC2 client's describe_instances.
     """
 
     regions = aws.get_regions()
@@ -52,121 +188,7 @@ def main(kwargs):
             "Values": kwargs["name_filter"]
         })
 
-    print("")
-    print("Probing " + str(len(regions)) + " AWS region(s) for instances...")
-
-    all_instances = probe_regions(regions, tag_filter)
-
-    for region in regions:
-        instances = [instance for instance in all_instances
-            if instance["region"] == region]
-        if not instances:
-            continue
-        print(region + ": " + str(len(instances)) + " instance(s) found:")
-        for instance in instances:
-            print("  " + instance["id"])
-            for tag_key, tag_value in instance["tags"].items():
-                print("    " + tag_key + ": " + tag_value)
-
-    if not all_instances:
-        if region_filter and not tag_filter:
-            halt.err("No instances found from specified region(s).",
-                "  Try removing the region filter.")
-        if not region_filter and tag_filter:
-            halt.err("No instances with specified tag(s) found.",
-                "  Try removing the tag filter.")
-        if region_filter and tag_filter:
-            halt.err(("No instances with specified tag(s) found "
-                "from specified region(s)."),
-                "  Try removing the region filter and/or the tag filter.")
-        halt.err("No instances found.")
-
-    return all_instances
-
-
-def probe_regions(regions, tag_filter=None):
-    """probe AWS region(s) for instances, and return dict(s) of instance(s)
-
-    Requires ec2:DescribeInstances permission.
-
-    Uses multithreading to probe all regions simultaneously.
-
-    Args:
-        regions (list[str]): AWS region(s) to probe.
-        tag_filter (list[dict]): Passed to probe_region
-
-    Returns:
-        list[dict]: Found instance(s).
-            "region" (str): AWS region that an instance is in.
-            "id" (str): ID of instance.
-            "tags" (dict): Instance tag key-value pair(s).
-    """
-
-    threader = Threader()
-    for region in regions:
-        threader.add_thread(probe_region, (region, tag_filter))
-    regions_info = threader.get_results()
-
-    all_instances = []
-    for region_info in regions_info:
-        for instance in region_info["instances"]:
-            all_instances.append({
-                "region": region_info["region"],
-                "id": instance["id"],
-                "tags": instance["tags"]
-            })
-
-    return all_instances
-
-
-def probe_region(region, tag_filter=None):
-    """probe a single AWS region for instances
-
-    Requires ec2:DescribeInstances permission.
-
-    Args:
-        region (str): AWS region to probe.
-        tag_filter (list[dict]): Filter out instances that don't have tags 
-            matching the filter. If None, filter not used.
-
-    Returns:
-        dict: Instance(s) found in region.
-            "region" (str): Probed AWS region.
-            "instances" (list[dict]): Instance(s) found.
-                "id" (str): ID of instance.
-                "tags" (dict): Instance tag key-value pair(s).
-    """
-
-    if tag_filter is None:
-        tag_filter = []
-
-    reservations = aws.ec2_client(
-        region).describe_instances(Filters=tag_filter)["Reservations"]
-
-    region_instances = {
-        "region": region,
-        "instances": []
-    }
-
-    for reservation in reservations:
-        for instance in reservation["Instances"]:
-            region_instances["instances"].append({
-                "id": instance["InstanceId"],
-                "tags": {
-                    tag["Key"]: tag["Value"] for tag in instance["Tags"]
-                }
-            })
-
-    return region_instances
-
-
-def get_all_tags():
-    """get instance tags from all instances in all regions"""
-    tags = []
-    all_instances = probe_regions(aws.get_regions())
-    for instance in all_instances:
-        tags.append(instance["tags"])
-    return tags
+    return (regions, tag_filter)
 
 
 def argparse_args(cmd_parser):

@@ -1,8 +1,8 @@
 from ec2mc import config
-from ec2mc import update_template
+from ec2mc.commands.aws_setup_sub import template
 from ec2mc.utils import aws
 
-class IAMGroupSetup(update_template.BaseClass):
+class IAMGroupSetup(template.BaseClass):
 
     def verify_component(self, config_aws_setup):
         """determine which groups need creating/updating, and which don't

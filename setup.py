@@ -4,6 +4,7 @@ import os.path
 from setuptools import setup, find_packages
 
 VERSION = "0.1.3"
+REPO_URL = 'https://github.com/TakingItCasual/ec2mc'
 
 readme_path = os.path.join(
     os.path.abspath(os.path.dirname(__file__)), "README.rst")
@@ -18,8 +19,8 @@ setup(
     long_description=LONG_DESC,
     author='TakingItCasual',
     author_email='takingitcasual+gh@gmail.com',
-    url='https://github.com/TakingItCasual/ec2mc',
-    download_url='https://github.com/TakingItCasual/ec2mc/archive/v'+VERSION+'.tar.gz',
+    url=REPO_URL,
+    download_url=REPO_URL+'/archive/v'+VERSION+'.tar.gz',
     license='MIT',
     classifiers=[
         'Development Status :: 3 - Alpha',

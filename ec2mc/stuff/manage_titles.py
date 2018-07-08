@@ -32,6 +32,7 @@ def update_title_dns(aws_region, instance_id, new_dns):
     update_servers_dat(config.SERVERS_DAT, title, new_dns)
 
 
+# TODO: Make compatible with all possible forms of the servers.dat file
 def update_servers_dat(servers_dat_path, server_title, new_dns):
     """update IP of server_title in server list with new_dns
 

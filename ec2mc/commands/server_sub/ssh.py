@@ -3,13 +3,13 @@ import subprocess
 import shutil
 
 from ec2mc import config
-from ec2mc import command_template
+from ec2mc.commands import template
 from ec2mc.utils import aws
 from ec2mc.utils import halt
 from ec2mc.verify import verify_instances
 from ec2mc.verify import verify_perms
 
-class SSHServer(command_template.BaseClass):
+class SSHServer(template.BaseClass):
 
     def main(self, kwargs):
         """SSH into an EC2 instance using its .pem private key

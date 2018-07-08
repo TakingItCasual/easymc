@@ -1,10 +1,10 @@
 import os
 
 from ec2mc import config
-from ec2mc import command_template
+from ec2mc.commands import template
 from ec2mc.utils import os2
 
-class Configure(command_template.BaseClass):
+class Configure(template.BaseClass):
 
     def main(self):
         """set IAM credentials, servers.dat path, and region whitelist"""

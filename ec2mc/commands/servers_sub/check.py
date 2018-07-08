@@ -1,11 +1,11 @@
 from ec2mc import config
-from ec2mc import command_template
+from ec2mc.commands import template
 from ec2mc.stuff import manage_titles
 from ec2mc.utils import aws
 from ec2mc.verify import verify_instances
 from ec2mc.verify import verify_perms
 
-class CheckServer(command_template.BaseClass):
+class CheckServer(template.BaseClass):
 
     def main(self, kwargs):
         """check instance status(es) & update client's server list
@@ -18,7 +18,11 @@ class CheckServer(command_template.BaseClass):
 
         for instance in instances:
             print("")
-            print("Checking instance " + instance["id"] + "...")
+            if instance["name"] is not None:
+                print("Checking " + instance["name"] +
+                    " (" + instance["id"] + ")...")
+            else:
+                print("Checking instance " + instance["id"] + "...")
 
             ec2_client = aws.ec2_client(instance["region"])
 

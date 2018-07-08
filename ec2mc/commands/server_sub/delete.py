@@ -1,12 +1,12 @@
-from ec2mc import command_template
+from ec2mc.commands import template
 from ec2mc.utils import aws
 from ec2mc.utils import halt
 from ec2mc.verify import verify_perms
 
-class DeleteServer(command_template.BaseClass):
+class DeleteServer(template.BaseClass):
 
     def main(self, kwargs):
-        """terminate an EC2 instance by its region, ID, and name
+        """terminate an EC2 instance, given its region, ID, and name
 
         Args:
             kwargs (dict):

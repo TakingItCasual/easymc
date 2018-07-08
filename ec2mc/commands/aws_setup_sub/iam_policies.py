@@ -3,11 +3,11 @@ import json
 from deepdiff import DeepDiff
 
 from ec2mc import config
-from ec2mc import update_template
+from ec2mc.commands.aws_setup_sub import template
 from ec2mc.utils import aws
 from ec2mc.utils import os2
 
-class IAMPolicySetup(update_template.BaseClass):
+class IAMPolicySetup(template.BaseClass):
 
     def verify_component(self, config_aws_setup):
         """determine which policies need creating/updating, and which don't

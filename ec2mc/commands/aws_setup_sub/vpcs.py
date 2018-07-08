@@ -1,12 +1,12 @@
 import os.path
 
 from ec2mc import config
-from ec2mc import update_template
+from ec2mc.commands.aws_setup_sub import template
 from ec2mc.utils import aws
 from ec2mc.utils import os2
 from ec2mc.utils.threader import Threader
 
-class VPCSetup(update_template.BaseClass):
+class VPCSetup(template.BaseClass):
 
     def verify_component(self, config_aws_setup):
         """determine statuses for VPC(s) and SG(s) on AWS

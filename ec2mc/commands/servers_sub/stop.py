@@ -1,11 +1,11 @@
 from botocore.exceptions import WaiterError
 
-from ec2mc import command_template
+from ec2mc.commands import template
 from ec2mc.utils import aws
 from ec2mc.verify import verify_instances
 from ec2mc.verify import verify_perms
 
-class StopServer(command_template.BaseClass):
+class StopServer(template.BaseClass):
 
     def main(self, kwargs):
         """force instance(s) to stop, regardless of online players
@@ -18,7 +18,11 @@ class StopServer(command_template.BaseClass):
 
         for instance in instances:
             print("")
-            print("Attempting to stop instance " + instance["id"] + "...")
+            if instance["name"] is not None:
+                print("Attempting to stop " + instance["name"] +
+                    " (" + instance["id"] + ")...")
+            else:
+                print("Attempting to stop instance " + instance["id"] + "...")
 
             ec2_client = aws.ec2_client(instance["region"])
 

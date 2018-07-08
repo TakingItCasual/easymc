@@ -1,5 +1,5 @@
 from ec2mc import config
-from ec2mc import command_template
+from ec2mc.commands import template
 from ec2mc.utils import aws
 from ec2mc.utils import halt
 from ec2mc.utils import os2
@@ -11,7 +11,7 @@ from ec2mc.commands.aws_setup_sub import iam_groups
 from ec2mc.commands.aws_setup_sub import vpcs
 from ec2mc.commands.aws_setup_sub import ssh_key_pairs
 
-class AWSSetup(command_template.BaseClass):
+class AWSSetup(template.BaseClass):
 
     def __init__(self):
         super().__init__()

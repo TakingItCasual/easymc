@@ -5,7 +5,7 @@ from ruamel import yaml
 from botocore.exceptions import ClientError
 
 from ec2mc import config
-from ec2mc import command_template
+from ec2mc.commands import template
 from ec2mc.utils import aws
 from ec2mc.utils import halt
 from ec2mc.utils import os2
@@ -14,7 +14,7 @@ from ec2mc.verify import verify_perms
 import pprint
 pp = pprint.PrettyPrinter(indent=2)
 
-class CreateServer(command_template.BaseClass):
+class CreateServer(template.BaseClass):
 
     def main(self, kwargs):
         """create and initialize a new EC2 instance
@@ -24,8 +24,9 @@ class CreateServer(command_template.BaseClass):
                 "template" (str): Config instance setup template name.
                 "region" (str): AWS region to create instance in.
                 "name" (str): Tag value for instance tag key "Name".
-                "tags" (list): Additional instance tag key-value pair(s).
                 "confirm" (bool): Whether to actually create the instance.
+                "elastic_ip" (bool): Whether to associate a new elastic IP.
+                "tags" (list): Additional instance tag key-value pair(s).
         """
 
         template_yaml_files = os2.list_dir_files(config.USER_DATA_DIR)
@@ -139,12 +140,10 @@ class CreateServer(command_template.BaseClass):
         creation_kwargs["sg_ids"] = [sg["GroupId"] for sg in vpc_sgs
             if sg["GroupName"] in instance_template["security_groups"]]
 
-        vpc_subnets = ec2_client.describe_subnets(
-            Filters=[{
-                "Name": "vpc-id",
-                "Values": [vpc_id]
-            }]
-        )["Subnets"]
+        vpc_subnets = ec2_client.describe_subnets(Filters=[{
+            "Name": "vpc-id",
+            "Values": [vpc_id]
+        }])["Subnets"]
         vpc_subnets.sort(key=lambda x: x["AvailabilityZone"])
         creation_kwargs["subnet_id"] = vpc_subnets[0]["SubnetId"]
 
@@ -289,7 +288,7 @@ class CreateServer(command_template.BaseClass):
             help="confirm instance creation")
         cmd_parser.add_argument(
             "-e", "--elastic_ip", action="store_true",
-            help="create and associate elastic IP")
+            help="create and associate elastic IP to instance")
         cmd_parser.add_argument(
             "-t", dest="tags", nargs=2, action="append", metavar="",
             help="instance tag key-value pair to attach to instance")

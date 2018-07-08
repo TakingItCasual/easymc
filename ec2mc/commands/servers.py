@@ -1,10 +1,10 @@
-from ec2mc import command_template
+from ec2mc.commands import template
 
 from ec2mc.commands.servers_sub import check
 from ec2mc.commands.servers_sub import start
 from ec2mc.commands.servers_sub import stop
 
-class Servers(command_template.BaseClass):
+class Servers(template.BaseClass):
 
     def __init__(self):
         super().__init__()

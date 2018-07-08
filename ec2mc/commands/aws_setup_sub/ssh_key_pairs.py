@@ -5,12 +5,12 @@ from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 
 from ec2mc import config
-from ec2mc import update_template
+from ec2mc.commands.aws_setup_sub import template
 from ec2mc.utils import aws
 from ec2mc.utils import halt
 from ec2mc.utils.threader import Threader
 
-class SSHKeyPairSetup(update_template.BaseClass):
+class SSHKeyPairSetup(template.BaseClass):
 
     def verify_component(self, _):
         """determine which regions need Namespace RSA key pairs created
