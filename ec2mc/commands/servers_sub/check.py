@@ -18,27 +18,26 @@ class CheckServer(template.BaseClass):
 
         for instance in instances:
             print("")
-            if instance["name"] is not None:
-                print("Checking " + instance["name"] +
-                    " (" + instance["id"] + ")...")
+            if instance['name'] is not None:
+                print(f"Checking {instance['name']} ({instance['id']})...")
             else:
-                print("Checking instance " + instance["id"] + "...")
+                print(f"Checking instance {instance['id']}...")
 
-            ec2_client = aws.ec2_client(instance["region"])
+            ec2_client = aws.ec2_client(instance['region'])
 
             response = ec2_client.describe_instances(
-                InstanceIds=[instance["id"]]
-            )["Reservations"][0]["Instances"][0]
-            instance_state = response["State"]["Name"]
-            instance_dns = response["PublicDnsName"]
+                InstanceIds=[instance['id']]
+            )['Reservations'][0]['Instances'][0]
+            instance_state = response['State']['Name']
+            instance_dns = response['PublicDnsName']
 
-            print("  Instance is currently " + instance_state + ".")
+            print(f"  Instance is currently {instance_state}.")
 
             if instance_state == "running":
-                print("  Instance DNS: " + instance_dns)
+                print(f"  Instance DNS: {instance_dns}")
                 if config.SERVERS_DAT is not None:
                     manage_titles.update_title_dns(
-                        instance["region"], instance["id"], instance_dns)
+                        instance['region'], instance['id'], instance_dns)
 
 
     def add_documentation(self, argparse_obj):

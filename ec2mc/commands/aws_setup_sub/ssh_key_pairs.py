@@ -34,10 +34,10 @@ class SSHKeyPairSetup(template.BaseClass):
         aws_fingerprints = [fp for fp in fingerprint_regions.values()
             if fp is not None]
 
-        total_regions = str(len(aws.get_regions()))
-        existing = str(len(aws_fingerprints))
-        print("EC2 key pair " + self.key_pair_name + " exists in " + existing +
-            " of " + total_regions + " AWS regions.")
+        total_regions = len(aws.get_regions())
+        existing = len(aws_fingerprints)
+        print(f"EC2 key pair {self.key_pair_name} exists in {existing} of "
+            f"{total_regions} AWS regions.")
 
         if len(set(aws_fingerprints)) > 1:
             print("Warning: Differing EC2 key pairs found.")
@@ -73,7 +73,7 @@ class SSHKeyPairSetup(template.BaseClass):
                 f.write(priv_key_str)
         # No private key file, and there are existing EC2 key pairs
         else:
-            halt.err("RSA private key file " + self.pem_file + " not found.",
+            halt.err(f"RSA private key file {self.pem_file} not found.",
                 "  Additional pairs must be created from same private key.")
 
         if len(set(aws_fingerprints)) > 1:
@@ -90,11 +90,11 @@ class SSHKeyPairSetup(template.BaseClass):
         created_pair_fingerprints = threader.get_results()
 
         if created_pair_fingerprints:
-            print("EC2 key pair " + self.key_pair_name + " created in " +
-                str(len(created_pair_fingerprints)) + " AWS region(s).")
+            print(f"EC2 key pair {self.key_pair_name} created in "
+                f"{len(created_pair_fingerprints)} AWS region(s).")
         else:
-            print("EC2 key pair " + self.key_pair_name +
-                " already present in all regions.")
+            print(f"EC2 key pair {self.key_pair_name} "
+                "already present in all regions.")
 
 
     def delete_component(self):
@@ -106,8 +106,8 @@ class SSHKeyPairSetup(template.BaseClass):
         deleted_key_pairs = threader.get_results()
 
         if any(deleted_key_pairs):
-            print("EC2 key pair " + self.key_pair_name +
-                " deleted from all AWS regions.")
+            print(f"EC2 key pair {self.key_pair_name} "
+                "deleted from all AWS regions.")
         else:
             print("No EC2 key pairs to delete.")
 
@@ -115,11 +115,11 @@ class SSHKeyPairSetup(template.BaseClass):
     def region_namespace_key_fingerprint(self, region):
         """return key fingerprint if region has Namespace RSA key pair"""
         key_pairs = aws.ec2_client(region).describe_key_pairs(Filters=[{
-            "Name": "key-name",
-            "Values": [self.key_pair_name]
-        }])["KeyPairs"]
+            'Name': "key-name",
+            'Values': [self.key_pair_name]
+        }])['KeyPairs']
         if key_pairs:
-            return key_pairs[0]["KeyFingerprint"]
+            return key_pairs[0]['KeyFingerprint']
         return None
 
 
@@ -128,7 +128,7 @@ class SSHKeyPairSetup(template.BaseClass):
         return aws.ec2_client(region).import_key_pair(
             KeyName=self.key_pair_name,
             PublicKeyMaterial=public_key_bytes
-        )["KeyFingerprint"]
+        )['KeyFingerprint']
 
 
     def delete_region_key_pair(self, region):
@@ -187,7 +187,7 @@ def pem_to_public_key(pem_str, der_encoded=False):
             backend=default_backend()
         )
     except ValueError:
-        halt.err(config.RSA_PRIV_KEY_PEM + " not a valid RSA private key.")
+        halt.err(f"{config.RSA_PRIV_KEY_PEM} not a valid RSA private key.")
 
     if der_encoded is True:
         return private_key.public_key().public_bytes(

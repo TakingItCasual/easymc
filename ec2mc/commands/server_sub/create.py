@@ -30,47 +30,47 @@ class CreateServer(template.BaseClass):
         """
 
         template_yaml_files = os2.list_dir_files(config.USER_DATA_DIR)
-        if kwargs["template"] + ".yaml" not in template_yaml_files:
-            halt.err("Template " + kwargs["template"] + " not found.")
+        if f"{kwargs['template']}.yaml" not in template_yaml_files:
+            halt.err(f"Template {kwargs['template']} not found.")
 
-        inst_template = os2.parse_yaml(config.USER_DATA_DIR +
-            kwargs["template"] + ".yaml")["ec2mc_template_info"]
+        inst_template = os2.parse_yaml(f"{config.USER_DATA_DIR}"
+            f"{kwargs['template']}.yaml")['ec2mc_template_info']
 
         self.verify_type_and_size_allowed(
-            inst_template["instance_type"], inst_template["volume_size"])
+            inst_template['instance_type'], inst_template['volume_size'])
 
         # Verify the specified region
-        if kwargs["region"] not in aws.get_regions():
-            halt.err(kwargs["region"] + " is not a valid region.")
-        self.ec2_client = aws.ec2_client(kwargs["region"])
+        if kwargs['region'] not in aws.get_regions():
+            halt.err(f"{kwargs['region']} is not a valid region.")
+        self.ec2_client = aws.ec2_client(kwargs['region'])
 
         creation_kwargs = self.parse_run_instance_args(kwargs, inst_template)
-        user_data = self.process_user_data(kwargs["template"], inst_template)
+        user_data = self.process_user_data(kwargs['template'], inst_template)
 
         # Instance creation dry run to verify IAM permissions
         try:
             self.create_instance(creation_kwargs, user_data, dry_run=True)
         except ClientError as e:
-            if not e.response["Error"]["Code"] == "DryRunOperation":
+            if not e.response['Error']['Code'] == "DryRunOperation":
                 halt.err(str(e))
 
         # Actual instance creation occurs after this confirmation.
-        if kwargs["confirm"] is False:
+        if kwargs['confirm'] is False:
             print("")
             print("Specified instance creation args verified as permitted.")
             halt.q("Please append the -c argument to confirm.")
 
         print("")
         instance = self.create_instance(
-            creation_kwargs, user_data, dry_run=False)["Instances"][0]
+            creation_kwargs, user_data, dry_run=False)['Instances'][0]
         print("Instance created.")
 
-        if kwargs["elastic_ip"] is True:
+        if kwargs['elastic_ip'] is True:
             halt.assert_empty(verify_perms.blocked(actions=[
                 "ec2:AllocateAddress",
                 "ec2:AssociateAddress"
             ]))
-            self.create_and_associate_elastic_ip(instance["InstanceId"])
+            self.create_and_associate_elastic_ip(instance['InstanceId'])
             print("New elastic IP associated with created instance.")
 
 
@@ -104,57 +104,57 @@ class CreateServer(template.BaseClass):
                 "key_name" (str): Name of EC2 key pair to assign (for SSH).
         """
 
-        region = kwargs["region"]
+        region = kwargs['region']
         ec2_client = aws.ec2_client(region)
         creation_kwargs = {}
 
         # TODO: Update template AMI to AWS Linux 2 LTS when it comes out
         creation_kwargs.update({
-            "ec2_ami": instance_template["AMI_info"]["AMI_ID"],
-            "device_name": instance_template["AMI_info"]["device_name"],
-            "instance_type": instance_template["instance_type"],
-            "volume_size": instance_template["volume_size"]
+            'ec2_ami': instance_template['AMI_info']['AMI_ID'],
+            'device_name': instance_template['AMI_info']['device_name'],
+            'instance_type': instance_template['instance_type'],
+            'volume_size': instance_template['volume_size']
         })
 
-        creation_kwargs["tags"] = [{
-            "Key": "Name",
-            "Value": kwargs["name"]
+        creation_kwargs['tags'] = [{
+            'Key': "Name",
+            'Value': kwargs['name']
         }]
-        creation_kwargs["tags"].append({
-            "Key": "DefaultUser",
-            "Value": instance_template["AMI_info"]["default_user"]
+        creation_kwargs['tags'].append({
+            'Key': "DefaultUser",
+            'Value': instance_template['AMI_info']['default_user']
         })
-        if kwargs["tags"]:
-            for tag_key, tag_value in kwargs["tags"]:
-                creation_kwargs["tags"].append({
-                    "Key": tag_key,
-                    "Value": tag_value
+        if kwargs['tags']:
+            for tag_key, tag_value in kwargs['tags']:
+                creation_kwargs['tags'].append({
+                    'Key': tag_key,
+                    'Value': tag_value
                 })
 
         vpc_info = aws.get_region_vpc(region)
         if vpc_info is None:
-            halt.err("VPC " + config.NAMESPACE + " not found.",
+            halt.err(f"VPC {config.NAMESPACE} not found.",
                 "  Have you uploaded the AWS setup?")
-        vpc_id = vpc_info["VpcId"]
+        vpc_id = vpc_info['VpcId']
         vpc_sgs = aws.get_region_security_groups(region, vpc_id)
-        creation_kwargs["sg_ids"] = [sg["GroupId"] for sg in vpc_sgs
-            if sg["GroupName"] in instance_template["security_groups"]]
+        creation_kwargs['sg_ids'] = [sg['GroupId'] for sg in vpc_sgs
+            if sg['GroupName'] in instance_template['security_groups']]
 
         vpc_subnets = ec2_client.describe_subnets(Filters=[{
-            "Name": "vpc-id",
-            "Values": [vpc_id]
-        }])["Subnets"]
-        vpc_subnets.sort(key=lambda x: x["AvailabilityZone"])
-        creation_kwargs["subnet_id"] = vpc_subnets[0]["SubnetId"]
+            'Name': "vpc-id",
+            'Values': [vpc_id]
+        }])['Subnets']
+        vpc_subnets.sort(key=lambda x: x['AvailabilityZone'])
+        creation_kwargs['subnet_id'] = vpc_subnets[0]['SubnetId']
 
         ec2_key_pairs = ec2_client.describe_key_pairs(Filters=[{
-            "Name": "key-name",
-            "Values": [config.NAMESPACE]
-        }])["KeyPairs"]
+            'Name': "key-name",
+            'Values': [config.NAMESPACE]
+        }])['KeyPairs']
         if not ec2_key_pairs:
-            halt.err("EC2 key pair " + config.NAMESPACE + " not found.",
+            halt.err(f"EC2 key pair {config.NAMESPACE} not found.",
                 "  Have you uploaded the AWS setup?")
-        creation_kwargs["key_name"] = ec2_key_pairs[0]["KeyName"]
+        creation_kwargs['key_name'] = ec2_key_pairs[0]['KeyName']
 
         return creation_kwargs
 
@@ -173,45 +173,45 @@ class CreateServer(template.BaseClass):
         """
 
         user_data = os2.parse_yaml(
-            config.USER_DATA_DIR + template_name + ".yaml")
+            f"{config.USER_DATA_DIR}{template_name}.yaml")
 
         if "write_directories" in template:
             template_dir = os.path.join(
-                (config.USER_DATA_DIR + template_name), "")
+                f"{config.USER_DATA_DIR}{template_name}", "")
 
             write_files = []
-            for write_dir in template["write_directories"]:
+            for write_dir in template['write_directories']:
                 dir_files = os2.list_dir_files(os.path.join(
-                    (template_dir + write_dir["local_dir"]), ""))
+                    f"{template_dir}{write_dir['local_dir']}", ""))
                 for dir_file in dir_files:
                     file_path = os.path.join(
-                        (template_dir + write_dir["local_dir"]), dir_file)
+                        f"{template_dir}{write_dir['local_dir']}", dir_file)
                     with open(file_path) as f:
                         file_b64 = base64.b64encode(bytes(f.read(), "utf-8"))
                     write_files.append({
-                        "encoding": "b64",
-                        "content": file_b64,
-                        "path": write_dir["instance_dir"] + dir_file
+                        'encoding': "b64",
+                        'content': file_b64,
+                        'path': f"{write_dir['instance_dir']}{dir_file}"
                     })
                     if "owner" in write_dir:
-                        write_files[-1]["owner"] = write_dir["owner"]
+                        write_files[-1]['owner'] = write_dir['owner']
                     if "chmod" in write_dir:
-                        write_files[-1]["permissions"] = write_dir["chmod"]
+                        write_files[-1]['permissions'] = write_dir['chmod']
 
             if write_files:
                 if "write_files" not in user_data:
-                    user_data["write_files"] = []
-                user_data["write_files"].extend(write_files)
+                    user_data['write_files'] = []
+                user_data['write_files'].extend(write_files)
 
         # Halt if write_files has duplicate paths
         if "write_files" in user_data:
-            write_file_paths = [entry["path"] for entry
-                in user_data["write_files"]]
+            write_file_paths = [entry['path'] for entry
+                in user_data['write_files']]
             if len(write_file_paths) != len(set(write_file_paths)):
                 halt.err("Duplicate template write_files paths.")
 
         # Make user_data valid cloud-config by removing additional setup info
-        del user_data["ec2mc_template_info"]
+        del user_data['ec2mc_template_info']
         return yaml.dump(user_data, Dumper=yaml.RoundTripDumper)
 
 
@@ -226,20 +226,20 @@ class CreateServer(template.BaseClass):
 
         return self.ec2_client.run_instances(
             DryRun=dry_run,
-            KeyName=creation_kwargs["key_name"],
+            KeyName=creation_kwargs['key_name'],
             MinCount=1, MaxCount=1,
-            ImageId=creation_kwargs["ec2_ami"],
-            InstanceType=creation_kwargs["instance_type"],
+            ImageId=creation_kwargs['ec2_ami'],
+            InstanceType=creation_kwargs['instance_type'],
             BlockDeviceMappings=[{
-                "DeviceName": creation_kwargs["device_name"],
-                "Ebs": {"VolumeSize": creation_kwargs["volume_size"]}
+                'DeviceName': creation_kwargs['device_name'],
+                'Ebs': {'VolumeSize': creation_kwargs['volume_size']}
             }],
             TagSpecifications=[{
-                "ResourceType": "instance",
-                "Tags": creation_kwargs["tags"]
+                'ResourceType': "instance",
+                'Tags': creation_kwargs['tags']
             }],
-            SecurityGroupIds=creation_kwargs["sg_ids"],
-            SubnetId=creation_kwargs["subnet_id"],
+            SecurityGroupIds=creation_kwargs['sg_ids'],
+            SubnetId=creation_kwargs['subnet_id'],
             UserData=user_data
         )
 
@@ -247,7 +247,7 @@ class CreateServer(template.BaseClass):
     def create_and_associate_elastic_ip(self, instance_id):
         """attempt to assign elastic IP to instance for 60 seconds"""
         allocation_id = self.ec2_client.allocate_address(
-            Domain="vpc")["AllocationId"]
+            Domain="vpc")['AllocationId']
         for _ in range(60):
             try:
                 self.ec2_client.associate_address(
@@ -256,7 +256,7 @@ class CreateServer(template.BaseClass):
                 )
                 break
             except ClientError as e:
-                if e.response["Error"]["Code"] != "InvalidInstanceID":
+                if e.response['Error']['Code'] != "InvalidInstanceID":
                     halt.err(str(e))
                 sleep(1)
         else:
@@ -267,12 +267,12 @@ class CreateServer(template.BaseClass):
         """verify user is allowed to create instance with type and size"""
         if verify_perms.blocked(actions=["ec2:RunInstances"],
                 resources=["arn:aws:ec2:*:*:instance/*"],
-                context={"ec2:InstanceType": [instance_type]}):
-            halt.err("Instance type " + instance_type + " not permitted.")
+                context={'ec2:InstanceType': [instance_type]}):
+            halt.err(f"Instance type {instance_type} not permitted.")
         if verify_perms.blocked(actions=["ec2:RunInstances"],
                 resources=["arn:aws:ec2:*:*:volume/*"],
-                context={"ec2:VolumeSize": [volume_size]}):
-            halt.err("Volume size " + str(volume_size) + "GiB is too large.")
+                context={'ec2:VolumeSize': [volume_size]}):
+            halt.err(f"Volume size {volume_size}GiB is too large.")
 
 
     def add_documentation(self, argparse_obj):
@@ -305,11 +305,9 @@ class CreateServer(template.BaseClass):
             "ec2:DescribeKeyPairs",
             "ec2:CreateTags"
         ]))
-        denied_actions.extend(verify_perms.blocked(actions=[
-            "ec2:RunInstances"
-        ], resources=[
-            "arn:aws:ec2:*:*:instance/*"
-        ], context={
-            "ec2:InstanceType": ["t2.nano"]
-        }))
+        denied_actions.extend(verify_perms.blocked(
+            actions=["ec2:RunInstances"],
+            resources=["arn:aws:ec2:*:*:instance/*"],
+            context={'ec2:InstanceType': ["t2.nano"]}
+        ))
         return denied_actions

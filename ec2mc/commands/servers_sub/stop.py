@@ -18,29 +18,29 @@ class StopServer(template.BaseClass):
 
         for instance in instances:
             print("")
-            if instance["name"] is not None:
-                print("Attempting to stop " + instance["name"] +
-                    " (" + instance["id"] + ")...")
+            if instance['name'] is not None:
+                print(f"Attempting to stop {instance['name']} "
+                    f"({instance['id']})...")
             else:
-                print("Attempting to stop instance " + instance["id"] + "...")
+                print(f"Attempting to stop instance {instance['id']}...")
 
-            ec2_client = aws.ec2_client(instance["region"])
+            ec2_client = aws.ec2_client(instance['region'])
 
             instance_state = ec2_client.describe_instances(
-                InstanceIds=[instance["id"]]
-            )["Reservations"][0]["Instances"][0]["State"]["Name"]
+                InstanceIds=[instance['id']]
+            )['Reservations'][0]['Instances'][0]['State']['Name']
 
             if instance_state == "stopped":
                 print("  Instance is already stopped.")
                 continue
 
             print("  Stopping instance...")
-            ec2_client.stop_instances(InstanceIds=[instance["id"]])
+            ec2_client.stop_instances(InstanceIds=[instance['id']])
 
             try:
                 ec2_client.get_waiter("instance_stopped").wait(
-                    InstanceIds=[instance["id"]],
-                    WaiterConfig={"Delay": 5, "MaxAttempts": 12}
+                    InstanceIds=[instance['id']],
+                    WaiterConfig={'Delay': 5, 'MaxAttempts': 12}
                 )
             except WaiterError:
                 print("  Instance not stopped after waiting 1 minute.")

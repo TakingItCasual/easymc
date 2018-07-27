@@ -49,7 +49,7 @@ Upload the default setup included with the script with the following command::
 
 (To make changes to the setup to be uploaded to AWS, see Customization_.)
 
-The administrator access given to the temporary IAM user is potentially dangerous, so create a (WIP...)
+The administrator access given to the temporary IAM user is potentially dangerous (services could be enabled that cost tens of thousands a day), so create a (WIP...)
 
 Server Creation
 ---------------

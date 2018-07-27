@@ -6,7 +6,7 @@ class Threader(object):
 
     Attributes:
         result_queue (Queue): Thread-safe queue that holds the results.
-        threads (Thread list): Threads of functions added with add_thread.
+        threads (list[Thread]): Threads of functions added with add_thread.
     """
 
     def __init__(self):

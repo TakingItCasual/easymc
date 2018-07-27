@@ -23,7 +23,7 @@ class Servers(template.BaseClass):
         """
 
         chosen_cmd = next(cmd for cmd in self.sub_commands
-            if cmd.module_name() == kwargs["action"])
+            if cmd.module_name() == kwargs['action'])
         chosen_cmd.main(kwargs)
 
 
@@ -37,5 +37,5 @@ class Servers(template.BaseClass):
 
     def blocked_actions(self, kwargs):
         chosen_cmd = next(cmd for cmd in self.sub_commands
-            if cmd.module_name() == kwargs["action"])
+            if cmd.module_name() == kwargs['action'])
         return chosen_cmd.blocked_actions()

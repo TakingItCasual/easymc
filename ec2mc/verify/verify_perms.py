@@ -27,9 +27,9 @@ def blocked(actions, resources=None, context=None):
         context_temp = []
         for context_key in context:
             context_temp.append({
-                "ContextKeyName": context_key,
-                "ContextKeyValues": [str(val) for val in context[context_key]],
-                "ContextKeyType": "string"
+                'ContextKeyName': context_key,
+                'ContextKeyValues': [str(val) for val in context[context_key]],
+                'ContextKeyType': "string"
             })
         context = context_temp
     else:
@@ -40,11 +40,11 @@ def blocked(actions, resources=None, context=None):
         ActionNames=actions,
         ResourceArns=resources,
         ContextEntries=context
-    )["EvaluationResults"]
+    )['EvaluationResults']
 
     blocked_actions = []
     for result in results:
-        if result["EvalDecision"] != "allowed":
-            blocked_actions.append(result["EvalActionName"])
+        if result['EvalDecision'] != "allowed":
+            blocked_actions.append(result['EvalActionName'])
 
     return sorted(blocked_actions)

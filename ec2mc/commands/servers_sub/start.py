@@ -20,31 +20,31 @@ class StartServer(template.BaseClass):
 
         for instance in instances:
             print("")
-            if instance["name"] is not None:
-                print("Attempting to start " + instance["name"] +
-                    " (" + instance["id"] + ")...")
+            if instance['name'] is not None:
+                print(f"Attempting to start {instance['name']} "
+                    f"({instance['id']})...")
             else:
-                print("Attempting to start instance " + instance["id"] + "...")
+                print(f"Attempting to start instance {instance['id']}...")
 
-            ec2_client = aws.ec2_client(instance["region"])
+            ec2_client = aws.ec2_client(instance['region'])
 
             instance_state = ec2_client.describe_instances(
-                InstanceIds=[instance["id"]]
-            )["Reservations"][0]["Instances"][0]["State"]["Name"]
+                InstanceIds=[instance['id']]
+            )['Reservations'][0]['Instances'][0]['State']['Name']
 
             if instance_state != "running" and instance_state != "stopped":
-                print("  Instance is currently " + instance_state + ".")
+                print(f"  Instance is currently {instance_state}.")
                 print("  Cannot start an instance from a transitional state.")
                 continue
 
             if instance_state == "stopped":
                 print("  Starting instance...")
-                ec2_client.start_instances(InstanceIds=[instance["id"]])
+                ec2_client.start_instances(InstanceIds=[instance['id']])
 
                 try:
                     ec2_client.get_waiter("instance_running").wait(
-                        InstanceIds=[instance["id"]],
-                        WaiterConfig={"Delay": 5, "MaxAttempts": 12}
+                        InstanceIds=[instance['id']],
+                        WaiterConfig={'Delay': 5, 'MaxAttempts': 12}
                     )
                 except WaiterError:
                     print("  Instance not running after waiting 1 minute.")
@@ -56,13 +56,13 @@ class StartServer(template.BaseClass):
                 print("  Instance is already running. Just join the server.")
 
             instance_dns = ec2_client.describe_instances(
-                InstanceIds=[instance["id"]]
-            )["Reservations"][0]["Instances"][0]["PublicDnsName"]
+                InstanceIds=[instance['id']]
+            )['Reservations'][0]['Instances'][0]['PublicDnsName']
 
-            print("  Instance DNS: " + instance_dns)
+            print(f"  Instance DNS: {instance_dns}")
             if config.SERVERS_DAT is not None:
                 manage_titles.update_title_dns(
-                    instance["region"], instance["id"], instance_dns)
+                    instance['region'], instance['id'], instance_dns)
 
 
     def add_documentation(self, argparse_obj):

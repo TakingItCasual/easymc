@@ -12,66 +12,66 @@ class IAMGroupSetup(template.BaseClass):
 
         Returns:
             dict: IAM group information.
-                "AWSExtra": Extra groups on AWS found under same namespace.
-                "ToCreate": Groups that do not (yet) exist on AWS.
-                "ToUpdate": Groups on AWS not the same as local versions.
-                "UpToDate": Groups on AWS up to date with local versions.
+                'AWSExtra': Extra groups on AWS found under same namespace.
+                'ToCreate': Groups that do not (yet) exist on AWS.
+                'ToUpdate': Groups on AWS not the same as local versions.
+                'UpToDate': Groups on AWS up to date with local versions.
         """
 
         self.iam_client = aws.iam_client()
-        self.path_prefix = "/" + config.NAMESPACE + "/"
+        self.path_prefix = f"/{config.NAMESPACE}/"
 
         # Local IAM group(s) list
-        self.iam_group_setup = config_aws_setup["IAM"]["Groups"]
+        self.iam_group_setup = config_aws_setup['IAM']['Groups']
 
         # IAM Groups already present on AWS
         aws_groups = self.get_iam_groups()
 
         # Names of local policies described in aws_setup.json
         group_names = {
-            "AWSExtra": [],
-            "ToCreate": [group["Name"] for group in self.iam_group_setup],
-            "ToUpdate": [],
-            "UpToDate": []
+            'AWSExtra': [],
+            'ToCreate': [group['Name'] for group in self.iam_group_setup],
+            'ToUpdate': [],
+            'UpToDate': []
         }
 
         # Check if group(s) described by aws_setup.json already on AWS
-        for local_group in group_names["ToCreate"][:]:
+        for local_group in group_names['ToCreate'][:]:
             for aws_group in aws_groups:
-                if local_group == aws_group["GroupName"]:
+                if local_group == aws_group['GroupName']:
                     # Group already exists on AWS, so next check if to update
-                    group_names["ToCreate"].remove(local_group)
-                    group_names["ToUpdate"].append(local_group)
+                    group_names['ToCreate'].remove(local_group)
+                    group_names['ToUpdate'].append(local_group)
                     break
 
         # Check if group(s) on AWS need attachment(s) updated
-        for local_group in group_names["ToUpdate"][:]:
-            aws_attachments = [policy["PolicyName"] for policy in
+        for local_group in group_names['ToUpdate'][:]:
+            aws_attachments = [policy['PolicyName'] for policy in
                 self.iam_client.list_attached_group_policies(
                     GroupName=local_group,
                     PathPrefix=self.path_prefix
-                )["AttachedPolicies"]]
+                )['AttachedPolicies']]
 
-            local_attachments = next(group["Policies"] for group in
-                self.iam_group_setup if group["Name"] == local_group)
+            local_attachments = next(group['Policies'] for group in
+                self.iam_group_setup if group['Name'] == local_group)
 
             if set(aws_attachments) == set(local_attachments):
                 # Local group and AWS group match, so no need to update
-                group_names["ToUpdate"].remove(local_group)
-                group_names["UpToDate"].append(local_group)
+                group_names['ToUpdate'].remove(local_group)
+                group_names['UpToDate'].append(local_group)
 
         return group_names
 
 
     def notify_state(self, group_names):
-        for group in group_names["AWSExtra"]:
-            print("IAM group " + group + " found on AWS but not locally.")
-        for group in group_names["ToCreate"]:
-            print("Local IAM group " + group + " to be created on AWS.")
-        for group in group_names["ToUpdate"]:
-            print("IAM group " + group + " on AWS to be updated.")
-        for group in group_names["UpToDate"]:
-            print("IAM group " + group + " on AWS is up to date.")
+        for group in group_names['AWSExtra']:
+            print(f"IAM group {group} found on AWS but not locally.")
+        for group in group_names['ToCreate']:
+            print(f"Local IAM group {group} to be created on AWS.")
+        for group in group_names['ToUpdate']:
+            print(f"IAM group {group} on AWS to be updated.")
+        for group in group_names['UpToDate']:
+            print(f"IAM group {group} on AWS is up to date.")
 
 
     def upload_component(self, group_names):
@@ -81,16 +81,16 @@ class IAMGroupSetup(template.BaseClass):
             group_names (dict): See what verify_component returns.
         """
 
-        for local_group in group_names["ToCreate"]:
+        for local_group in group_names['ToCreate']:
             self.create_group(local_group)
-            print("IAM group " + local_group + " created on AWS.")
+            print(f"IAM group {local_group} created on AWS.")
 
-        for local_group in group_names["ToUpdate"]:
+        for local_group in group_names['ToUpdate']:
             self.update_group(local_group)
-            print("IAM group " + local_group + " on AWS updated.")
+            print(f"IAM group {local_group} on AWS updated.")
 
-        for local_group in group_names["UpToDate"]:
-            print("IAM group " + local_group + " on AWS already up to date.")
+        for local_group in group_names['UpToDate']:
+            print(f"IAM group {local_group} on AWS already up to date.")
 
 
     def delete_component(self):
@@ -101,8 +101,8 @@ class IAMGroupSetup(template.BaseClass):
             print("No IAM groups on AWS to delete.")
 
         for aws_group in aws_groups:
-            self.delete_group(aws_group["GroupName"])
-            print("IAM group " + aws_group["GroupName"] + " deleted from AWS.")
+            self.delete_group(aws_group['GroupName'])
+            print(f"IAM group {aws_group['GroupName']} deleted from AWS.")
 
 
     def create_group(self, group_name):
@@ -129,17 +129,17 @@ class IAMGroupSetup(template.BaseClass):
 
     def attach_group_policies(self, group_name):
         """attach IAM policy(s) described in iam_group_setup to group"""
-        local_attachments = next(group["Policies"] for group in
-            self.iam_group_setup if group["Name"] == group_name)
+        local_attachments = next(group['Policies'] for group in
+            self.iam_group_setup if group['Name'] == group_name)
         aws_policies = self.iam_client.list_policies(
             Scope="Local",
             OnlyAttached=False,
             PathPrefix=self.path_prefix
-        )["Policies"]
+        )['Policies']
 
         for attachment in local_attachments:
-            aws_policy_arn = next(aws_policy["Arn"] for aws_policy in
-                aws_policies if aws_policy["PolicyName"] == attachment)
+            aws_policy_arn = next(aws_policy['Arn'] for aws_policy in
+                aws_policies if aws_policy['PolicyName'] == attachment)
             self.iam_client.attach_group_policy(
                 GroupName=group_name,
                 PolicyArn=aws_policy_arn
@@ -148,11 +148,11 @@ class IAMGroupSetup(template.BaseClass):
 
     def detach_group_policies(self, group_name):
         """detach IAM policy(s) from IAM group"""
-        attached_policy_arns = [policy["PolicyArn"] for policy in
+        attached_policy_arns = [policy['PolicyArn'] for policy in
             self.iam_client.list_attached_group_policies(
                 GroupName=group_name,
                 PathPrefix=self.path_prefix
-            )["AttachedPolicies"]]
+            )['AttachedPolicies']]
         for attached_policy_arn in attached_policy_arns:
             self.iam_client.detach_group_policy(
                 GroupName=group_name,
@@ -163,18 +163,18 @@ class IAMGroupSetup(template.BaseClass):
     def detach_group_users(self, group_name):
         """detach IAM user(s) from IAM group"""
         aws_group_users = self.iam_client.get_group(
-            GroupName=group_name)["Users"]
+            GroupName=group_name)['Users']
         for aws_group_user in aws_group_users:
             self.iam_client.remove_user_from_group(
                 GroupName=group_name,
-                UserName=aws_group_user["UserName"]
+                UserName=aws_group_user['UserName']
             )
 
 
     def get_iam_groups(self):
         """returns IAM group(s) on AWS under set namespace"""
         return self.iam_client.list_groups(
-            PathPrefix=self.path_prefix)["Groups"]
+            PathPrefix=self.path_prefix)['Groups']
 
 
     def blocked_actions(self, sub_command):

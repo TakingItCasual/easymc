@@ -35,27 +35,27 @@ class SSHServer(template.BaseClass):
 
         # Verify RSA private key file exists and set permissions
         if not os.path.isfile(config.RSA_PRIV_KEY_PEM):
-            halt.err(config.RSA_PRIV_KEY_PEM + " not found.",
+            halt.err(f"{config.RSA_PRIV_KEY_PEM} not found.",
                 "  Namespace RSA private key PEM file required to SSH.")
         os.chmod(config.RSA_PRIV_KEY_PEM, config.PK_PERMS)
 
-        ec2_client = aws.ec2_client(instance["region"])
+        ec2_client = aws.ec2_client(instance['region'])
 
         response = ec2_client.describe_instances(
-            InstanceIds=[instance["id"]]
-        )["Reservations"][0]["Instances"][0]
-        instance_state = response["State"]["Name"]
-        instance_dns = response["PublicDnsName"]
+            InstanceIds=[instance['id']]
+        )['Reservations'][0]['Instances'][0]
+        instance_state = response['State']['Name']
+        instance_dns = response['PublicDnsName']
         try:
-            default_user = next(pair["Value"] for pair in response["Tags"]
-                if pair["Key"] == "DefaultUser")
+            default_user = next(pair['Value'] for pair in response['Tags']
+                if pair['Key'] == "DefaultUser")
         except StopIteration:
             halt.err("Instance missing DefaultUser tag key-value pair.")
 
         if instance_state != "running":
             halt.err("Cannot SSH into an instance that isn't running.")
 
-        username_and_hostname = default_user + "@" + instance_dns
+        username_and_hostname = f"{default_user}@{instance_dns}"
 
         print("")
         print("Instance's user and hostname are the following:")

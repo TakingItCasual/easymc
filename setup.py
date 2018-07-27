@@ -20,7 +20,7 @@ setup(
     author='TakingItCasual',
     author_email='takingitcasual+gh@gmail.com',
     url=REPO_URL,
-    download_url=REPO_URL+'/archive/v'+VERSION+'.tar.gz',
+    download_url=f'{REPO_URL}/archive/v{VERSION}.tar.gz',
     license='MIT',
     classifiers=[
         'Development Status :: 3 - Alpha',

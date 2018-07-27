@@ -16,28 +16,28 @@ class DeleteServer(template.BaseClass):
         """
 
         # Verify the specified region
-        if kwargs["region"] not in aws.get_regions():
-            halt.err(kwargs["region"] + " is not a valid region.")
-        ec2_client = aws.ec2_client(kwargs["region"])
+        if kwargs['region'] not in aws.get_regions():
+            halt.err(f"{kwargs['region']} is not a valid region.")
+        ec2_client = aws.ec2_client(kwargs['region'])
 
         reservations = ec2_client.describe_instances(Filters=[
             {
-                "Name": "instance-id",
-                "Values": [kwargs["id"]]
+                'Name': "instance-id",
+                'Values': [kwargs['id']]
             },
             {
-                "Name": "tag:Name",
-                "Values": [kwargs["name"]]
+                'Name': "tag:Name",
+                'Values': [kwargs['name']]
             }
-        ])["Reservations"]
+        ])['Reservations']
         if not reservations:
             halt.err("No instances matching given parameters found.")
 
         elastic_ips = ec2_client.describe_addresses(Filters=[{
-            "Name": "instance-id",
-            "Values": [kwargs["id"]]
-        }])["Addresses"]
-        # If instance has an associated elastic IP, disassociate and release
+            'Name': "instance-id",
+            'Values': [kwargs['id']]
+        }])['Addresses']
+        # If elastic IP(s) associated with instance, disassociate and release
         print("")
         if elastic_ips:
             halt.assert_empty(verify_perms.blocked(actions=[
@@ -45,13 +45,21 @@ class DeleteServer(template.BaseClass):
                 "ec2:ReleaseAddress"
             ]))
 
-            ec2_client.disassociate_address(
-                AssociationId=elastic_ips[0]["AssociationId"])
-            ec2_client.release_address(
-                AllocationId=elastic_ips[0]["AllocationId"])
-            print("Instance's elastic IP disassociated and released.")
+            for elastic_ip in elastic_ips:
+                ec2_client.disassociate_address(
+                    AssociationId=elastic_ip['AssociationId'])
+                if kwargs['preserve_ip'] is False:
+                    ec2_client.release_address(
+                        AllocationId=elastic_ip['AllocationId'])
+                    print(f"Elastic IP {elastic_ip['PublicIp']} "
+                        "disassociated and released.")
+                else:
+                    print(f"Elastic IP {elastic_ip['PublicIp']} "
+                        "disassociated but preserved.")
+        elif kwargs['preserve_ip'] is True:
+            print("No elastic IPs associated with instance.")
 
-        ec2_client.terminate_instances(InstanceIds=[kwargs["id"]])
+        ec2_client.terminate_instances(InstanceIds=[kwargs['id']])
         print("Instance terminated.")
 
 
@@ -63,6 +71,9 @@ class DeleteServer(template.BaseClass):
             "id", help="ID of instance to terminate")
         cmd_parser.add_argument(
             "name", help="value for instance's tag key \"Name\"")
+        cmd_parser.add_argument(
+           "-s", "--save_ip", action="store_true",
+            help="preserve any associated elastic IP")
 
 
     def blocked_actions(self):

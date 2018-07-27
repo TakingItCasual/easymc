@@ -2,9 +2,6 @@ from ec2mc.utils import aws
 from ec2mc.utils import halt
 from ec2mc.utils.threader import Threader
 
-import pprint
-pp = pprint.PrettyPrinter(indent=2)
-
 def main(kwargs):
     """wrapper for probe_regions which prints found instances to the CLI
 
@@ -27,34 +24,34 @@ def main(kwargs):
     regions, tag_filter = parse_filters(kwargs)
 
     print("")
-    print("Probing " + str(len(regions)) + " AWS region(s) for instances...")
+    print(f"Probing {len(regions)} AWS region(s) for instances...")
 
     all_instances = probe_regions(regions, tag_filter)
 
     for region in regions:
         instances = [instance for instance in all_instances
-            if instance["region"] == region]
+            if instance['region'] == region]
         if not instances:
             continue
 
-        print(region + ": " + str(len(instances)) + " instance(s) found:")
+        print(f"{region}: {len(instances)} instance(s) found:")
         for instance in instances:
-            if instance["name"] is not None:
-                print("  " + instance["name"] + " (" + instance["id"] + ")")
+            if instance['name'] is not None:
+                print(f"  {instance['name']} ({instance['id']})")
             else:
-                print("  " + instance["id"])
+                print(f"  {instance['id']}")
 
-            for tag_key, tag_value in instance["tags"].items():
-                print("    " + tag_key + ": " + tag_value)
+            for tag_key, tag_value in instance['tags'].items():
+                print(f"    {tag_key}: {tag_value}")
 
     if not all_instances:
-        if kwargs["region_filter"] and not tag_filter:
+        if kwargs['region_filter'] and not tag_filter:
             halt.err("No instances found from specified region(s).",
                 "  Try removing the region filter.")
-        if not kwargs["region_filter"] and tag_filter:
+        if not kwargs['region_filter'] and tag_filter:
             halt.err("No instances with specified tag(s) found.",
                 "  Try removing the tag filter.")
-        if kwargs["region_filter"] and tag_filter:
+        if kwargs['region_filter'] and tag_filter:
             halt.err(("No instances with specified tag(s) found "
                 "from specified region(s)."),
                 "  Try removing the region filter and/or the tag filter.")
@@ -89,7 +86,7 @@ def probe_regions(regions, tag_filter=None):
     for region, instances in regions_instances.items():
         for instance in instances:
             all_instances.append({
-                "region": region,
+                'region': region,
                 **instance
             })
 
@@ -117,21 +114,21 @@ def probe_region(region, tag_filter=None):
         tag_filter = []
 
     reservations = aws.ec2_client(region).describe_instances(
-        Filters=tag_filter)["Reservations"]
+        Filters=tag_filter)['Reservations']
 
     region_instances = []
     for reservation in reservations:
-        for instance in reservation["Instances"]:
+        for instance in reservation['Instances']:
             region_instances.append({
-                "id": instance["InstanceId"],
-                "name": None,
-                "tags": {tag["Key"]: tag["Value"] for tag in instance["Tags"]}
+                'id': instance['InstanceId'],
+                'name': None,
+                'tags': {tag['Key']: tag['Value'] for tag in instance['Tags']}
             })
 
     for instance in region_instances:
-        if "Name" in instance["tags"]:
-            instance["name"] = instance["tags"]["Name"]
-            del instance["tags"]["Name"]
+        if "Name" in instance['tags']:
+            instance['name'] = instance['tags']['Name']
+            del instance['tags']['Name']
 
     return region_instances
 
@@ -141,7 +138,7 @@ def get_all_tags():
     tags = []
     all_instances = probe_regions(aws.get_regions())
     for instance in all_instances:
-        tags.append(instance["tags"])
+        tags.append(instance['tags'])
     return tags
 
 
@@ -153,13 +150,13 @@ def parse_filters(kwargs):
 
     Returns:
         tuple:
-            list[str]: Regions to probe.
+            list[str]: Region(s) to probe.
             list[dict]: Filter to pass to EC2 client's describe_instances.
     """
 
     regions = aws.get_regions()
-    if kwargs["region_filter"] is not None:
-        region_filter = set(kwargs["region_filter"])
+    if kwargs['region_filter'] is not None:
+        region_filter = set(kwargs['region_filter'])
         # Verify region filter is valid
         if not region_filter.issubset(set(regions)):
             halt.err("Following invalid region(s) specified:",
@@ -167,25 +164,25 @@ def parse_filters(kwargs):
         regions = list(region_filter)
 
     tag_filter = []
-    if kwargs["tag_filters"]:
+    if kwargs['tag_filters']:
         # Convert dict(s) list to what describe_instances' Filters expects.
-        for filter_elements in kwargs["tag_filters"]:
+        for filter_elements in kwargs['tag_filters']:
             # Filter instances based on tag key-value(s).
             if len(filter_elements) > 1:
                 tag_filter.append({
-                    "Name": "tag:"+filter_elements[0],
-                    "Values": filter_elements[1:]
+                    'Name': f"tag:{filter_elements[0]}",
+                    'Values': filter_elements[1:]
                 })
             # If filter tag values not given, filter by just the tag key.
             elif filter_elements:
                 tag_filter.append({
-                    "Name": "tag-key",
-                    "Values": [filter_elements[0]]
+                    'Name': "tag-key",
+                    'Values': [filter_elements[0]]
                 })
-    if kwargs["name_filter"]:
+    if kwargs['name_filter']:
         tag_filter.append({
-            "Name": "tag:Name",
-            "Values": kwargs["name_filter"]
+            'Name': "tag:Name",
+            'Values': kwargs['name_filter']
         })
 
     return (regions, tag_filter)

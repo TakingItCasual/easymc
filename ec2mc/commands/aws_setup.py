@@ -28,11 +28,11 @@ class AWSSetup(template.BaseClass):
 
         Args:
             kwargs (dict):
-                "action": Whether to check, upload, or delete setup on AWS
+                'action': Whether to check, upload, or delete setup on AWS
         """
 
-        if kwargs["action"] == "delete":
-            path_prefix = "/" + config.NAMESPACE + "/"
+        if kwargs['action'] == "delete":
+            path_prefix = f"/{config.NAMESPACE}/"
             if not self.verify_namespace_groups_empty(path_prefix):
                 halt.err("User(s) attached to Namespace group(s).")
             if not self.verify_namespace_policies_empty(path_prefix):
@@ -46,20 +46,20 @@ class AWSSetup(template.BaseClass):
         for component in self.aws_components:
             component_info = component.verify_component(config_aws_setup)
             print("")
-            if kwargs["action"] == "check":
+            if kwargs['action'] == "check":
                 component.notify_state(component_info)
-            elif kwargs["action"] == "upload":
+            elif kwargs['action'] == "upload":
                 component.upload_component(component_info)
-            elif kwargs["action"] == "delete":
+            elif kwargs['action'] == "delete":
                 component.delete_component()
 
 
     def verify_namespace_groups_empty(self, path_prefix):
         """return False if any users attached to Namespace groups"""
         iam_client = aws.iam_client()
-        aws_groups = iam_client.list_groups(PathPrefix=path_prefix)["Groups"]
+        aws_groups = iam_client.list_groups(PathPrefix=path_prefix)['Groups']
         for aws_group in aws_groups:
-            if iam_client.get_group(GroupName=aws_group["GroupName"])["Users"]:
+            if iam_client.get_group(GroupName=aws_group['GroupName'])['Users']:
                 return False
         return True
 
@@ -71,12 +71,12 @@ class AWSSetup(template.BaseClass):
             Scope="Local",
             OnlyAttached=True,
             PathPrefix=path_prefix
-        )["Policies"]
+        )['Policies']
         for aws_policy in aws_policies:
             attached_users = iam_client.list_entities_for_policy(
-                PolicyArn=aws_policy["Arn"],
+                PolicyArn=aws_policy['Arn'],
                 EntityFilter="User"
-            )["PolicyUsers"]
+            )['PolicyUsers']
             if attached_users:
                 return False
         return True
@@ -98,9 +98,9 @@ class AWSSetup(template.BaseClass):
         namespace_vpc = aws.get_region_vpc(region)
         if namespace_vpc is not None:
             vpc_reservations = ec2_client.describe_instances(Filters=[{
-                "Name": "vpc-id",
-                "Values": [namespace_vpc["VpcId"]]
-            }])["Reservations"]
+                'Name': "vpc-id",
+                'Values': [namespace_vpc['VpcId']]
+            }])['Reservations']
             if vpc_reservations:
                 return False
         return True
@@ -120,7 +120,7 @@ class AWSSetup(template.BaseClass):
 
     def blocked_actions(self, kwargs):
         denied_actions = []
-        if kwargs["action"] == "delete":
+        if kwargs['action'] == "delete":
             denied_actions.extend(verify_perms.blocked(actions=[
                 "iam:ListGroups",
                 "iam:GetGroup",
@@ -131,5 +131,5 @@ class AWSSetup(template.BaseClass):
                 "ec2:DescribeInstances"
             ]))
         for component in self.aws_components:
-            denied_actions.extend(component.blocked_actions(kwargs["action"]))
+            denied_actions.extend(component.blocked_actions(kwargs['action']))
         return denied_actions

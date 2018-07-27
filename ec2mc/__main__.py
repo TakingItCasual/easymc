@@ -23,18 +23,18 @@ from ec2mc.commands import servers
 #pp = pprint.PrettyPrinter(indent=2)
 
 def main(args=None):
-    """ec2mc's entry point
+    """ec2mc script's entry point
 
     Args:
         args (list): Args for argparse. If None, use CLI's args.
     """
 
     try:
-        if args is None:
-            args = sys.argv[1:]
-
         if sys.version_info < (3, 6):
             halt.err("Python version 3.6 or greater required.")
+
+        if args is None:
+            args = sys.argv[1:]
 
         # Available commands from the ec2mc.commands directory
         commands = [
@@ -48,7 +48,7 @@ def main(args=None):
         kwargs = argv_to_kwargs(args, commands)
         # Get the command class object from the commands list
         chosen_cmd = next(cmd for cmd in commands
-            if cmd.module_name() == kwargs["command"])
+            if cmd.module_name() == kwargs['command'])
 
         # If the "configure" command was used, skip configuration verification
         if chosen_cmd.module_name() == "configure":
@@ -74,7 +74,7 @@ def argv_to_kwargs(args, commands):
 
     Returns:
         dict: Parsed argparse arguments.
-            "command": First positional argument.
+            'command': First positional argument.
             Other key-value pairs vary depending on the command. See the 
                 command's add_documentation method to see its args.
     """

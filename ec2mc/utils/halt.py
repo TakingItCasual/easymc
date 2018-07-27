@@ -9,7 +9,7 @@ def assert_empty(blocked_actions):
 def err(*halt_messages):
     """prepend "Error: " to first halt message, then halt"""
     halt_messages = list(halt_messages)
-    halt_messages[0] = "Error: " + halt_messages[0]
+    halt_messages[0] = f"Error: {halt_messages[0]}"
     q(*halt_messages)
 
 
