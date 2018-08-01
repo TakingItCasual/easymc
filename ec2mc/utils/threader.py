@@ -18,7 +18,7 @@ class Threader(object):
         """insert threaded function into queue to make its return retrievable
 
         The index of the thread and the threaded function's first arg are 
-        inserted into the queue along with the threaded function itself.
+        inserted into the queue, preceding the threaded function itself.
 
         Args: See add_thread
         """
@@ -32,6 +32,9 @@ class Threader(object):
         Args:
             func (function): Function to thread.
             fargs (tuple): Argument(s) to pass to the func function.
+
+        Raises:
+            ValueError: If func isn't callable, or if fargs not a tuple.
         """
 
         if not callable(func):

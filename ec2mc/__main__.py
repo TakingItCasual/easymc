@@ -8,8 +8,6 @@ IAM user is a part of.
 import sys
 import argparse
 
-sys.dont_write_bytecode = True
-
 from ec2mc.verify import verify_config
 from ec2mc.verify import verify_setup
 from ec2mc.utils import halt

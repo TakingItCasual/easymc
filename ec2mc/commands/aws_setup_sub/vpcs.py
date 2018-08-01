@@ -166,9 +166,8 @@ class VPCSetup(template.BaseClass):
             VpcId=vpc_id
         )
 
-        ig_id = self.create_internet_gateway(region, vpc_id)
-        rt_id = self.create_vpc_route_table(region, vpc_id, ig_id)
-        self.create_vpc_subnets(region, vpc_id, rt_id)
+        route_table_id = self.create_internet_gateway(region, vpc_id)
+        self.create_vpc_subnets(region, vpc_id, route_table_id)
 
 
     def delete_region_vpc(self, region):
@@ -177,13 +176,15 @@ class VPCSetup(template.BaseClass):
         if region_vpc is not None:
             self.delete_vpc_sgs(region, region_vpc['VpcId'])
             self.delete_vpc_subnets(region, region_vpc['VpcId'])
+            self.delete_vpc_internet_gateways(region, region_vpc['VpcId'])
             aws.ec2_client(region).delete_vpc(VpcId=region_vpc['VpcId'])
             return True
         return False
 
 
     def create_internet_gateway(self, region, vpc_id):
-        """create internet gateway and attach it to VPC"""
+        """create internet gateway, attach it to VPC, and configure route"""
+
         ec2_client = aws.ec2_client(region)
         ig_id = ec2_client.create_internet_gateway(
             )['InternetGateway']['InternetGatewayId']
@@ -192,30 +193,40 @@ class VPCSetup(template.BaseClass):
             InternetGatewayId=ig_id,
             VpcId=vpc_id
         )
-        return ig_id
 
-
-    def delete_vpc_internet_gateways(self, region, vpc_id):
-        """delete internet gateways attached solely to VPC"""
-        pass
-
-
-    def create_vpc_route_table(self, region, vpc_id, ig_id):
-        """create route table and configure route with internet gateway"""
-        ec2_client = aws.ec2_client(region)
-        rt_id = ec2_client.create_route_table(VpcId=vpc_id)['RouteTableId']
+        # Existance of VPC's automatically created route table is assumed
+        rt_id = ec2_client.describe_route_tables(Filters=[{
+            'Name': "vpc-id",
+            'Values': [vpc_id]
+        }])['RouteTables'][0]['RouteTableId']
         aws.attach_tags(ec2_client, rt_id, self.vpc_name)
         ec2_client.create_route(
             DestinationCidrBlock="0.0.0.0/0",
             GatewayId=ig_id,
             RouteTableId=rt_id
         )
+
         return rt_id
 
 
-    def delete_vpc_route_tables(self, vpc_id):
-        """delete VPC route tables"""
-        pass
+    def delete_vpc_internet_gateways(self, region, vpc_id):
+        """detach (and delete) internet gateway(s) attached (solely) to VPC"""
+
+        ec2_client = aws.ec2_client(region)
+        gateways = ec2_client.describe_internet_gateways(Filters=[{
+            'Name': "attachment.vpc-id",
+            'Values': [vpc_id]
+        }])['InternetGateways']
+
+        for gateway in gateways:
+            ec2_client.detach_internet_gateway(
+                InternetGatewayId=gateway["InternetGatewayId"],
+                VpcId=vpc_id
+            )
+            # Only delete gateway if attached solely to Namespace VPC
+            if len(gateway["Attachments"]) == 1:
+                ec2_client.delete_internet_gateway(
+                    InternetGatewayId=gateway["InternetGatewayId"])
 
 
     def create_vpc_subnets(self, region, vpc_id, rt_id):
@@ -302,7 +313,9 @@ class VPCSetup(template.BaseClass):
             "ec2:DescribeVpcs",
             "ec2:DescribeSubnets",
             "ec2:DescribeSecurityGroups",
-            "ec2:DescribeAvailabilityZones"
+            "ec2:DescribeAvailabilityZones",
+            "ec2:DescribeRouteTables",
+            "ec2:DescribeInternetGateways"
         ]
         self.upload_actions = [
             "ec2:CreateVpc",
@@ -321,6 +334,8 @@ class VPCSetup(template.BaseClass):
         self.delete_actions = [
             "ec2:DeleteSecurityGroup",
             "ec2:DeleteSubnet",
+            "ec2:DetachInternetGateway",
+            "ec2:DeleteInternetGateway",
             "ec2:DeleteVpc"
         ]
         return super().blocked_actions(sub_command)
