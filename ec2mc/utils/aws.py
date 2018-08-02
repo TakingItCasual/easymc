@@ -54,6 +54,7 @@ def get_region_vpc(region):
 
     Requires ec2:DescribeVpcs permission.
     """
+
     vpcs = ec2_client(region).describe_vpcs(Filters=[{
         'Name': "tag:Namespace",
         'Values': [config.NAMESPACE]
@@ -61,14 +62,18 @@ def get_region_vpc(region):
 
     if len(vpcs) > 1:
         halt.err(f"Multiple VPCs with Namespace tag {config.NAMESPACE} "
-            "found from AWS.")
+            f"found in {region} region.")
     elif vpcs:
         return vpcs[0]
     return None
 
 
 def get_region_security_groups(region, vpc_id=None):
-    """get security groups from region with config's Namespace tag"""
+    """get security groups from region with config's Namespace tag
+
+    Requires ec2:DescribeSecurityGroups permission.
+    """
+
     sg_filter = [{
         'Name': "tag:Namespace",
         'Values': [config.NAMESPACE]
@@ -79,17 +84,12 @@ def get_region_security_groups(region, vpc_id=None):
             'Values': [vpc_id]
         })
 
-    vpc_sgs = ec2_client(region).describe_security_groups(
+    return ec2_client(region).describe_security_groups(
         Filters=sg_filter)['SecurityGroups']
-
-    sg_group_names = [sg['GroupName'] for sg in vpc_sgs]
-    if len(sg_group_names) > len(set(sg_group_names)):
-        halt.err(f"SGs with duplicate names in {region} region.")
-    return vpc_sgs
 
 
 # TODO: Attach tag(s) on resource (e.g. VPC) creation when it becomes supported
-def attach_tags(aws_ec2_client, resource_id, name_tag=None):
+def attach_tags(region, resource_id, name_tag=None):
     """attempt to attach tag(s) to resource (including Namespace tag) for 60s
     
     Requires ec2:CreateTags permission.
@@ -101,7 +101,7 @@ def attach_tags(aws_ec2_client, resource_id, name_tag=None):
     Because waiters don't work reliably (in my experience), that's why.
 
     Args:
-        aws_ec2_client: Get existing EC2 client so a new one isn't needed.
+        region (str): AWS region the resource resides in.
         resource_id (str): The ID of the resource.
         name_tag (str): A tag value to assign to the tag key "Name".
     """
@@ -119,7 +119,8 @@ def attach_tags(aws_ec2_client, resource_id, name_tag=None):
     not_found_regex = re.compile("Invalid[a-zA-Z]*\\.NotFound")
     for _ in range(60):
         try:
-            aws_ec2_client.create_tags(Resources=[resource_id], Tags=new_tags)
+            ec2_client(region).create_tags(
+                Resources=[resource_id], Tags=new_tags)
             break
         except ClientError as e:
             if not_found_regex.search(e.response['Error']['Code']) is None:

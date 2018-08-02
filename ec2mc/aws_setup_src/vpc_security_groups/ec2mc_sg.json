@@ -9,7 +9,9 @@
             ],
             "Ipv6Ranges": [
                 {"CidrIpv6": "::/0"}
-            ]
+            ],
+            "PrefixListIds": [],
+            "UserIdGroupPairs": []
         },
         {
             "IpProtocol": "tcp",
@@ -20,8 +22,9 @@
             ],
             "Ipv6Ranges": [
                 {"CidrIpv6": "::/0"}
-            ]
+            ],
+            "PrefixListIds": [],
+            "UserIdGroupPairs": []
         }
-    ],
-    "Egress": []
+    ]
 }

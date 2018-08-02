@@ -33,14 +33,18 @@ def test_threader_add_thread_type_verification():
     """test that add_thread only accepts function and tuple as args 1 and 2"""
     def func(index):
         return index
-    not_a_function = "testing"
 
     with pytest.raises(ValueError) as excinfo:
         threader = Threader()
-        threader.add_thread(not_a_function, ("1st arg",))
+        threader.add_thread("I'm a string!", ("1st arg",))
     assert str(excinfo.value) == "func must be a function."
 
     with pytest.raises(ValueError) as excinfo:
         threader = Threader()
         threader.add_thread(func, "fargs...")
-    assert str(excinfo.value) == "fargs must be a tuple."
+    assert str(excinfo.value) == "fargs must be a non-empty tuple."
+
+    with pytest.raises(ValueError) as excinfo:
+        threader = Threader()
+        threader.add_thread(func, tuple())
+    assert str(excinfo.value) == "fargs must be a non-empty tuple."

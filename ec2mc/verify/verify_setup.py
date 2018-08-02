@@ -71,9 +71,9 @@ def verify_aws_setup(config_aws_setup):
     if not unique_names(config_aws_setup['IAM']['Groups']):
         halt.err("aws_setup.json incorrectly formatted:",
             "IAM group names must be unique.")
-    if not unique_names(config_aws_setup['EC2']['SecurityGroups']):
+    if not unique_names(config_aws_setup['VPC']['SecurityGroups']):
         halt.err("aws_setup.json incorrectly formatted:",
-            "EC2 security group names must be unique.")
+            "VPC security group names must be unique.")
 
 
 def verify_instance_templates(config_aws_setup):
@@ -81,7 +81,7 @@ def verify_instance_templates(config_aws_setup):
     template_yaml_files = os2.list_dir_files(config.USER_DATA_DIR, ext=".yaml")
 
     schema = os2.get_json_schema("instance_templates")
-    sg_names = [sg['Name'] for sg in config_aws_setup['EC2']['SecurityGroups']]
+    sg_names = [sg['Name'] for sg in config_aws_setup['VPC']['SecurityGroups']]
     for template_yaml_file in template_yaml_files:
         user_data = os2.parse_yaml(
             f"{config.USER_DATA_DIR}{template_yaml_file}")
@@ -136,10 +136,6 @@ def verify_iam_policies(config_aws_setup):
                 if policy not in iam_policy_files]
         )
 
-    # Warn if iam_policies has policies not described by aws_setup.json
-    if not set(iam_policy_files).issubset(set(setup_policy_list)):
-        print("Warning: Unused policy(s) found from iam_policies dir.")
-
 
 def verify_vpc_security_groups(config_aws_setup):
     """verify aws_setup.json reflects contents of vpc_security_groups dir"""
@@ -147,7 +143,7 @@ def verify_vpc_security_groups(config_aws_setup):
 
     # SGs described in aws_setup/aws_setup.json
     setup_sg_list = [f"{sg['Name']}.json" for sg
-        in config_aws_setup['EC2']['SecurityGroups']]
+        in config_aws_setup['VPC']['SecurityGroups']]
     # Actual SG json files located in aws_setup/vpc_security_groups/
     vpc_sg_json_files = os2.list_dir_files(sg_dir, ext=".json")
 
@@ -155,19 +151,14 @@ def verify_vpc_security_groups(config_aws_setup):
     if not set(setup_sg_list).issubset(set(vpc_sg_json_files)):
         halt.err(
             "Following SG(s) not found from aws_setup/vpc_security_groups/:",
-            *[sg for sg in setup_sg_list
-                if sg not in vpc_sg_json_files]
+            *[sg for sg in setup_sg_list if sg not in vpc_sg_json_files]
         )
 
-    # Halt if any security group missing Ingress and/or Egress tags
+    # Halt if any security group missing Ingress key
     schema = os2.get_json_schema("vpc_security_groups")
     for sg_file in vpc_sg_json_files:
         sg_dict = os2.parse_json(f"{sg_dir}{sg_file}")
         os2.validate_dict(sg_dict, schema, f"SG {sg_file}")
-
-    # Warn if vpc_security_groups has SGs not described by aws_setup.json
-    if not set(vpc_sg_json_files).issubset(set(setup_sg_list)):
-        print("Warning: Unused SG(s) found from vpc_security_groups dir.")
 
 
 def unique_names(dict_list):

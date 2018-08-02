@@ -40,7 +40,7 @@
             },
             "required": ["Policies", "Groups"]
         },
-        "EC2": {
+        "VPC": {
             "type": "object",
             "properties": {
                 "SecurityGroups": {
@@ -60,5 +60,5 @@
             "required": ["SecurityGroups"]
         }
     },
-    "required": ["Modified", "Namespace", "IAM", "EC2"]
+    "required": ["Modified", "Namespace", "IAM", "VPC"]
 }

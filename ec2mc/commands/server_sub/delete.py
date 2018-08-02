@@ -21,14 +21,8 @@ class DeleteServer(template.BaseClass):
         ec2_client = aws.ec2_client(kwargs['region'])
 
         reservations = ec2_client.describe_instances(Filters=[
-            {
-                'Name': "instance-id",
-                'Values': [kwargs['id']]
-            },
-            {
-                'Name': "tag:Name",
-                'Values': [kwargs['name']]
-            }
+            {'Name': "instance-id", 'Values': [kwargs['id']]},
+            {'Name': "tag:Name", 'Values': [kwargs['name']]}
         ])['Reservations']
         if not reservations:
             halt.err("No instances matching given parameters found.")

@@ -28,7 +28,7 @@
             }
         ]
     },
-    "EC2": {
+    "VPC": {
         "SecurityGroups": [
             {
                 "Name": "ec2mc_sg",
