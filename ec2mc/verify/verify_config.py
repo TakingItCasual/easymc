@@ -19,7 +19,7 @@ def main():
         if not os.path.isfile(credentials_csv):
             halt.err(
                 "Configuration is not set. Set with \"ec2mc configure\".",
-                "  IAM credentials needed to interact with AWS."
+                "  An IAM user access key is needed to interact with AWS."
             )
         create_config_from_credentials_csv(credentials_csv)
     config_dict = os2.parse_json(config.CONFIG_JSON)
@@ -34,7 +34,7 @@ def main():
         if os.path.isfile(servers_dat) and servers_dat.endswith("servers.dat"):
             config.SERVERS_DAT = servers_dat
 
-    # Verify config's IAM user credentials.
+    # Verify config's IAM user access key.
     verify_user(config_dict)
 
     # Verify config's region whitelist is valid.
@@ -54,19 +54,19 @@ def main():
         print("Config doesn't have a valid path for MC client's servers.dat.")
         print("  The Minecraft client's server list will not be updated.")
         print("")
-    print(f"Credentials verified as IAM user \"{config.IAM_NAME}\".")
+    print(f"Access key verified as IAM user \"{config.IAM_NAME}\".")
 
 
 def verify_user(config_dict):
-    """verify config's IAM user credentials and minimal permissions
+    """verify config's IAM user access key and minimal permissions
 
     iam:GetUser, iam:SimulatePrincipalPolicy, and ec2:DescribeRegions 
     permissions required for successful verification.
 
     Args:
-        config_dict (dict): Should contain config's IAM user credentials.
-            "iam_id" (str): IAM user's access key ID
-            "iam_secret" (str): IAM user's secret access key
+        config_dict (dict): Should contain config's IAM user access key.
+            "iam_id" (str): IAM user's access key ID.
+            "iam_secret" (str): IAM user's secret access key.
     """
     if 'iam_id' not in config_dict:
         halt.err("IAM user ID not set. Set with \"ec2mc configure\".")

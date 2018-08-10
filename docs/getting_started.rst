@@ -24,7 +24,7 @@ Amazon Web Services Setup
 
 To create the necessary AWS account, visit https://aws.amazon.com/.
 
-This script requires AWS IAM user credentials to interact with your account.
+This script requires an AWS IAM user access key to interact with your account.
 To set up your AWS account, a temporary IAM user is needed.
 To create the IAM user, visit your `IAM Management Console`_ and create a new user.
 
@@ -33,7 +33,8 @@ In step 2, switch to "Attach existing policies directly" and enable "Administrat
 Create the user.
 Keep the page that loads open for the next step.
 
-To set the credentials for the script, you can download your IAM user's credentials.csv file (by clicking "Download .csv") and move the file to the script's configuration folder. Alternatively, you can copy the IAM user's access key ID and secret access key, and paste them into the corresponding inputs given by the following command::
+To set the access key for the script, you can download your IAM user's credentials.csv file (by clicking "Download .csv") and move the file to the script's configuration folder.
+Alternatively, you can copy the IAM user's access key ID and secret access key, and paste them into the corresponding inputs given by the following command::
 
     ec2mc configure
 
@@ -41,7 +42,7 @@ To verify the previous steps, attempt to use the following command again::
 
     ec2mc servers check
 
-If the previous steps were successfully completed, the script will output a "credentials verified" notification.
+If the previous steps were successfully completed, the script will output a "access key verified" notification.
 
 Upload the default AWS setup included with the script with the following command::
 

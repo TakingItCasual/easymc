@@ -9,7 +9,7 @@ Templates are provided for the simple creation of vanilla and modded Minecraft s
 
 For a guide on setting up your AWS account and creating a server, see `Getting Started`_.
 
-For a guide on managing and distributing IAM user credentials, see `Managing Users`_.
+For a guide on managing and distributing IAM user access keys, see `Managing Users`_.
 
 For a comprehensive list and explanation of the available commands, see Commands_.
 

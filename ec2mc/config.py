@@ -10,7 +10,7 @@ DIST_DIR = os.path.join(os.path.dirname(__file__), "")
 
 # Directory for ec2mc to find/create its configuration file(s).
 CONFIG_DIR = os.path.join(os.path.expanduser("~"), ".ec2mc", "")
-# JSON file containing IAM credentials, servers.dat path, and region whitelist.
+# JSON file containing IAM access keys, servers.dat path, and region whitelist.
 CONFIG_JSON = f"{CONFIG_DIR}config.json"
 # JSON file containing instance title(s) for the MC client's server list.
 SERVER_TITLES_JSON = f"{CONFIG_DIR}server_titles.json"

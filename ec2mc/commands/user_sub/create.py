@@ -40,10 +40,10 @@ class CreateUser(CommandBase):
         )
 
         print("")
-        print(f"IAM user \"{kwargs['name']}\" created on AWS")
+        print(f"IAM user \"{kwargs['name']}\" created on AWS.")
 
-        # IAM user credentials generated and saved to dictionary
-        new_credentials = iam_client.create_access_key(
+        # IAM user access key generated and saved to dictionary
+        new_access_key = iam_client.create_access_key(
             UserName=kwargs['name'])['AccessKey']
         config_dict = os2.parse_json(config.CONFIG_JSON)
         if 'iam_access_keys' not in config_dict:
@@ -56,28 +56,28 @@ class CreateUser(CommandBase):
                 'iam_secret': config_dict['iam_secret']
             })
             config_dict.update({
-                'iam_id': new_credentials['AccessKeyId'],
-                'iam_secret': new_credentials['SecretAccessKey']
+                'iam_id': new_access_key['AccessKeyId'],
+                'iam_secret': new_access_key['SecretAccessKey']
             })
             os2.save_json(config_dict, config.CONFIG_JSON)
-            print("  User's credentials set as default in config.")
+            print("  User's access key set as default in config.")
         else:
-            # Back up new credentials in config file
+            # Back up new IAM user's access key in config file
             config_dict['iam_access_keys'].append({
-                'iam_id': new_credentials['AccessKeyId'],
-                'iam_secret': new_credentials['SecretAccessKey']
+                'iam_id': new_access_key['AccessKeyId'],
+                'iam_secret': new_access_key['SecretAccessKey']
             })
             os2.save_json(config_dict, config.CONFIG_JSON)
 
-            #self.create_configuration_zip(new_credentials)
+            #self.create_configuration_zip(new_access_key)
             #print("  User's zipped config folder created in config.")
 
 
-    def create_configuration_zip(self, new_credentials):
-        """create zipped config folder containing new credentials"""
+    def create_configuration_zip(self, new_access_key):
+        """create zipped config folder containing new IAM user access key"""
         new_config = {
-            'iam_id': new_credentials['AccessKeyId'],
-            'iam_secret': new_credentials['SecretAccessKey']
+            'iam_id': new_access_key['AccessKeyId'],
+            'iam_secret': new_access_key['SecretAccessKey']
         }
         if config.REGION_WHITELIST is not None:
             new_config['region_whitelist'] = config.REGION_WHITELIST
@@ -99,7 +99,7 @@ class CreateUser(CommandBase):
             "group", help="name of IAM group to assign IAM user to")
         cmd_parser.add_argument(
             "-d", "--default", action="store_true",
-            help="set new IAM user's credentials as primary credentials")
+            help="set new IAM user's access key as default in config")
         cmd_parser.add_argument(
             "-k", "--ssh_key", action="store_true",
             help="copy RSA private key to new user's zipped configuration")

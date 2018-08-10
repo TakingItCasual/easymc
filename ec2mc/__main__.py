@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """AWS EC2 instance manager for Minecraft servers. Requires IAM user 
-credentials associated with an AWS account. To use a specific command, 
+access key associated with an AWS account. To use a specific command, 
 the necessary permissions must be attached to the IAM group that the 
 IAM user is a part of.
 """
@@ -51,8 +51,10 @@ def main(args=None):
 
         # If the "configure" command was used, skip configuration verification
         if chosen_cmd.module_name() == "configure":
-            chosen_cmd.main(kwargs)
-            halt.q()
+            # --swap_user argument usage requires configuration verification
+            if kwargs["swap_user"] is None:
+                chosen_cmd.main(kwargs)
+                halt.q()
 
         # Verify config's config.json and server_titles.json
         verify_config.main()

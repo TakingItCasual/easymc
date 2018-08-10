@@ -9,7 +9,7 @@ class CommandBase(ABC):
 
     @abstractmethod
     def main(self, kwargs):
-        """overridden by child class to describe command's functionality"""
+        """overridden by child class to implement command's functionality"""
         pass
 
 

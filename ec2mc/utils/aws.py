@@ -26,7 +26,7 @@ def get_regions():
 
 
 def ec2_client(region):
-    """create and return an EC2 client using IAM credentials and a region"""
+    """create and return EC2 client using IAM user access key and a region"""
     return boto3.client("ec2",
         aws_access_key_id=config.IAM_ID,
         aws_secret_access_key=config.IAM_SECRET,
@@ -34,14 +34,14 @@ def ec2_client(region):
     )
 
 def iam_client():
-    """create and return an IAM client using IAM credentials"""
+    """create and return IAM client using IAM user access key"""
     return boto3.client("iam",
         aws_access_key_id=config.IAM_ID,
         aws_secret_access_key=config.IAM_SECRET
     )
 
 def ssm_client():
-    """create and return an SSM client using IAM credentials"""
+    """create and return SSM client using IAM user access key"""
     return boto3.client("ssm",
         aws_access_key_id=config.IAM_ID,
         aws_secret_access_key=config.IAM_SECRET
@@ -135,6 +135,6 @@ def access_key_owner(access_key_id):
         return iam_client().get_access_key_last_used(
             AccessKeyId=access_key_id)['UserName']
     except ClientError as e:
-        if e.response['Error']['Code'] == "":
+        if e.response['Error']['Code'] == "AccessDenied":
             return None
         halt.err(str(e))

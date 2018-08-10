@@ -35,7 +35,7 @@ class DeleteUser(CommandBase):
                 AccessKeyId=aws_access_key['AccessKeyId']
             )
 
-            # Remove IAM user's backed up credentials from config
+            # Remove IAM user's backed up access key from config
             config_dict = os2.parse_json(config.CONFIG_JSON)
             if 'iam_access_keys' in config_dict:
                 config_dict['iam_access_keys'][:] = [
@@ -54,7 +54,7 @@ class DeleteUser(CommandBase):
         iam_client.delete_user(UserName=user_name)
         
         print("")
-        print(f"IAM user \"{user_name}\" delete from AWS.")
+        print(f"IAM user \"{user_name}\" deleted from AWS.")
 
 
     def add_documentation(self, argparse_obj):

@@ -9,7 +9,7 @@ from ec2mc.utils import os2
 class Configure(CommandBase):
 
     def main(self, kwargs):
-        """set IAM credentials, servers.dat path, and region whitelist"""
+        """set IAM access key, servers.dat path, and region whitelist"""
         # verify_config:main normally does this, but it wasn't called.
         if not os.path.isdir(config.CONFIG_DIR):
             os.mkdir(config.CONFIG_DIR)
@@ -21,7 +21,7 @@ class Configure(CommandBase):
             os2.validate_dict(config_dict, schema, "config.json")
 
         if kwargs['swap_user'] is not None:
-            config_dict = self.switch_credentials(
+            config_dict = self.switch_access_key(
                 config_dict, kwargs['swap_user'])
         else:
             config_dict = self.default_set_config(config_dict)
@@ -79,30 +79,30 @@ class Configure(CommandBase):
         return config_dict
 
 
-    def switch_credentials(self, config_dict, user_name):
-        """set credentials stored under iam_access_keys list as primary"""
-        if 'iam_access_keys' not in config_dict:
-            halt.err("No backup credentials stored in config.")
+    def switch_access_key(self, config_dict, user_name):
+        """set access key stored under iam_access_keys list as primary"""
+        if not ('iam_access_keys' in config_dict and
+                config_dict['iam_access_keys']):
+            halt.err("No backup access keys stored in config.")
 
-        for index, credentials in enumerate(config_dict['iam_access_keys']):
+        for index, access_key in enumerate(config_dict['iam_access_keys']):
             # TODO: Verify access key is active
-            if aws.access_key_owner(credentials['iam_id']) == user_name:
-                # Back up current credentials under iam_access_keys in config
+            if aws.access_key_owner(access_key['iam_id']) == user_name:
+                # Swap default access key with requested IAM user's in config
                 config_dict['iam_access_keys'].append({
-                    'iam_id': config.IAM_ID,
-                    'iam_secret': config.IAM_SECRET
+                    'iam_id': config_dict['iam_id'],
+                    'iam_secret': config_dict['iam_secret']
                 })
-
-                # Overwrite current credentials with requested IAM user's
-                config_dict['iam_id'] = credentials['iam_id']
-                config_dict['iam_secret'] = credentials['iam_secret']
+                config_dict.update({
+                    'iam_id': access_key['iam_id'],
+                    'iam_secret': access_key['iam_secret']
+                })
                 del config_dict['iam_access_keys'][index]
 
-                print("")
-                print(f"{user_name}'s access key set as default credentials.")
+                print(f"{user_name}'s access key set as default in config.")
                 break
         else:
-            halt.err(f"IAM User \"{user_name}\" backup credentials not found.")
+            halt.err(f"IAM User \"{user_name}\" backup access key not found.")
 
         return config_dict
 
@@ -111,4 +111,4 @@ class Configure(CommandBase):
         cmd_parser = super().add_documentation(argparse_obj)
         cmd_parser.add_argument(
             "--swap_user", metavar="",
-            help="swap primary credentials in config")
+            help="swap primary access key in config")
