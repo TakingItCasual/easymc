@@ -1,8 +1,8 @@
 from ec2mc import config
-from ec2mc.commands.aws_setup_sub import template
+from ec2mc.commands.base_classes import ComponentSetup
 from ec2mc.utils import aws
 
-class IAMGroupSetup(template.BaseClass):
+class IAMGroupSetup(ComponentSetup):
 
     def verify_component(self, config_aws_setup):
         """determine which groups need creating/updating, and which don't
@@ -17,7 +17,6 @@ class IAMGroupSetup(template.BaseClass):
                 'ToUpdate': Groups on AWS not the same as local versions.
                 'UpToDate': Groups on AWS up to date with local versions.
         """
-
         self.iam_client = aws.iam_client()
         self.path_prefix = f"/{config.NAMESPACE}/"
 
@@ -80,7 +79,6 @@ class IAMGroupSetup(template.BaseClass):
         Args:
             group_names (dict): See what verify_component returns.
         """
-
         for local_group in group_names['ToCreate']:
             self.create_group(local_group)
             print(f"IAM group {local_group} created on AWS.")
@@ -95,7 +93,6 @@ class IAMGroupSetup(template.BaseClass):
 
     def delete_component(self):
         """remove user(s) and policy(s) from group(s), then delete group(s)"""
-
         aws_groups = self.get_iam_groups()
         if not aws_groups:
             print("No IAM groups on AWS to delete.")

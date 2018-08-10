@@ -1,13 +1,13 @@
 from botocore.exceptions import WaiterError
 
 from ec2mc import config
-from ec2mc.commands import template
+from ec2mc.commands.base_classes import CommandBase
 from ec2mc.stuff import manage_titles
 from ec2mc.utils import aws
 from ec2mc.verify import verify_instances
 from ec2mc.verify import verify_perms
 
-class StartServer(template.BaseClass):
+class StartServer(CommandBase):
 
     def main(self, kwargs):
         """start stopped instance(s) & update client's server list
@@ -15,7 +15,6 @@ class StartServer(template.BaseClass):
         Args:
             kwargs (dict): See verify.verify_instances:argparse_args
         """
-
         instances = verify_instances.main(kwargs)
 
         for instance in instances:

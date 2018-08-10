@@ -1,9 +1,9 @@
-from ec2mc.commands import template
+from ec2mc.commands.base_classes import CommandBase
 from ec2mc.utils import aws
 from ec2mc.utils import halt
 from ec2mc.verify import verify_perms
 
-class DeleteServer(template.BaseClass):
+class DeleteServer(CommandBase):
 
     def main(self, kwargs):
         """terminate an EC2 instance, given its region, ID, and name
@@ -14,7 +14,6 @@ class DeleteServer(template.BaseClass):
                 "id" (str): ID of instance to terminate.
                 "name" (str): Tag value for instance tag key "Name".
         """
-
         # Verify the specified region
         if kwargs['region'] not in aws.get_regions():
             halt.err(f"{kwargs['region']} is not a valid region.")

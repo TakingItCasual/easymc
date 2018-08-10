@@ -6,9 +6,9 @@ from setuptools import setup, find_packages
 VERSION = "0.1.3"
 REPO_URL = 'https://github.com/TakingItCasual/ec2mc'
 
-readme_path = os.path.join(
+README_PATH = os.path.join(
     os.path.abspath(os.path.dirname(__file__)), "README.rst")
-with open(readme_path, encoding='utf-8') as f:
+with open(README_PATH, encoding='utf-8') as f:
     LONG_DESC = f.read()
 
 # The OS restrictions are due to the cryptography package.

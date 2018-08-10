@@ -20,7 +20,6 @@ def main(kwargs):
 
     Returns: See what probe_regions returns.
     """
-
     regions, tag_filter = parse_filters(kwargs)
 
     print("")
@@ -76,7 +75,6 @@ def probe_regions(regions, tag_filter=None):
             "region" (str): AWS region that an instance is in.
             For other key-value pairs, see what probe_region returns.
     """
-
     threader = Threader()
     for region in regions:
         threader.add_thread(probe_region, (region, tag_filter))
@@ -109,7 +107,6 @@ def probe_region(region, tag_filter=None):
             "name" (str/None): Tag value for instance tag key "Name".
             "tags" (dict): Instance tag key-value pair(s).
     """
-
     if tag_filter is None:
         tag_filter = []
 
@@ -126,7 +123,7 @@ def probe_region(region, tag_filter=None):
             })
 
     for instance in region_instances:
-        if "Name" in instance['tags']:
+        if 'Name' in instance['tags']:
             instance['name'] = instance['tags']['Name']
             del instance['tags']['Name']
 
@@ -153,7 +150,6 @@ def parse_filters(kwargs):
             list[str]: Region(s) to probe.
             list[dict]: Filter to pass to EC2 client's describe_instances.
     """
-
     regions = aws.get_regions()
     if kwargs['region_filter'] is not None:
         region_filter = set(kwargs['region_filter'])

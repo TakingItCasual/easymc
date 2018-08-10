@@ -3,13 +3,13 @@ import subprocess
 import shutil
 
 from ec2mc import config
-from ec2mc.commands import template
+from ec2mc.commands.base_classes import CommandBase
 from ec2mc.utils import aws
 from ec2mc.utils import halt
 from ec2mc.verify import verify_instances
 from ec2mc.verify import verify_perms
 
-class SSHServer(template.BaseClass):
+class SSHServer(CommandBase):
 
     def main(self, kwargs):
         """SSH into an EC2 instance using its .pem private key
@@ -21,7 +21,6 @@ class SSHServer(template.BaseClass):
         Args:
             kwargs (dict): See verify.verify_instances:argparse_args
         """
-
         if os.name != "posix":
             print("")
             print("Notice: This command is not fully implemented for your OS.")

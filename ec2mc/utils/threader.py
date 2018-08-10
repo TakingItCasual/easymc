@@ -36,7 +36,6 @@ class Threader(object):
         Raises:
             ValueError: If func isn't callable, or if fargs not a tuple.
         """
-
         if not callable(func):
             raise ValueError("func must be a function.")
         if not isinstance(fargs, tuple) or not fargs:
@@ -53,7 +52,6 @@ class Threader(object):
             return_dict (bool): Return dict instead of list. Threads' 
                 function's first argument used as key.
         """
-
         for thread in self.threads:
             thread.join()
 

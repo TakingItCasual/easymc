@@ -3,36 +3,30 @@ AWS EC2 instance manager for Minecraft servers
 
 |PyPI Version| |Python Version|
 
-Requires a Python version of at least 3.6.
-Can be installed with pip::
-
-	pip install ec2mc
-
 A Python console script for managing Minecraft servers hosted on AWS EC2 instances (cloud computing).
-The script is still in alpha, and currently only supports starting and checking instances that already exist.
-Commands to create instances and initialize an AWS account are planned.
+Functionality is included for automating later parts of the AWS account setup process.
+Templates are provided for the simple creation of vanilla and modded Minecraft servers.
 
-IAM user credentials must be set before the script can be used::
+For a guide on setting up your AWS account and creating a server, see `Getting Started`_.
 
-	ec2mc configure
+For a guide on managing and distributing IAM user credentials, see `Managing Users`_.
 
-Sample credentials (with minimal permissions) are the following::
+For a comprehensive list and explanation of the available commands, see Commands_.
 
-	AWS access key ID: AKIAJSJIRSCFBLUWRG2Q
-	AWS secret access key: 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
+For an explanation on what can be customized (and how), see Customization_.
 
-"File path for Minecraft's servers.dat" can be left empty.
-The preceding IAM user credentials have been included to facilitate a basic understanding of what the script does.
-The instance will turn itself off after 10 minutes of inactivity using crontab.
+For a breakdown of the costs of running a server, see Costs_.
 
-Full commands to be used are the following ("-r" is the region filter, "-n" is a tag filter)::
 
-	ec2mc server check -r eu-central-1 -n chisels-and-bits-1
-	ec2mc server start -r eu-central-1 -n chisels-and-bits-1
+.. _Getting Started: https://github.com/TakingItCasual/ec2mc/blob/master/docs/getting_started.rst
 
-To see how the script updates the Minecraft client's server list, install Minecraft and add the MC client's servers.dat path to the config with "ec2mc configure".
-The script can't handle a non-existent/empty server list (yet?), so please add an entry to the Minecraft client's server list before using the script (gibberish is fine, as long as an entry exists).
+.. _Managing Users: https://github.com/TakingItCasual/ec2mc/blob/master/docs/managing_users.rst
 
+.. _Customization: https://github.com/TakingItCasual/ec2mc/blob/master/docs/customization.rst
+
+.. _Commands: https://github.com/TakingItCasual/ec2mc/blob/master/docs/commands.rst
+
+.. _Costs: https://github.com/TakingItCasual/ec2mc/blob/master/docs/costs.rst
 
 .. |PyPI Version| image:: https://raw.githubusercontent.com/TakingItCasual/ec2mc/master/docs/images/pypi-v0.1.3-orange.svg?sanitize=true
    :target: https://pypi.org/project/ec2mc/

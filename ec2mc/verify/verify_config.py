@@ -9,7 +9,6 @@ from ec2mc.verify import verify_perms
 
 def main():
     """verifies existence of config file, as well as each key's value"""
-
     # If config directory doesn't already exist, create it.
     if not os.path.isdir(config.CONFIG_DIR):
         os.mkdir(config.CONFIG_DIR)
@@ -30,7 +29,7 @@ def main():
     os2.validate_dict(config_dict, schema, "config.json")
 
     # Assign config.SERVERS_DAT if config's servers.dat path is valid.
-    if "servers_dat" in config_dict:
+    if 'servers_dat' in config_dict:
         servers_dat = config_dict['servers_dat']
         if os.path.isfile(servers_dat) and servers_dat.endswith("servers.dat"):
             config.SERVERS_DAT = servers_dat
@@ -39,7 +38,7 @@ def main():
     verify_user(config_dict)
 
     # Verify config's region whitelist is valid.
-    if "region_whitelist" in config_dict and config_dict['region_whitelist']:
+    if 'region_whitelist' in config_dict and config_dict['region_whitelist']:
         config.REGION_WHITELIST = tuple(config_dict['region_whitelist'])
         if len(aws.get_regions()) != len(config.REGION_WHITELIST):
             halt.err("Following invalid region(s) in config whitelist:",
@@ -69,10 +68,9 @@ def verify_user(config_dict):
             "iam_id" (str): IAM user's access key ID
             "iam_secret" (str): IAM user's secret access key
     """
-
-    if "iam_id" not in config_dict:
+    if 'iam_id' not in config_dict:
         halt.err("IAM user ID not set. Set with \"ec2mc configure\".")
-    if "iam_secret" not in config_dict:
+    if 'iam_secret' not in config_dict:
         halt.err("IAM user secret not set. Set with \"ec2mc configure\".")
 
     config.IAM_ID = config_dict['iam_id']

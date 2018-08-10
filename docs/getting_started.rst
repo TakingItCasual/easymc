@@ -8,7 +8,7 @@ Script Installation
 
 This script requires Python (version 3.6 or greater).
 Python can be downloaded from http://www.python.org/ (during installation, enable "Add Python3.x to PATH").
-The script can then be installed with pip::
+The script can then be installed from a terminal with pip::
 
     pip install ec2mc
 
@@ -17,7 +17,7 @@ For example::
 
     ec2mc servers check
 
-You will get a "configuration is not set" error, but the folder will be created.
+You will get a "Configuration is not set" error, but the folder will be created.
 
 Amazon Web Services Setup
 -------------------------
@@ -43,7 +43,7 @@ To verify the previous steps, attempt to use the following command again::
 
 If the previous steps were successfully completed, the script will output a "credentials verified" notification.
 
-Upload the default setup included with the script with the following command::
+Upload the default AWS setup included with the script with the following command::
 
     ec2mc aws_setup upload
 

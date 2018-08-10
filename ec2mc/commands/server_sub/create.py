@@ -5,7 +5,7 @@ from ruamel import yaml
 from botocore.exceptions import ClientError
 
 from ec2mc import config
-from ec2mc.commands import template
+from ec2mc.commands.base_classes import CommandBase
 from ec2mc.utils import aws
 from ec2mc.utils import halt
 from ec2mc.utils import os2
@@ -14,7 +14,7 @@ from ec2mc.verify import verify_perms
 import pprint
 pp = pprint.PrettyPrinter(indent=2)
 
-class CreateServer(template.BaseClass):
+class CreateServer(CommandBase):
 
     def main(self, kwargs):
         """create and initialize a new EC2 instance
@@ -28,7 +28,6 @@ class CreateServer(template.BaseClass):
                 "elastic_ip" (bool): Whether to associate a new elastic IP.
                 "tags" (list): Additional instance tag key-value pair(s).
         """
-
         template_yaml_files = os2.list_dir_files(config.USER_DATA_DIR)
         if f"{kwargs['template']}.yaml" not in template_yaml_files:
             halt.err(f"Template {kwargs['template']} not found.")
@@ -103,7 +102,6 @@ class CreateServer(template.BaseClass):
                 "subnet_id" (str): ID of VPC subnet to assign to instance.
                 "key_name" (str): Name of EC2 key pair to assign (for SSH).
         """
-
         region = kwargs['region']
         ec2_client = aws.ec2_client(region)
         creation_kwargs = {}
@@ -171,11 +169,10 @@ class CreateServer(template.BaseClass):
         Returns:
             str: YAML file string to initialize instance on first boot.
         """
-
         user_data = os2.parse_yaml(
             f"{config.USER_DATA_DIR}{template_name}.yaml")
 
-        if "write_directories" in template:
+        if 'write_directories' in template:
             template_dir = os.path.join(
                 f"{config.USER_DATA_DIR}{template_name}", "")
 
@@ -193,18 +190,18 @@ class CreateServer(template.BaseClass):
                         'content': file_b64,
                         'path': f"{write_dir['instance_dir']}{dir_file}"
                     })
-                    if "owner" in write_dir:
+                    if 'owner' in write_dir:
                         write_files[-1]['owner'] = write_dir['owner']
-                    if "chmod" in write_dir:
+                    if 'chmod' in write_dir:
                         write_files[-1]['permissions'] = write_dir['chmod']
 
             if write_files:
-                if "write_files" not in user_data:
+                if 'write_files' not in user_data:
                     user_data['write_files'] = []
                 user_data['write_files'].extend(write_files)
 
         # Halt if write_files has duplicate paths
-        if "write_files" in user_data:
+        if 'write_files' in user_data:
             write_file_paths = [entry['path'] for entry
                 in user_data['write_files']]
             if len(write_file_paths) != len(set(write_file_paths)):
@@ -223,7 +220,6 @@ class CreateServer(template.BaseClass):
             user_data (str): YAML file string to initialize instance on boot.
             dry_run (bool): If True, only test if IAM user is allowed to.
         """
-
         return self.ec2_client.run_instances(
             DryRun=dry_run,
             KeyName=creation_kwargs['key_name'],

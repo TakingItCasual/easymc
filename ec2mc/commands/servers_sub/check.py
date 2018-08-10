@@ -1,11 +1,11 @@
 from ec2mc import config
-from ec2mc.commands import template
+from ec2mc.commands.base_classes import CommandBase
 from ec2mc.stuff import manage_titles
 from ec2mc.utils import aws
 from ec2mc.verify import verify_instances
 from ec2mc.verify import verify_perms
 
-class CheckServer(template.BaseClass):
+class CheckServer(CommandBase):
 
     def main(self, kwargs):
         """check instance status(es) & update client's server list
@@ -13,7 +13,6 @@ class CheckServer(template.BaseClass):
         Args:
             kwargs (dict): See verify.verify_instances:argparse_args
         """
-
         instances = verify_instances.main(kwargs)
 
         for instance in instances:

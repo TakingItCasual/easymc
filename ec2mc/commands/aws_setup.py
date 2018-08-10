@@ -1,5 +1,5 @@
 from ec2mc import config
-from ec2mc.commands import template
+from ec2mc.commands.base_classes import CommandBase
 from ec2mc.utils import aws
 from ec2mc.utils import halt
 from ec2mc.utils import os2
@@ -11,7 +11,7 @@ from ec2mc.commands.aws_setup_sub import iam_groups
 from ec2mc.commands.aws_setup_sub import vpcs
 from ec2mc.commands.aws_setup_sub import ssh_key_pairs
 
-class AWSSetup(template.BaseClass):
+class AWSSetup(CommandBase):
 
     def __init__(self):
         super().__init__()
@@ -30,7 +30,6 @@ class AWSSetup(template.BaseClass):
             kwargs (dict):
                 'action': Whether to check, upload, or delete setup on AWS
         """
-
         if kwargs['action'] == "delete":
             path_prefix = f"/{config.NAMESPACE}/"
             if not self.verify_namespace_groups_empty(path_prefix):

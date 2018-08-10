@@ -2,12 +2,13 @@ import os.path
 from deepdiff import DeepDiff
 
 from ec2mc import config
-from ec2mc.commands.aws_setup_sub import template
+from ec2mc.commands.base_classes import ComponentSetup
 from ec2mc.utils import aws
+from ec2mc.utils import halt
 from ec2mc.utils import os2
 from ec2mc.utils.threader import Threader
 
-class VPCSetup(template.BaseClass):
+class VPCSetup(ComponentSetup):
 
     def verify_component(self, config_aws_setup):
         """determine statuses for VPC(s) and SG(s) on AWS
@@ -26,7 +27,6 @@ class VPCSetup(template.BaseClass):
                         "ToUpdate" (list): AWS region(s) to update SG in.
                         "UpToDate" (list): AWS region(s) SG is up to date in.
         """
-
         regions = aws.get_regions()
 
         self.vpc_name = config.NAMESPACE
@@ -54,16 +54,16 @@ class VPCSetup(template.BaseClass):
         # VPC security groups already present in AWS regions
         aws_sgs = sg_threader.get_results(return_dict=True)
 
-        # Check each region for VPC with with correct Name tag value
+        # Check each region has VPC with correct Name tag value
         for region in regions:
             if aws_vpcs[region] is not None:
                 if ({'Key': "Name", 'Value': self.vpc_name}
                         in aws_vpcs[region]['Tags']):
                     vpc_regions['ToCreate'].remove(region)
                     vpc_regions['Existing'].append(region)
-        # TODO: Detect and create missing subnets for existing VPCs
+        # TODO: Detect and repair incomplete VPCs (missing subnets, etc.)
 
-        # Check each region for SG(s) described by aws_setup.json
+        # Check each region for VPC SG(s) described by aws_setup.json
         for sg_name, sg_regions in sg_names.items():
             for region in regions:
                 if aws_vpcs[region] is not None:
@@ -73,15 +73,16 @@ class VPCSetup(template.BaseClass):
                         sg_regions['ToCreate'].remove(region)
                         sg_regions['ToUpdate'].append(region)
 
+                # Check if existing VPC SG needs to be updated
                 if region in sg_regions['ToUpdate']:
-                    local_ingress = self.get_json_sg_ingress(sg_name)
-                    aws_ingress = next(sg['IpPermissions'] for sg
+                    local_sg_ingress = self.get_json_sg_ingress(sg_name)
+                    aws_sg_ingress = next(sg['IpPermissions'] for sg
                         in aws_sgs[region] if sg['GroupName'] == sg_name)
 
-                    ingress_diffs = DeepDiff(
-                        local_ingress, aws_ingress, ignore_order=True)
+                    sg_ingress_diffs = DeepDiff(
+                        local_sg_ingress, aws_sg_ingress, ignore_order=True)
 
-                    if not ingress_diffs:
+                    if not sg_ingress_diffs:
                         sg_regions['ToUpdate'].remove(region)
                         sg_regions['UpToDate'].append(region)
 
@@ -108,7 +109,6 @@ class VPCSetup(template.BaseClass):
         Args:
             vpc_and_sg_info (dict): See what verify_component returns.
         """
-
         vpc_regions, sg_names = vpc_and_sg_info
 
         vpc_threader = Threader()
@@ -128,7 +128,7 @@ class VPCSetup(template.BaseClass):
             threader.add_thread(aws.get_region_vpc, (region,))
         for region, vpc in threader.get_results(return_dict=True).items():
             if vpc is None:
-                halt.err(f"Namespace VPC not found from {region} region.")
+                halt.err(f"Namespace VPC not created in {region} region.")
             vpc_ids[region] = vpc['VpcId']
 
         sg_threader = Threader()
@@ -154,7 +154,6 @@ class VPCSetup(template.BaseClass):
 
     def delete_component(self):
         """delete VPC(s) and associated SG(s) from AWS"""
-
         threader = Threader()
         for region in aws.get_regions():
             threader.add_thread(self.delete_region_vpc, (region,))
@@ -168,7 +167,6 @@ class VPCSetup(template.BaseClass):
 
     def create_vpc(self, region):
         """create VPC with subnet(s) in region and attach tags"""
-
         ec2_client = aws.ec2_client(region)
         vpc_id = ec2_client.create_vpc(
             CidrBlock="172.31.0.0/16",
@@ -202,7 +200,6 @@ class VPCSetup(template.BaseClass):
 
     def create_internet_gateway(self, region, vpc_id):
         """create internet gateway, attach it to VPC, and configure route"""
-
         ec2_client = aws.ec2_client(region)
         ig_id = ec2_client.create_internet_gateway(
             )['InternetGateway']['InternetGatewayId']
@@ -229,7 +226,6 @@ class VPCSetup(template.BaseClass):
 
     def delete_vpc_internet_gateways(self, region, vpc_id):
         """detach (and delete) internet gateway(s) attached (solely) to VPC"""
-
         ec2_client = aws.ec2_client(region)
         gateways = ec2_client.describe_internet_gateways(Filters=[{
             'Name': "attachment.vpc-id",
@@ -255,7 +251,6 @@ class VPCSetup(template.BaseClass):
             vpc_id (str): ID of VPC to create subnets under.
             rt_id (str): ID of route table to attach subnets to.
         """
-
         ec2_client = aws.ec2_client(region)
         azs = ec2_client.describe_availability_zones()['AvailabilityZones']
         for index, az in enumerate(azs):
@@ -287,7 +282,6 @@ class VPCSetup(template.BaseClass):
 
     def create_sg(self, region, sg_name, vpc_id):
         """create new VPC security group on AWS"""
-
         ec2_client = aws.ec2_client(region)
         sg_id = ec2_client.create_security_group(
             Description=next(sg['Desc'] for sg in self.security_group_setup
@@ -297,34 +291,33 @@ class VPCSetup(template.BaseClass):
         )['GroupId']
         aws.attach_tags(region, sg_id, sg_name)
 
-        local_ingress_filters = self.get_json_sg_ingress(sg_name)
-        if local_ingress_filters:
+        local_sg_ingress = self.get_json_sg_ingress(sg_name)
+        if local_sg_ingress:
             ec2_client.authorize_security_group_ingress(
                 GroupId=sg_id,
-                IpPermissions=local_ingress_filters
+                IpPermissions=local_sg_ingress
             )
 
 
     def update_sg(self, region, sg_name, vpc_id):
         """update VPC security group that already exists on AWS"""
-
         ec2_client = aws.ec2_client(region)
         aws_sgs = aws.get_region_security_groups(region, vpc_id)
 
         sg_id = next(sg['GroupId'] for sg in aws_sgs
             if sg['GroupName'] == sg_name)
-        aws_ingress_filters = next(sg['IpPermissions'] for sg in aws_sgs
+        aws_sg_ingress = next(sg['IpPermissions'] for sg in aws_sgs
             if sg['GroupName'] == sg_name)
         ec2_client.revoke_security_group_ingress(
             GroupId=sg_id,
-            IpPermissions=aws_ingress_filters
+            IpPermissions=aws_sg_ingress
         )
 
-        local_ingress_filters = self.get_json_sg_ingress(sg_name)
-        if local_ingress_filters:
+        local_sg_ingress = self.get_json_sg_ingress(sg_name)
+        if local_sg_ingress:
             ec2_client.authorize_security_group_ingress(
                 GroupId=sg_id,
-                IpPermissions=local_ingress_filters
+                IpPermissions=local_sg_ingress
             )
 
 

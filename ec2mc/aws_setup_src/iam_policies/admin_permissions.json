@@ -15,6 +15,23 @@
             "Resource": "*"
         },
         {
+            "Sid": "ManageIAMUserPermissions",
+            "Effect": "Allow",
+            "Action": [
+                "iam:ListGroups",
+                "iam:CreateUser",
+                "iam:AddUserToGroup",
+                "iam:CreateAccessKey",
+                "iam:ListUsers",
+                "iam:ListAccessKeys",
+                "iam:DeleteAccessKey",
+                "iam:ListGroupsForUser",
+                "iam:RemoveUserFromGroup",
+                "iam:DeleteUser"
+            ],
+            "Resource": "*"
+        },
+        {
             "Sid": "CreateInstancePermissions",
             "Effect": "Allow",
             "Action": ["ec2:RunInstances"],

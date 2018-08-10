@@ -3,11 +3,11 @@ import json
 from deepdiff import DeepDiff
 
 from ec2mc import config
-from ec2mc.commands.aws_setup_sub import template
+from ec2mc.commands.base_classes import ComponentSetup
 from ec2mc.utils import aws
 from ec2mc.utils import os2
 
-class IAMPolicySetup(template.BaseClass):
+class IAMPolicySetup(ComponentSetup):
 
     def verify_component(self, config_aws_setup):
         """determine which policies need creating/updating, and which don't
@@ -22,7 +22,6 @@ class IAMPolicySetup(template.BaseClass):
                 'ToUpdate': Policies on AWS not the same as local versions.
                 'UpToDate': Policies on AWS up to date with local versions.
         """
-
         self.iam_client = aws.iam_client()
         self.policy_dir = os.path.join(
             f"{config.AWS_SETUP_DIR}iam_policies", "")
@@ -96,7 +95,6 @@ class IAMPolicySetup(template.BaseClass):
         Args:
             policy_names (dict): See what verify_component returns.
         """
-
         for local_policy in policy_names['ToCreate']:
             self.create_policy(local_policy)
             print(f"IAM policy {local_policy} created on AWS.")
@@ -112,7 +110,6 @@ class IAMPolicySetup(template.BaseClass):
 
     def delete_component(self):
         """remove attachments, delete old versions, then delete policies"""
-
         aws_policies = self.get_iam_policies()
         if not aws_policies:
             print("No IAM policies on AWS to delete.")

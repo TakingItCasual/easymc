@@ -1,37 +1,51 @@
 import os
 
 from ec2mc import config
-from ec2mc.commands import template
+from ec2mc.commands.base_classes import CommandBase
+from ec2mc.utils import aws
+from ec2mc.utils import halt
 from ec2mc.utils import os2
 
-class Configure(template.BaseClass):
+class Configure(CommandBase):
 
-    def main(self):
+    def main(self, kwargs):
         """set IAM credentials, servers.dat path, and region whitelist"""
-
         # verify_config:main normally does this, but it wasn't called.
         if not os.path.isdir(config.CONFIG_DIR):
             os.mkdir(config.CONFIG_DIR)
 
         config_dict = {}
+        if os.path.isfile(config.CONFIG_JSON):
+            schema = os2.get_json_schema("config")
+            config_dict = os2.parse_json(config.CONFIG_JSON)
+            os2.validate_dict(config_dict, schema, "config.json")
+
+        if kwargs['swap_user'] is not None:
+            config_dict = self.switch_credentials(
+                config_dict, kwargs['swap_user'])
+        else:
+            config_dict = self.default_set_config(config_dict)
+
+        os2.save_json(config_dict, config.CONFIG_JSON)
+        os.chmod(config.CONFIG_JSON, config.CONFIG_PERMS)
+
+
+    def default_set_config(self, config_dict):
+        """default behavior when no argparse arguments are specified"""
         iam_id_str = "None"
         iam_secret_str = "None"
         servers_dat_str = "None"
         whitelist_str = "All"
 
-        if os.path.isfile(config.CONFIG_JSON):
-            schema = os2.get_json_schema("config")
-            config_dict = os2.parse_json(config.CONFIG_JSON)
-            os2.validate_dict(config_dict, schema, "config.json")
-            if "iam_id" in config_dict:
-                iam_id_str = "*"*16 + config_dict['iam_id'][-4:]
-            if "iam_secret" in config_dict:
-                iam_secret_str = "*"*16 + config_dict['iam_secret'][-4:]
-            if "servers_dat" in config_dict:
-                servers_dat_str = config_dict['servers_dat']
-            if ("region_whitelist" in config_dict
-                    and config_dict['region_whitelist']):
-                whitelist_str = ",".join(config_dict['region_whitelist'])
+        if 'iam_id' in config_dict:
+            iam_id_str = "*"*16 + config_dict['iam_id'][-4:]
+        if 'iam_secret' in config_dict:
+            iam_secret_str = "*"*16 + config_dict['iam_secret'][-4:]
+        if 'servers_dat' in config_dict:
+            servers_dat_str = config_dict['servers_dat']
+        if ('region_whitelist' in config_dict
+                and config_dict['region_whitelist']):
+            whitelist_str = ",".join(config_dict['region_whitelist'])
 
         iam_id = input(f"AWS Access Key ID [{iam_id_str}]: ")
         iam_secret = input(f"AWS Secret Access Key [{iam_secret_str}]: ")
@@ -62,5 +76,39 @@ class Configure(template.BaseClass):
         if region_whitelist:
             config_dict['region_whitelist'] = region_whitelist
 
-        os2.save_json(config_dict, config.CONFIG_JSON)
-        os.chmod(config.CONFIG_JSON, config.CONFIG_PERMS)
+        return config_dict
+
+
+    def switch_credentials(self, config_dict, user_name):
+        """set credentials stored under iam_access_keys list as primary"""
+        if 'iam_access_keys' not in config_dict:
+            halt.err("No backup credentials stored in config.")
+
+        for index, credentials in enumerate(config_dict['iam_access_keys']):
+            # TODO: Verify access key is active
+            if aws.access_key_owner(credentials['iam_id']) == user_name:
+                # Back up current credentials under iam_access_keys in config
+                config_dict['iam_access_keys'].append({
+                    'iam_id': config.IAM_ID,
+                    'iam_secret': config.IAM_SECRET
+                })
+
+                # Overwrite current credentials with requested IAM user's
+                config_dict['iam_id'] = credentials['iam_id']
+                config_dict['iam_secret'] = credentials['iam_secret']
+                del config_dict['iam_access_keys'][index]
+
+                print("")
+                print(f"{user_name}'s access key set as default credentials.")
+                break
+        else:
+            halt.err(f"IAM User \"{user_name}\" backup credentials not found.")
+
+        return config_dict
+
+
+    def add_documentation(self, argparse_obj):
+        cmd_parser = super().add_documentation(argparse_obj)
+        cmd_parser.add_argument(
+            "--swap_user", metavar="",
+            help="swap primary credentials in config")

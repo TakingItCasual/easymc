@@ -6,6 +6,7 @@
             "Effect": "Allow",
             "Action": [
                 "iam:GetUser",
+                "iam:GetAccessKeyLastUsed",
                 "iam:SimulatePrincipalPolicy",
                 "ec2:DescribeRegions"
             ],

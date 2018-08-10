@@ -16,6 +16,7 @@ from ec2mc.commands import configure
 from ec2mc.commands import aws_setup
 from ec2mc.commands import server
 from ec2mc.commands import servers
+from ec2mc.commands import user
 
 #import pprint
 #pp = pprint.PrettyPrinter(indent=2)
@@ -26,7 +27,6 @@ def main(args=None):
     Args:
         args (list): Args for argparse. If None, use CLI's args.
     """
-
     try:
         if sys.version_info < (3, 6):
             halt.err("Python version 3.6 or greater required.")
@@ -39,7 +39,8 @@ def main(args=None):
             configure.Configure(),
             aws_setup.AWSSetup(),
             server.Server(),
-            servers.Servers()
+            servers.Servers(),
+            user.User()
         ]
 
         # Use argparse to turn args into dict of arguments
@@ -50,7 +51,7 @@ def main(args=None):
 
         # If the "configure" command was used, skip configuration verification
         if chosen_cmd.module_name() == "configure":
-            chosen_cmd.main()
+            chosen_cmd.main(kwargs)
             halt.q()
 
         # Verify config's config.json and server_titles.json
@@ -62,7 +63,6 @@ def main(args=None):
         halt.assert_empty(chosen_cmd.blocked_actions(kwargs))
         # Use the command
         chosen_cmd.main(kwargs)
-        print("")
     except SystemExit:
         pass
 
@@ -76,7 +76,6 @@ def argv_to_kwargs(args, commands):
             Other key-value pairs vary depending on the command. See the 
                 command's add_documentation method to see its args.
     """
-
     parser = argparse.ArgumentParser(description=__doc__)
     cmd_args = parser.add_subparsers(metavar="{command}"+" "*2, dest="command")
     cmd_args.required = True

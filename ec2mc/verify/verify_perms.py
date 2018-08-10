@@ -14,7 +14,6 @@ def blocked(actions, resources=None, context=None):
     Returns:
         list: Actions denied by IAM due to insufficient permissions.
     """
-
     if not actions:
         return []
     actions = list(set(actions))

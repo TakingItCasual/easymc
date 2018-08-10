@@ -5,12 +5,12 @@ from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 
 from ec2mc import config
-from ec2mc.commands.aws_setup_sub import template
+from ec2mc.commands.base_classes import ComponentSetup
 from ec2mc.utils import aws
 from ec2mc.utils import halt
 from ec2mc.utils.threader import Threader
 
-class SSHKeyPairSetup(template.BaseClass):
+class SSHKeyPairSetup(ComponentSetup):
 
     def verify_component(self, _):
         """determine which regions need Namespace RSA key pairs created
@@ -19,7 +19,6 @@ class SSHKeyPairSetup(template.BaseClass):
             dict: Which regions Namespace EC2 key pair exists in.
                 Region name (str/None): Public key fingerprint, if pair exists.
         """
-
         self.pem_file = os.path.basename(config.RSA_PRIV_KEY_PEM)
         self.key_pair_name = os.path.splitext(self.pem_file)[0]
 
@@ -58,7 +57,6 @@ class SSHKeyPairSetup(template.BaseClass):
         Args:
             fingerprint_regions (dict): See what verify_component returns.
         """
-
         aws_fingerprints = [fp for fp in fingerprint_regions.values()
             if fp is not None]
 
@@ -99,7 +97,6 @@ class SSHKeyPairSetup(template.BaseClass):
 
     def delete_component(self):
         """remove Namespace RSA key pairs from all AWS regions"""
-
         threader = Threader()
         for region in aws.get_regions():
             threader.add_thread(self.delete_region_key_pair, (region,))
@@ -154,7 +151,6 @@ def generate_rsa_key_pair():
             str: Private key string
             bytes: Public key bytes
     """
-
     # Generate private/public key pair
     key = rsa.generate_private_key(
         public_exponent=65537,

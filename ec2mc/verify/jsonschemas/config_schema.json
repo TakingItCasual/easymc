@@ -9,6 +9,19 @@
             "items": {"type": "string"},
             "minItems": 0,
             "uniqueItems": true
+        },
+        "iam_access_keys": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "iam_id": {"type": "string"},
+                    "iam_secret": {"type": "string"}
+                },
+                "required": ["iam_id", "iam_secret"]
+            },
+            "minItems": 0,
+            "uniqueItems": true
         }
     }
 }

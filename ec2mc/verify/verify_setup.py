@@ -9,7 +9,6 @@ from ec2mc.utils import halt
 # TODO: Verify appropriate stuff against AWS, rather than local setup
 def main():
     """verify contents of user's config's aws_setup directory"""
-
     # Directory path for distribution's packaged aws_setup
     src_aws_setup_dir = os.path.join(f"{config.DIST_DIR}aws_setup_src", "")
 
@@ -99,14 +98,14 @@ def verify_instance_templates(config_aws_setup):
             f"{config.USER_DATA_DIR}{template_name}", "")
         # If write_directories not empty, verify template directory exists
         if not os.path.isdir(template_dir):
-            if ("write_directories" in template_info
+            if ('write_directories' in template_info
                     and template_info['write_directories']):
                 halt.err(f"{template_name} template directory not found.")
         # Verify existance of write_directories subdir(s) in template directory
         else:
             # TODO: Be more specific about missing subdirectories
             template_subdirs = os2.list_dir_dirs(template_dir)
-            if "write_directories" in template_info:
+            if 'write_directories' in template_info:
                 for write_dir in template_info['write_directories']:
                     if write_dir['local_dir'] not in template_subdirs:
                         halt.err(f"{write_dir['local_dir']} subdirectory not "

@@ -12,7 +12,6 @@ def update_title_dns(aws_region, instance_id, new_dns):
         instance_id (str): ID of instance.
         new_dns (str): Instance's new DNS to update client's server list with.
     """
-
     titles_dict = {'Instances': []}
     if os.path.isfile(config.SERVER_TITLES_JSON):
         titles_dict = os2.parse_json(config.SERVER_TITLES_JSON)
@@ -41,7 +40,6 @@ def update_servers_dat(servers_dat_path, server_title, new_dns):
         server_title (str): Name of the server within client's server list.
         new_dns (str): Instance's new DNS to update client's server list with.
     """
-
     servers_dat_file = nbtlib.nbt.load(servers_dat_path, gzipped=False)
 
     for server_list_entry in servers_dat_file.root['servers']:
