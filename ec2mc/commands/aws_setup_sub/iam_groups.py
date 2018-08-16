@@ -119,7 +119,6 @@ class IAMGroupSetup(ComponentSetup):
 
     def delete_group(self, group_name):
         """delete IAM group from AWS"""
-        self.detach_group_users(group_name)
         self.detach_group_policies(group_name)
         self.iam_client.delete_group(GroupName=group_name)
 
@@ -157,17 +156,6 @@ class IAMGroupSetup(ComponentSetup):
             )
 
 
-    def detach_group_users(self, group_name):
-        """detach IAM user(s) from IAM group"""
-        aws_group_users = self.iam_client.get_group(
-            GroupName=group_name)['Users']
-        for aws_group_user in aws_group_users:
-            self.iam_client.remove_user_from_group(
-                GroupName=group_name,
-                UserName=aws_group_user['UserName']
-            )
-
-
     def get_iam_groups(self):
         """returns IAM group(s) on AWS under set namespace"""
         return self.iam_client.list_groups(
@@ -186,9 +174,6 @@ class IAMGroupSetup(ComponentSetup):
             "iam:DetachGroupPolicy"
         ]
         self.delete_actions = [
-            "iam:DeleteGroup",
-            "iam:GetGroup",
-            "iam:RemoveUserFromGroup",
             "iam:DetachGroupPolicy",
             "iam:DeleteGroup"
         ]

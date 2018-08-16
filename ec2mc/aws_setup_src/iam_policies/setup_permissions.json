@@ -1,0 +1,92 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "DeleteSetupPrecheckPermissions",
+            "Effect": "Allow",
+            "Action": [
+                "iam:ListGroups",
+                "iam:GetGroup",
+                "iam:ListPolicies",
+                "iam:ListEntitiesForPolicy",
+                "ec2:DescribeRegions",
+                "ec2:DescribeVpcs",
+                "ec2:DescribeInstances"
+            ],
+            "Resource": "*"
+        },
+        {
+            "Sid": "IAMPolicySetupPermissions",
+            "Effect": "Allow",
+            "Action": [
+                "iam:ListPolicies",
+                "iam:ListPolicyVersions",
+                "iam:GetPolicyVersion",
+                "iam:CreatePolicy",
+                "iam:CreatePolicyVersion",
+                "iam:DeletePolicyVersion",
+                "iam:ListEntitiesForPolicy",
+                "iam:DetachGroupPolicy",
+                "iam:DetachRolePolicy",
+                "iam:DetachUserPolicy",
+                "iam:DeletePolicy"
+            ],
+            "Resource": "*"
+        },
+        {
+            "Sid": "IAMGroupSetupPermissions",
+            "Effect": "Allow",
+            "Action": [
+                "iam:ListGroups",
+                "iam:ListAttachedGroupPolicies",
+                "iam:CreateGroup",
+                "iam:ListPolicies",
+                "iam:AttachGroupPolicy",
+                "iam:DetachGroupPolicy",
+                "iam:DeleteGroup"
+            ],
+            "Resource": "*"
+        },
+        {
+            "Sid": "VPCSetupPermissions",
+            "Effect": "Allow",
+            "Action": [
+                "ec2:DescribeRegions",
+                "ec2:DescribeVpcs",
+                "ec2:DescribeSubnets",
+                "ec2:DescribeSecurityGroups",
+                "ec2:DescribeAvailabilityZones",
+                "ec2:DescribeRouteTables",
+                "ec2:DescribeInternetGateways",
+                "ec2:CreateVpc",
+                "ec2:CreateTags",
+                "ec2:ModifyVpcAttribute",
+                "ec2:CreateInternetGateway",
+                "ec2:AttachInternetGateway",
+                "ec2:CreateRouteTable",
+                "ec2:CreateRoute",
+                "ec2:CreateSubnet",
+                "ec2:AssociateRouteTable",
+                "ec2:CreateSecurityGroup",
+                "ec2:RevokeSecurityGroupIngress",
+                "ec2:AuthorizeSecurityGroupIngress",
+                "ec2:DeleteSecurityGroup",
+                "ec2:DeleteSubnet",
+                "ec2:DetachInternetGateway",
+                "ec2:DeleteInternetGateway",
+                "ec2:DeleteVpc"
+            ],
+            "Resource": "*"
+        },
+        {
+            "Sid": "EC2KeyPairSetupPermissions",
+            "Effect": "Allow",
+            "Action": [
+                "ec2:DescribeKeyPairs",
+                "ec2:ImportKeyPair",
+                "ec2:DeleteKeyPair"
+            ],
+            "Resource": "*"
+        }
+    ]
+}

@@ -27,6 +27,8 @@
                 "iam:DeleteAccessKey",
                 "iam:ListGroupsForUser",
                 "iam:RemoveUserFromGroup",
+                "iam:ListAttachedUserPolicies",
+                "iam:DetachUserPolicy",
                 "iam:DeleteUser"
             ],
             "Resource": "*"
@@ -50,7 +52,7 @@
         },
         {
             "Sid": "ElasticAddressPermissions",
-            "Effect": "Deny",
+            "Effect": "Allow",
             "Action": [
                 "ec2:AllocateAddress",
                 "ec2:AssociateAddress",

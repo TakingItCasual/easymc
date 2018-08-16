@@ -49,17 +49,13 @@ def main(args=None):
         chosen_cmd = next(cmd for cmd in commands
             if cmd.module_name() == kwargs['command'])
 
-        # If the "configure" command was used, skip configuration verification
-        if chosen_cmd.module_name() == "configure":
-            # --swap_user argument usage requires configuration verification
-            if kwargs["swap_user"] is None:
-                chosen_cmd.main(kwargs)
-                halt.q()
-
-        # Verify config's config.json and server_titles.json
-        verify_config.main()
-        # Verify config's aws_setup.json and YAML instance templates
-        verify_setup.main()
+        # If basic configuration being done, skip config verification
+        if not (chosen_cmd.module_name() == "configure" and
+                kwargs["swap_user"] is None):
+            # Verify config's config.json and server_titles.json
+            verify_config.main()
+            # Verify config's aws_setup.json and YAML instance templates
+            verify_setup.main()
 
         # Verify that the IAM user has needed permissions to use the command
         halt.assert_empty(chosen_cmd.blocked_actions(kwargs))

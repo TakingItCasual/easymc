@@ -61,12 +61,6 @@ class Threader(object):
         thread_data.sort(key=lambda thread_index: thread_index[0])
 
         if return_dict:
-            results = {}
-            for _, key, thread_return in thread_data:
-                results[key] = thread_return
-        else:
-            results = []
-            for _, _, thread_return in thread_data:
-                results.append(thread_return)
-
-        return results
+            return {first_arg: thread_return for
+                _, first_arg, thread_return in thread_data}
+        return [thread_return for _, _, thread_return in thread_data]

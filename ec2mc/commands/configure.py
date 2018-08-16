@@ -5,6 +5,7 @@ from ec2mc.commands.base_classes import CommandBase
 from ec2mc.utils import aws
 from ec2mc.utils import halt
 from ec2mc.utils import os2
+from ec2mc.verify import verify_perms
 
 class Configure(CommandBase):
 
@@ -26,8 +27,9 @@ class Configure(CommandBase):
         else:
             config_dict = self.default_set_config(config_dict)
 
-        os2.save_json(config_dict, config.CONFIG_JSON)
-        os.chmod(config.CONFIG_JSON, config.CONFIG_PERMS)
+        if config_dict:
+            os2.save_json(config_dict, config.CONFIG_JSON)
+            os.chmod(config.CONFIG_JSON, config.CONFIG_PERMS)
 
 
     def default_set_config(self, config_dict):
@@ -66,7 +68,7 @@ class Configure(CommandBase):
                 "Additional whitelist item (or leave empty): "))
         del region_whitelist[-1]
 
-        # Only change key value(s) if non-empty string(s) given.
+        # Only modify key value(s) if non-empty string(s) given.
         if iam_id:
             config_dict['iam_id'] = iam_id
         if iam_secret:
@@ -111,4 +113,10 @@ class Configure(CommandBase):
         cmd_parser = super().add_documentation(argparse_obj)
         cmd_parser.add_argument(
             "--swap_user", metavar="",
-            help="swap primary access key in config")
+            help="swap default access key in config")
+
+
+    def blocked_actions(self, kwargs):
+        if kwargs['swap_user'] is not None:
+            return verify_perms.blocked(actions=["iam:GetAccessKeyLastUsed"])
+        return []

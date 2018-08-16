@@ -51,8 +51,16 @@ class DeleteUser(CommandBase):
                 UserName=user_name
             )
 
+        user_policies = iam_client.list_attached_user_policies(
+            UserName=user_name)['AttachedPolicies']
+        for user_policy in user_policies:
+            iam_client.detach_user_policy(
+                UserName=user_name,
+                PolicyArn=user_policy['PolicyArn']
+            )
+
         iam_client.delete_user(UserName=user_name)
-        
+
         print("")
         print(f"IAM user \"{user_name}\" deleted from AWS.")
 
@@ -70,5 +78,7 @@ class DeleteUser(CommandBase):
             "iam:DeleteAccessKey",
             "iam:ListGroupsForUser",
             "iam:RemoveUserFromGroup",
+            "iam:ListAttachedUserPolicies",
+            "iam:DetachUserPolicy",
             "iam:DeleteUser"
         ])

@@ -11,9 +11,6 @@ from ec2mc.utils import halt
 from ec2mc.utils import os2
 from ec2mc.verify import verify_perms
 
-import pprint
-pp = pprint.PrettyPrinter(indent=2)
-
 class CreateServer(CommandBase):
 
     def main(self, kwargs):

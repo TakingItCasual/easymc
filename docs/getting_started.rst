@@ -26,9 +26,11 @@ To create the necessary AWS account, visit https://aws.amazon.com/.
 
 This script requires an AWS IAM user access key to interact with your account.
 To set up your AWS account, a temporary IAM user is needed.
-To create the IAM user, visit your `IAM Management Console`_ and create a new user.
+To create the temporary IAM user, visit your `IAM Management Console`_ and create a new user.
 
-In step 1, give the IAM user a name, and enable "Programmatic access" for "Access type".
+Please note that the AdministratorAccess policy given to the temporary IAM user is potentially dangerous (AWS provides some very expensive services (>$10,000/day)), so the user should be deleted after creating another IAM user with the script.
+
+In step 1, name the IAM user, and enable "Programmatic access" for "Access type".
 In step 2, switch to "Attach existing policies directly" and enable "AdministratorAccess".
 Create the user.
 Keep the page that loads open for the next step.
@@ -48,19 +50,57 @@ Upload the default AWS setup included with the script with the following command
 
     ec2mc aws_setup upload
 
-(To make changes to the setup to be uploaded to AWS, see Customization_.)
+(For an explanation of what is uploaded to AWS, and how it can be customized, see Customization_.)
 
-The administrator access given to the temporary IAM user is potentially dangerous (services could be enabled that cost tens of thousands a day), so create a (WIP...)
+Create an IAM user under the setup_users IAM group (e.g. with the name "Bob") with the script::
+
+    ec2mc user create Bob setup_users --default
+
+(The --default argument sets the new user's access key as the script's default access key.)
+
+The temporary IAM user should then be deleted either from the `IAM management console`_, or with the script::
+
+    ec2mc user delete <name of temporary IAM user>
 
 Server Creation
 ---------------
 
-(WIP)
+Please note that AWS refers to the servers they provide as "instances".
+AWS EC2 On-Demand instances (cloud servers) can be turned on and off at will, and you will only be charged for the time they're turned on (see Costs_).
+
+Server IP Persistence
+~~~~~~~~~~~~~~~~~~~~~
+
+By default, the script creates an instance which changes its IP address every time it is turned on, as this is the cheaper option (see Costs_).
+To maintain a constant IP address for an instance over its existence, append the --elastic_ip argument to the instance creation command.
+
+The script contains functionality to automatically update the local Minecraft client's server list with the current IP(s) of AWS instance(s).
+The path for the Minecraft client's servers.dat just needs to be specified in the config, and the server list will be updated whenever either of the two following script commands are run::
+
+    ec2mc servers check
+    ec2mc servers start
+
+You could create a Minecraft shortcut that automatically runs the check command, to eliminate the need to manually update IPs in the Minecraft client server list each time an instance is turned on.
+
+Creating The Server
+~~~~~~~~~~~~~~~~~~~
+
+The script includes a template for creating a Minecraft 1.13 vanilla server.
+You must specify an `AWS Region`_ to place the instance in (ideally, the one closest to you).
+Create the instance (e.g. in the London region)::
+
+    ec2mc server create mc_template eu-west-2 server_name_goes_here
+
+(A template for a modded server is also included: "cnb_template". See Customization_ for how to make your own template.)
 
 
 .. _IAM Management Console: https://console.aws.amazon.com/iam/home#/users
 
 .. _Customization: https://github.com/TakingItCasual/ec2mc/blob/master/docs/customization.rst
+
+.. _Costs: https://github.com/TakingItCasual/ec2mc/blob/master/docs/costs.rst
+
+.. _AWS Region: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-regions-availability-zones.html#concepts-available-regions
 
 .. |PyPI Version| image:: https://raw.githubusercontent.com/TakingItCasual/ec2mc/master/docs/images/pypi-v0.1.3-orange.svg?sanitize=true
    :target: https://pypi.org/project/ec2mc/

@@ -50,10 +50,6 @@ def main():
         schema = os2.get_json_schema("server_titles")
         os2.validate_dict(server_titles_dict, schema, "server_titles.json")
 
-    if config.SERVERS_DAT is None:
-        print("Config doesn't have a valid path for MC client's servers.dat.")
-        print("  The Minecraft client's server list will not be updated.")
-        print("")
     print(f"Access key verified as IAM user \"{config.IAM_NAME}\".")
 
 
@@ -101,8 +97,11 @@ def verify_user(config_dict):
             halt.assert_empty(["iam:SimulatePrincipalPolicy"])
         halt.err(str(e))
 
-    # Verify IAM user can use ec2:DescribeRegions action.
-    halt.assert_empty(verify_perms.blocked(actions=["ec2:DescribeRegions"]))
+    # Verify IAM user can use other basic permissions needed for the script
+    halt.assert_empty(verify_perms.blocked(actions=[
+        "ec2:DescribeRegions",
+        "iam:GetAccessKeyLastUsed"
+    ]))
 
 
 def create_config_from_credentials_csv(file_path):

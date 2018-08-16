@@ -47,7 +47,7 @@ class SSHKeyPairSetup(ComponentSetup):
                 print("Warning: Local key fingerprint doesn't match any "
                     "EC2 key pair.")
         elif aws_fingerprints:
-            print("Warning: No local key found, despite existance of "
+            print("Warning: No local key found, despite existence of "
                 "EC2 key pair(s).")
 
 

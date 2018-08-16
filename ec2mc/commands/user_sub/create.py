@@ -69,11 +69,11 @@ class CreateUser(CommandBase):
             })
             os2.save_json(config_dict, config.CONFIG_JSON)
 
-            #self.create_configuration_zip(new_access_key)
+            #self.create_configuration_zip(new_access_key, kwargs['ssh_key'])
             #print("  User's zipped config folder created in config.")
 
 
-    def create_configuration_zip(self, new_access_key):
+    def create_configuration_zip(self, new_access_key, give_ssh_key):
         """create zipped config folder containing new IAM user access key"""
         new_config = {
             'iam_id': new_access_key['AccessKeyId'],
@@ -87,7 +87,7 @@ class CreateUser(CommandBase):
             shutil.rmtree(temp_dir)
         os.mkdir(temp_dir)
 
-        if kwargs['ssh_key']:
+        if give_ssh_key is True:
             pass
 
 
