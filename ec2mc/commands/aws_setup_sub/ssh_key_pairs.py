@@ -1,13 +1,10 @@
-import os
-import hashlib
-from cryptography.hazmat.backends import default_backend
-from cryptography.hazmat.primitives import serialization
-from cryptography.hazmat.primitives.asymmetric import rsa
+import os.path
 
 from ec2mc import config
 from ec2mc.commands.base_classes import ComponentSetup
 from ec2mc.utils import aws
 from ec2mc.utils import halt
+from ec2mc.utils import pem
 from ec2mc.utils.threader import Threader
 
 class SSHKeyPairSetup(ComponentSetup):
@@ -38,11 +35,11 @@ class SSHKeyPairSetup(ComponentSetup):
         print(f"EC2 key pair {self.key_pair_name} exists in {existing} of "
             f"{total_regions} AWS regions.")
 
+        # TODO: Redo this whole section
         if len(set(aws_fingerprints)) > 1:
             print("Warning: Differing EC2 key pairs found.")
         if os.path.isfile(config.RSA_PRIV_KEY_PEM) and aws_fingerprints:
-            with open(config.RSA_PRIV_KEY_PEM, encoding="utf-8") as f:
-                local_key_fingerprint = public_key_fingerprint(f.read())
+            local_key_fingerprint = pem.local_key_fingerprint()
             if local_key_fingerprint not in aws_fingerprints:
                 print("Warning: Local key fingerprint doesn't match any "
                     "EC2 key pair.")
@@ -61,14 +58,10 @@ class SSHKeyPairSetup(ComponentSetup):
             if fp is not None]
 
         if os.path.isfile(config.RSA_PRIV_KEY_PEM):
-            with open(config.RSA_PRIV_KEY_PEM, encoding="utf-8") as f:
-                priv_key_str = f.read()
-            pub_key_bytes = pem_to_public_key(priv_key_str)
+            pub_key_bytes = pem.pem_to_public_key()
         # If SSH key pair doesn't exist in any regions, create a new one
         elif not aws_fingerprints:
-            priv_key_str, pub_key_bytes = generate_rsa_key_pair()
-            with open(config.RSA_PRIV_KEY_PEM, "w", encoding="utf-8") as f:
-                f.write(priv_key_str)
+            pub_key_bytes = pem.generate_rsa_key_pair()
         # No private key file, and there are existing EC2 key pairs
         else:
             halt.err(f"RSA private key file {self.pem_file} not found.",
@@ -76,7 +69,7 @@ class SSHKeyPairSetup(ComponentSetup):
 
         if len(set(aws_fingerprints)) > 1:
             print("Warning: Differing EC2 key pairs found.")
-        local_key_fingerprint = public_key_fingerprint(priv_key_str)
+        local_key_fingerprint = pem.local_key_fingerprint()
         if local_key_fingerprint not in aws_fingerprints and aws_fingerprints:
             halt.err("Local key fingerprint doesn't match any EC2 key pair.")
 
@@ -141,63 +134,3 @@ class SSHKeyPairSetup(ComponentSetup):
         self.upload_actions = ["ec2:ImportKeyPair"]
         self.delete_actions = ["ec2:DeleteKeyPair"]
         return super().blocked_actions(sub_command)
-
-
-def generate_rsa_key_pair():
-    """generate and return RSA private/public key pair
-
-    Returns:
-        tuple:
-            str: Private key string
-            bytes: Public key bytes
-    """
-    # Generate private/public key pair
-    key = rsa.generate_private_key(
-        public_exponent=65537,
-        key_size=2048,
-        backend=default_backend()
-    )
-
-    # Get private key in PEM container format
-    private_key_str = key.private_bytes(
-        encoding=serialization.Encoding.PEM,
-        format=serialization.PrivateFormat.TraditionalOpenSSL,
-        encryption_algorithm=serialization.NoEncryption()
-    ).decode("utf-8")
-
-    # Get public key in OpenSSH format
-    public_key_bytes = key.public_key().public_bytes(
-        serialization.Encoding.OpenSSH,
-        serialization.PublicFormat.OpenSSH
-    )
-
-    return (private_key_str, public_key_bytes)
-
-
-def pem_to_public_key(pem_str, der_encoded=False):
-    """convert pem RSA private key string to public key bytes"""
-    try:
-        private_key = serialization.load_pem_private_key(
-            pem_str.encode("utf-8"),
-            password=None,
-            backend=default_backend()
-        )
-    except ValueError:
-        halt.err(f"{config.RSA_PRIV_KEY_PEM} not a valid RSA private key.")
-
-    if der_encoded is True:
-        return private_key.public_key().public_bytes(
-            serialization.Encoding.DER,
-            serialization.PublicFormat.SubjectPublicKeyInfo
-        )
-    return private_key.public_key().public_bytes(
-        serialization.Encoding.OpenSSH,
-        serialization.PublicFormat.OpenSSH
-    )
-
-
-def public_key_fingerprint(pem_str):
-    """get private key's public key's fingerprint in AWS's format"""
-    public_key_der_bytes = pem_to_public_key(pem_str, der_encoded=True)
-    md5_digest = hashlib.md5(public_key_der_bytes).hexdigest()
-    return ":".join(a + b for a, b in zip(md5_digest[::2], md5_digest[1::2]))

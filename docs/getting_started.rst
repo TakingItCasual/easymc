@@ -44,7 +44,7 @@ To verify the previous steps, attempt to use the following command again::
 
     ec2mc servers check
 
-If the previous steps were successfully completed, the script will output a "access key verified" notification.
+If the previous steps were done correctly, the script will output a "access key verified" notification.
 
 Upload the default AWS setup included with the script with the following command::
 
@@ -58,20 +58,18 @@ Create an IAM user under the setup_users IAM group (e.g. with the name "Bob") wi
 
 (The --default argument sets the new user's access key as the script's default access key.)
 
-The temporary IAM user should then be deleted either from the `IAM management console`_, or with the script::
-
-    ec2mc user delete <name of temporary IAM user>
+The temporary IAM user should then be deleted from your `IAM Management Console`_.
 
 Server Creation
 ---------------
 
 Please note that AWS refers to the servers they provide as "instances".
-AWS EC2 On-Demand instances (cloud servers) can be turned on and off at will, and you will only be charged for the time they're turned on (see Costs_).
+AWS EC2 On-Demand instances (the cloud servers) can be turned on and off at will, and you will only be charged for the time they're turned on (see Costs_).
 
 Server IP Persistence
 ~~~~~~~~~~~~~~~~~~~~~
 
-By default, the script creates an instance which changes its IP address every time it is turned on, as this is the cheaper option (see Costs_).
+By default, the script creates an instance which changes its IP address after every reboot, as this is the cheaper option (see Costs_).
 To maintain a constant IP address for an instance over its existence, append the --elastic_ip argument to the instance creation command.
 
 The script contains functionality to automatically update the local Minecraft client's server list with the current IP(s) of AWS instance(s).
@@ -80,7 +78,7 @@ The path for the Minecraft client's servers.dat just needs to be specified in th
     ec2mc servers check
     ec2mc servers start
 
-You could create a Minecraft shortcut that automatically runs the check command, to eliminate the need to manually update IPs in the Minecraft client server list each time an instance is turned on.
+You could create a Minecraft shortcut that automatically runs the check command, to eliminate the need to manually update an IP in the Minecraft client's server list each time an instance is rebooted.
 
 Creating The Server
 ~~~~~~~~~~~~~~~~~~~
@@ -90,6 +88,10 @@ You must specify an `AWS Region`_ to place the instance in (ideally, the one clo
 Create the instance (e.g. in the London region)::
 
     ec2mc server create mc_template eu-west-2 server_name_goes_here
+
+Or if a persistent IP address is desired::
+
+    ec2mc server create mc_template eu-west-2 server_name_goes_here --elastic_ip
 
 (A template for a modded server is also included: "cnb_template". See Customization_ for how to make your own template.)
 

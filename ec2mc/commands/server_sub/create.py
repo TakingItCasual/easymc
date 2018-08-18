@@ -1,4 +1,4 @@
-import os
+import os.path
 import base64
 from time import sleep
 from ruamel import yaml
@@ -9,6 +9,7 @@ from ec2mc.commands.base_classes import CommandBase
 from ec2mc.utils import aws
 from ec2mc.utils import halt
 from ec2mc.utils import os2
+from ec2mc.utils import pem
 from ec2mc.verify import verify_perms
 
 class CreateServer(CommandBase):
@@ -50,24 +51,22 @@ class CreateServer(CommandBase):
             if not e.response['Error']['Code'] == "DryRunOperation":
                 halt.err(str(e))
 
-        # Actual instance creation occurs after this confirmation.
-        if kwargs['confirm'] is False:
-            print("")
-            print("Specified instance creation args verified as permitted.")
-            halt.q("Please append the -c argument to confirm.")
-
         print("")
-        instance = self.create_instance(
-            creation_kwargs, user_data, dry_run=False)['Instances'][0]
-        print("Instance created.")
+        if kwargs['confirm'] is False:
+            print("Specified instance creation args verified as permitted.")
+            print("Please append the -c argument to confirm.")
+        else:
+            instance = self.create_instance(
+                creation_kwargs, user_data, dry_run=False)['Instances'][0]
+            print("Instance created.")
 
-        if kwargs['elastic_ip'] is True:
-            halt.assert_empty(verify_perms.blocked(actions=[
-                "ec2:AllocateAddress",
-                "ec2:AssociateAddress"
-            ]))
-            self.create_and_associate_elastic_ip(instance['InstanceId'])
-            print("New elastic IP associated with created instance.")
+            if kwargs['elastic_ip'] is True:
+                halt.assert_empty(verify_perms.blocked(actions=[
+                    "ec2:AllocateAddress",
+                    "ec2:AssociateAddress"
+                ]))
+                self.create_and_associate_elastic_ip(instance['InstanceId'])
+                print("New elastic IP associated with created instance.")
 
 
     def parse_run_instance_args(self, kwargs, instance_template):
@@ -111,14 +110,16 @@ class CreateServer(CommandBase):
             'volume_size': instance_template['volume_size']
         })
 
-        creation_kwargs['tags'] = [{
-            'Key': "Name",
-            'Value': kwargs['name']
-        }]
-        creation_kwargs['tags'].append({
-            'Key': "DefaultUser",
-            'Value': instance_template['AMI_info']['default_user']
-        })
+        creation_kwargs['tags'] = [
+            {
+                'Key': "Name",
+                'Value': kwargs['name']
+            },
+            {
+                'Key': "DefaultUser",
+                'Value': instance_template['AMI_info']['default_user']
+            }
+        ]
         if kwargs['tags']:
             for tag_key, tag_value in kwargs['tags']:
                 creation_kwargs['tags'].append({
@@ -147,15 +148,20 @@ class CreateServer(CommandBase):
             'Values': [config.NAMESPACE]
         }])['KeyPairs']
         if not ec2_key_pairs:
-            halt.err(f"EC2 key pair {config.NAMESPACE} not found.",
+            halt.err(f"EC2 key pair {config.NAMESPACE} not found from AWS.",
                 "  Have you uploaded the AWS setup?")
+        if not os.path.isfile(config.RSA_PRIV_KEY_PEM):
+            rsa_key_file = os.path.basename(config.RSA_PRIV_KEY_PEM)
+            halt.err(f"{rsa_key_file} not found from config.")
+        if pem.local_key_fingerprint() != ec2_key_pairs[0]['KeyFingerprint']:
+            halt.err("Local RSA key fingerprint doesn't match EC2 key pair's.")
         creation_kwargs['key_name'] = ec2_key_pairs[0]['KeyName']
 
         return creation_kwargs
 
 
     def process_user_data(self, template_name, template):
-        """add b64 bash scripts to config's user_data write_files
+        """add b64 template files to user_data's write_files
 
         Args:
             template_name (str): Name of the YAML instance template.
