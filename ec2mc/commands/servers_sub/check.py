@@ -2,8 +2,8 @@ from ec2mc import config
 from ec2mc.commands.base_classes import CommandBase
 from ec2mc.stuff import manage_titles
 from ec2mc.utils import aws
-from ec2mc.verify import verify_instances
-from ec2mc.verify import verify_perms
+from ec2mc.validate import validate_instances
+from ec2mc.validate import validate_perms
 
 class CheckServer(CommandBase):
 
@@ -11,9 +11,9 @@ class CheckServer(CommandBase):
         """check instance status(es) & update client's server list
 
         Args:
-            kwargs (dict): See verify.verify_instances:argparse_args
+            kwargs (dict): See validate.validate_instances:argparse_args
         """
-        instances = verify_instances.main(kwargs)
+        instances = validate_instances.main(kwargs)
 
         for instance in instances:
             print("")
@@ -41,11 +41,11 @@ class CheckServer(CommandBase):
 
     def add_documentation(self, argparse_obj):
         cmd_parser = super().add_documentation(argparse_obj)
-        verify_instances.argparse_args(cmd_parser)
+        validate_instances.argparse_args(cmd_parser)
 
 
     def blocked_actions(self):
-        return verify_perms.blocked(actions=[
+        return validate_perms.blocked(actions=[
             "ec2:DescribeRegions",
             "ec2:DescribeInstances"
         ])

@@ -4,6 +4,7 @@ from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 
 from ec2mc import config
+from ec2mc.utils import halt
 
 def generate_rsa_key_pair():
     """generate RSA private/public key pair, save private, return public

@@ -153,7 +153,7 @@ def parse_filters(kwargs):
     regions = aws.get_regions()
     if kwargs['region_filter'] is not None:
         region_filter = set(kwargs['region_filter'])
-        # Verify region filter is valid
+        # Validate region filter
         if not region_filter.issubset(set(regions)):
             halt.err("Following invalid region(s) specified:",
                 *(region_filter - set(regions)))
@@ -185,7 +185,7 @@ def parse_filters(kwargs):
 
 
 def argparse_args(cmd_parser):
-    """initialize arguments for argparse that verify_instances:main needs"""
+    """initialize argparse arguments that validate_instances:main expects"""
     cmd_parser.add_argument(
         "-r", dest="region_filter", nargs="+", metavar="",
         help=("AWS region(s) to probe for instances. If not set, all regions "

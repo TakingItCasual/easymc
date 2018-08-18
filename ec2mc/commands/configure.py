@@ -5,13 +5,13 @@ from ec2mc.commands.base_classes import CommandBase
 from ec2mc.utils import aws
 from ec2mc.utils import halt
 from ec2mc.utils import os2
-from ec2mc.verify import verify_perms
+from ec2mc.validate import validate_perms
 
 class Configure(CommandBase):
 
     def main(self, kwargs):
         """set IAM access key, servers.dat path, and region whitelist"""
-        # verify_config:main normally does this, but it wasn't called.
+        # validate_config:main normally does this, but it wasn't called.
         if not os.path.isdir(config.CONFIG_DIR):
             os.mkdir(config.CONFIG_DIR)
 
@@ -88,7 +88,7 @@ class Configure(CommandBase):
             halt.err("No backup access keys stored in config.")
 
         for index, access_key in enumerate(config_dict['iam_access_keys']):
-            # TODO: Verify access key is active
+            # TODO: Validate access key is active
             if aws.access_key_owner(access_key['iam_id']) == user_name:
                 # Swap default access key with requested IAM user's in config
                 config_dict['iam_access_keys'].append({
@@ -118,5 +118,5 @@ class Configure(CommandBase):
 
     def blocked_actions(self, kwargs):
         if kwargs['swap_user'] is not None:
-            return verify_perms.blocked(actions=["iam:GetAccessKeyLastUsed"])
+            return validate_perms.blocked(actions=["iam:GetAccessKeyLastUsed"])
         return []

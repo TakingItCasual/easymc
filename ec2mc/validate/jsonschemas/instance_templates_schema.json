@@ -7,15 +7,13 @@
                 "AMI_info": {
                     "type": "object",
                     "properties": {
-                        "AMI_ID": {"type" : "string"},
-                        "device_name": {"type" : "string"},
+                        "AMI_name": {"type" : "string"},
                         "default_user": {"type" : "string"}
                     },
-                    "required": ["AMI_ID", "device_name", "default_user"]
+                    "required": ["AMI_name", "default_user"]
                 },
                 "instance_type": {"type": "string"},
                 "volume_size": {"type": "integer"},
-                "elastic_address": {"type": "boolean"},
                 "security_groups": {
                     "type" : "array",
                     "items": {"type": "string"},
@@ -45,7 +43,6 @@
                 "AMI_info",
                 "instance_type",
                 "volume_size",
-                "elastic_address",
                 "security_groups"
             ]
         }

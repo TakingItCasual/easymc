@@ -8,7 +8,7 @@ from ec2mc.commands.base_classes import CommandBase
 from ec2mc.utils import aws
 from ec2mc.utils import halt
 from ec2mc.utils import os2
-from ec2mc.verify import verify_perms
+from ec2mc.validate import validate_perms
 
 class CreateUser(CommandBase):
 
@@ -17,7 +17,7 @@ class CreateUser(CommandBase):
         iam_client = aws.iam_client()
         path_prefix = f"/{config.NAMESPACE}/"
 
-        # Specified IAM group verified to exist
+        # Validate specified IAM group exists
         iam_groups = iam_client.list_groups(PathPrefix=path_prefix)['Groups']
         for iam_group in iam_groups:
             if (iam_group['Path'] == path_prefix and
@@ -106,7 +106,7 @@ class CreateUser(CommandBase):
 
 
     def blocked_actions(self):
-        return verify_perms.blocked(actions=[
+        return validate_perms.blocked(actions=[
             "iam:ListGroups",
             "iam:CreateUser",
             "iam:AddUserToGroup",

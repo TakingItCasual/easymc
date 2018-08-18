@@ -9,7 +9,7 @@ from ec2mc.utils.threader import Threader
 
 class SSHKeyPairSetup(ComponentSetup):
 
-    def verify_component(self, _):
+    def check_component(self, _):
         """determine which regions need Namespace RSA key pairs created
 
         Returns:
@@ -52,7 +52,7 @@ class SSHKeyPairSetup(ComponentSetup):
         """create Namespace RSA key pairs in all AWS regions
 
         Args:
-            fingerprint_regions (dict): See what verify_component returns.
+            fingerprint_regions (dict): See what check_component returns.
         """
         aws_fingerprints = [fp for fp in fingerprint_regions.values()
             if fp is not None]

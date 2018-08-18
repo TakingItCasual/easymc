@@ -6,9 +6,9 @@ from ec2mc import config
 from ec2mc.utils import os2
 from ec2mc.utils import halt
 
-# TODO: Verify appropriate stuff against AWS, rather than local setup
+# TODO: Validate appropriate stuff against AWS, rather than local setup
 def main():
-    """verify contents of user's config's aws_setup directory"""
+    """validate contents of user's config's aws_setup directory"""
     # Directory path for distribution's packaged aws_setup
     src_aws_setup_dir = os.path.join(f"{config.DIST_DIR}aws_setup_src", "")
 
@@ -33,14 +33,14 @@ def main():
             cp_aws_setup_to_config(src_aws_setup_dir)
             config_aws_setup = get_config_aws_setup_dict()
 
-    verify_aws_setup(config_aws_setup)
-    verify_instance_templates(config_aws_setup)
+    validate_aws_setup(config_aws_setup)
+    validate_instance_templates(config_aws_setup)
 
     config.NAMESPACE = config_aws_setup['Namespace']
     config.RSA_PRIV_KEY_PEM = f"{config.CONFIG_DIR}{config.NAMESPACE}.pem"
 
-    verify_iam_policies(config_aws_setup)
-    verify_vpc_security_groups(config_aws_setup)
+    validate_iam_policies(config_aws_setup)
+    validate_vpc_security_groups(config_aws_setup)
 
 
 def get_config_aws_setup_dict():
@@ -58,8 +58,8 @@ def cp_aws_setup_to_config(src_aws_setup_dir):
     shutil.copytree(src_aws_setup_dir, config.AWS_SETUP_DIR)
 
 
-def verify_aws_setup(config_aws_setup):
-    """verify config's aws_setup.json"""
+def validate_aws_setup(config_aws_setup):
+    """validate config's aws_setup.json"""
     schema = os2.get_json_schema("aws_setup")
     os2.validate_dict(config_aws_setup, schema, "aws_setup.json")
 
@@ -75,8 +75,8 @@ def verify_aws_setup(config_aws_setup):
             "VPC security group names must be unique.")
 
 
-def verify_instance_templates(config_aws_setup):
-    """verify config aws_setup user_data YAML instance templates"""
+def validate_instance_templates(config_aws_setup):
+    """validate config aws_setup user_data YAML instance templates"""
     template_yaml_files = os2.list_dir_files(config.USER_DATA_DIR, ext=".yaml")
 
     schema = os2.get_json_schema("instance_templates")
@@ -87,7 +87,7 @@ def verify_instance_templates(config_aws_setup):
         os2.validate_dict(user_data, schema, template_yaml_file)
 
         template_info = user_data['ec2mc_template_info']
-        # Verify template security group(s) also described in aws_setup.json
+        # Validate template security group(s) also described in aws_setup.json
         for security_group in template_info['security_groups']:
             if security_group not in sg_names:
                 halt.err(f"{template_yaml_file} incorrectly formatted:",
@@ -96,25 +96,24 @@ def verify_instance_templates(config_aws_setup):
         template_name = os.path.splitext(template_yaml_file)[0]
         template_dir = os.path.join(
             f"{config.USER_DATA_DIR}{template_name}", "")
-        # If write_directories not empty, verify template directory exists
+        # If write_directories not empty, validate template directory exists
         if not os.path.isdir(template_dir):
             if ('write_directories' in template_info
                     and template_info['write_directories']):
-                halt.err(f"{template_name} template directory not found.")
-        # Verify existence of write_directories subdir(s) in template directory
+                halt.err(f"{template_name} template's directory not found.")
+        # Validate template's subdirectories exist
         else:
-            # TODO: Be more specific about missing subdirectories
             template_subdirs = os2.list_dir_dirs(template_dir)
             if 'write_directories' in template_info:
                 for write_dir in template_info['write_directories']:
                     if write_dir['local_dir'] not in template_subdirs:
-                        halt.err(f"{write_dir['local_dir']} subdirectory not "
-                            "found from user_data.")
-    # write_files path uniqueness verified in create:process_user_data
+                        halt.err(f"{template_name} template's "
+                            f"{write_dir['local_dir']} subdir not found.")
+    # write_files path uniqueness validated in create:process_user_data
 
 
-def verify_iam_policies(config_aws_setup):
-    """verify aws_setup.json reflects contents of iam_policies dir"""
+def validate_iam_policies(config_aws_setup):
+    """validate aws_setup.json reflects contents of iam_policies dir"""
     policy_dir = os.path.join(f"{config.AWS_SETUP_DIR}iam_policies", "")
 
     # Policies described in aws_setup/aws_setup.json
@@ -136,8 +135,8 @@ def verify_iam_policies(config_aws_setup):
         )
 
 
-def verify_vpc_security_groups(config_aws_setup):
-    """verify aws_setup.json reflects contents of vpc_security_groups dir"""
+def validate_vpc_security_groups(config_aws_setup):
+    """validate aws_setup.json reflects contents of vpc_security_groups dir"""
     sg_dir = os.path.join(f"{config.AWS_SETUP_DIR}vpc_security_groups", "")
 
     # SGs described in aws_setup/aws_setup.json
@@ -161,7 +160,7 @@ def verify_vpc_security_groups(config_aws_setup):
 
 
 def unique_names(dict_list):
-    """verify each Name key value is unique within list of dicts"""
+    """validate each Name key value is unique within list of dicts"""
     names = [list_dict['Name'] for list_dict in dict_list]
     if len(names) != len(set(names)):
         return False

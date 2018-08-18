@@ -5,10 +5,10 @@ from ec2mc import config
 from ec2mc.utils import aws
 from ec2mc.utils import halt
 from ec2mc.utils import os2
-from ec2mc.verify import verify_perms
+from ec2mc.validate import validate_perms
 
 def main():
-    """verifies existence of config file, as well as each key's value"""
+    """validates existence of config file, as well as each key's value"""
     # If config directory doesn't already exist, create it.
     if not os.path.isdir(config.CONFIG_DIR):
         os.mkdir(config.CONFIG_DIR)
@@ -24,7 +24,7 @@ def main():
         create_config_from_credentials_csv(credentials_csv)
     config_dict = os2.parse_json(config.CONFIG_JSON)
 
-    # Verify config.json adheres to its schema.
+    # Validate config.json adheres to its schema.
     schema = os2.get_json_schema("config")
     os2.validate_dict(config_dict, schema, "config.json")
 
@@ -34,30 +34,30 @@ def main():
         if os.path.isfile(servers_dat) and servers_dat.endswith("servers.dat"):
             config.SERVERS_DAT = servers_dat
 
-    # Verify config's IAM user access key.
-    verify_user(config_dict)
+    # Validate config's IAM user access key.
+    validate_user(config_dict)
 
-    # Verify config's region whitelist is valid.
+    # Validate config's region whitelist is valid.
     if 'region_whitelist' in config_dict and config_dict['region_whitelist']:
         config.REGION_WHITELIST = tuple(config_dict['region_whitelist'])
         if len(aws.get_regions()) != len(config.REGION_WHITELIST):
             halt.err("Following invalid region(s) in config whitelist:",
                 *(set(config.REGION_WHITELIST) - set(aws.get_regions())))
 
-    # Verify server_titles.json adheres to its schema.
+    # Validate server_titles.json adheres to its schema.
     if os.path.isfile(config.SERVER_TITLES_JSON):
         server_titles_dict = os2.parse_json(config.SERVER_TITLES_JSON)
         schema = os2.get_json_schema("server_titles")
         os2.validate_dict(server_titles_dict, schema, "server_titles.json")
 
-    print(f"Access key verified as IAM user \"{config.IAM_NAME}\".")
+    print(f"Access key validated as IAM user \"{config.IAM_NAME}\".")
 
 
-def verify_user(config_dict):
-    """verify config's IAM user access key and minimal permissions
+def validate_user(config_dict):
+    """validate config's IAM user access key and minimal permissions
 
     iam:GetUser, iam:SimulatePrincipalPolicy, and ec2:DescribeRegions 
-    permissions required for successful verification.
+    permissions required for successful validation.
 
     Args:
         config_dict (dict): Should contain config's IAM user access key.
@@ -72,7 +72,7 @@ def verify_user(config_dict):
     config.IAM_ID = config_dict['iam_id']
     config.IAM_SECRET = config_dict['iam_secret']
 
-    # IAM User must be validated before permission verification can be done.
+    # IAM User access key must be validated before validate_perms can be used.
     try:
         iam_user = aws.iam_client().get_user()['User']
     except ClientError as e:
@@ -89,16 +89,16 @@ def verify_user(config_dict):
     config.IAM_ARN = iam_user['Arn']
     config.IAM_NAME = iam_user['UserName']
 
-    # Verify IAM user can use iam:SimulatePrincipalPolicy action.
+    # Validate IAM user can use iam:SimulatePrincipalPolicy action.
     try:
-        verify_perms.blocked(actions=["iam:GetUser"])
+        validate_perms.blocked(actions=["iam:GetUser"])
     except ClientError as e:
         if e.response['Error']['Code'] == "AccessDenied":
             halt.assert_empty(["iam:SimulatePrincipalPolicy"])
         halt.err(str(e))
 
-    # Verify IAM user can use other basic permissions needed for the script
-    halt.assert_empty(verify_perms.blocked(actions=[
+    # Validate IAM user can use other basic permissions needed for the script
+    halt.assert_empty(validate_perms.blocked(actions=[
         "ec2:DescribeRegions",
         "iam:GetAccessKeyLastUsed"
     ]))

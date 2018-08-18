@@ -22,8 +22,8 @@ def list_dir_dirs(target_dir):
 
 
 def get_json_schema(schema_name):
-    """return schema from ec2mc.verify.jsonschemas as dictionary"""
-    return parse_json(os.path.join((f"{config.DIST_DIR}verify"),
+    """return schema from ec2mc.validate.jsonschemas as dictionary"""
+    return parse_json(os.path.join(f"{config.DIST_DIR}validate",
         "jsonschemas", f"{schema_name}_schema.json"))
 
 
@@ -36,7 +36,7 @@ def validate_dict(input_dict, schema_dict, input_dict_source):
 
 
 def parse_json(file_path):
-    """verify that JSON file exists and contains valid JSON"""
+    """validate JSON file exists and contains valid JSON"""
     if not os.path.isfile(file_path):
         halt.err(f"{file_path} not found.")
     with open(file_path, encoding="utf-8") as f:
@@ -54,7 +54,7 @@ def save_json(input_dict, file_path):
 
 
 def parse_yaml(file_path):
-    """verify that YAML file exists and contains valid YAML"""
+    """validate YAML file exists and contains valid YAML"""
     if not os.path.isfile(file_path):
         halt.err(f"{file_path} not found.")
     with open(file_path, encoding="utf-8") as f:

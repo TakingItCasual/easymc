@@ -2,7 +2,7 @@
 
 from abc import ABC, abstractmethod
 
-from ec2mc.verify import verify_perms
+from ec2mc.validate import validate_perms
 
 class CommandBase(ABC):
     """base class for most ec2mc command classes to inherit from"""
@@ -61,10 +61,10 @@ class ParentCommand(CommandBase):
 
 
 class ComponentSetup(ABC):
-    """base class for aws_setup component verifying/uploading/deleting"""
+    """base class for aws_setup component checking/uploading/deleting"""
 
     @abstractmethod
-    def verify_component(self, config_aws_setup):
+    def check_component(self, config_aws_setup):
         """check if AWS already has component, and if it is up to date"""
         pass
 
@@ -103,4 +103,4 @@ class ComponentSetup(ABC):
             needed_actions.extend(self.upload_actions)
         elif sub_command == "delete":
             needed_actions.extend(self.delete_actions)
-        return verify_perms.blocked(actions=needed_actions)
+        return validate_perms.blocked(actions=needed_actions)

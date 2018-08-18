@@ -5,7 +5,7 @@ def blocked(actions, resources=None, context=None):
     """test whether IAM user is able to use specified AWS action(s)
 
     Args:
-        actions (list): AWS action(s) to verify the IAM user can use.
+        actions (list): AWS action(s) to validate IAM user can use.
         resources (list): Check if action(s) can be used on resource(s). 
             If None, action(s) must be usable on all resources ("*").
         context (dict): Check if action(s) can be used with context(s). 

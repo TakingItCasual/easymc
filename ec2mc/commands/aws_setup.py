@@ -4,7 +4,7 @@ from ec2mc.utils import aws
 from ec2mc.utils import halt
 from ec2mc.utils import os2
 from ec2mc.utils.threader import Threader
-from ec2mc.verify import verify_perms
+from ec2mc.validate import validate_perms
 
 from ec2mc.commands.aws_setup_sub import iam_policies
 from ec2mc.commands.aws_setup_sub import iam_groups
@@ -32,18 +32,18 @@ class AWSSetup(CommandBase):
         """
         if kwargs['action'] == "delete":
             path_prefix = f"/{config.NAMESPACE}/"
-            if not self.verify_namespace_groups_empty(path_prefix):
+            if not self.namespace_groups_empty(path_prefix):
                 halt.err("IAM User(s) attached to Namespace IAM group(s).")
-            if not self.verify_namespace_policies_empty(path_prefix):
+            if not self.namespace_policies_empty(path_prefix):
                 halt.err("IAM User(s) attached to Namespace IAM policy(s).")
-            if not self.verify_namespace_vpcs_empty():
+            if not self.namespace_vpcs_empty():
                 halt.err("EC2 instance(s) found under Namespace VPC(s).")
 
         # AWS setup JSON config dictionary
         config_aws_setup = os2.parse_json(config.AWS_SETUP_JSON)
 
         for component in self.aws_components:
-            component_info = component.verify_component(config_aws_setup)
+            component_info = component.check_component(config_aws_setup)
             print("")
             if kwargs['action'] == "check":
                 component.notify_state(component_info)
@@ -53,7 +53,7 @@ class AWSSetup(CommandBase):
                 component.delete_component()
 
 
-    def verify_namespace_groups_empty(self, path_prefix):
+    def namespace_groups_empty(self, path_prefix):
         """return False if any users attached to Namespace groups"""
         iam_client = aws.iam_client()
         aws_groups = iam_client.list_groups(PathPrefix=path_prefix)['Groups']
@@ -63,7 +63,7 @@ class AWSSetup(CommandBase):
         return True
 
 
-    def verify_namespace_policies_empty(self, path_prefix):
+    def namespace_policies_empty(self, path_prefix):
         """return False if any users attached to Namespace policies"""
         iam_client = aws.iam_client()
         aws_policies = iam_client.list_policies(
@@ -81,17 +81,17 @@ class AWSSetup(CommandBase):
         return True
 
 
-    def verify_namespace_vpcs_empty(self):
+    def namespace_vpcs_empty(self):
         """return False if any instances within Namespace VPCs found"""
         threader = Threader()
         for region in aws.get_regions():
-            threader.add_thread(self.region_vpc_is_empty, (region,))
+            threader.add_thread(self.region_vpc_empty, (region,))
         if not all(threader.get_results()):
             return False
         return True
 
 
-    def region_vpc_is_empty(self, region):
+    def region_vpc_empty(self, region):
         """return False if any instances found in region's Namespace VPC"""
         ec2_client = aws.ec2_client(region)
         namespace_vpc = aws.get_region_vpc(region)
@@ -120,7 +120,7 @@ class AWSSetup(CommandBase):
     def blocked_actions(self, kwargs):
         denied_actions = []
         if kwargs['action'] == "delete":
-            denied_actions.extend(verify_perms.blocked(actions=[
+            denied_actions.extend(validate_perms.blocked(actions=[
                 "iam:ListGroups",
                 "iam:GetGroup",
                 "iam:ListPolicies",

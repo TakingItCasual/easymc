@@ -7,7 +7,7 @@ from ec2mc.commands.base_classes import CommandBase
 from ec2mc.utils import aws
 from ec2mc.utils import halt
 from ec2mc.utils import os2
-from ec2mc.verify import verify_perms
+from ec2mc.validate import validate_perms
 
 class DeleteUser(CommandBase):
 
@@ -72,7 +72,7 @@ class DeleteUser(CommandBase):
 
 
     def blocked_actions(self):
-        return verify_perms.blocked(actions=[
+        return validate_perms.blocked(actions=[
             "iam:ListUsers",
             "iam:ListAccessKeys",
             "iam:DeleteAccessKey",

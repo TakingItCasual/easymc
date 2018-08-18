@@ -10,7 +10,7 @@ from ec2mc.utils.threader import Threader
 
 class VPCSetup(ComponentSetup):
 
-    def verify_component(self, config_aws_setup):
+    def check_component(self, config_aws_setup):
         """determine statuses for VPC(s) and SG(s) on AWS
 
         Args:
@@ -107,7 +107,7 @@ class VPCSetup(ComponentSetup):
         """create VPC(s) and create/update SG(s) in AWS region(s)
 
         Args:
-            vpc_and_sg_info (dict): See what verify_component returns.
+            vpc_and_sg_info (dict): See what check_component returns.
         """
         vpc_regions, sg_names = vpc_and_sg_info
 

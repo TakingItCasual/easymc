@@ -9,7 +9,7 @@ from ec2mc.utils import os2
 
 class IAMPolicySetup(ComponentSetup):
 
-    def verify_component(self, config_aws_setup):
+    def check_component(self, config_aws_setup):
         """determine which policies need creating/updating, and which don't
 
         Args:
@@ -93,7 +93,7 @@ class IAMPolicySetup(ComponentSetup):
         """create policies on AWS that don't exist, update policies that do
 
         Args:
-            policy_names (dict): See what verify_component returns.
+            policy_names (dict): See what check_component returns.
         """
         for local_policy in policy_names['ToCreate']:
             self.create_policy(local_policy)

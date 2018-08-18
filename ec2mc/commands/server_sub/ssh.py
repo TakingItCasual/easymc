@@ -6,8 +6,8 @@ from ec2mc import config
 from ec2mc.commands.base_classes import CommandBase
 from ec2mc.utils import aws
 from ec2mc.utils import halt
-from ec2mc.verify import verify_instances
-from ec2mc.verify import verify_perms
+from ec2mc.validate import validate_instances
+from ec2mc.validate import validate_perms
 
 class SSHServer(CommandBase):
 
@@ -19,20 +19,20 @@ class SSHServer(CommandBase):
         print out instance's username@hostname.
 
         Args:
-            kwargs (dict): See verify.verify_instances:argparse_args
+            kwargs (dict): See validate.validate_instances:argparse_args
         """
         if os.name != "posix":
             print("")
             print("Notice: This command is not fully implemented for your OS.")
             print("  Interactive SSH session will not be opened.")
 
-        instances = verify_instances.main(kwargs)
+        instances = validate_instances.main(kwargs)
         if len(instances) > 1:
             halt.err("Instance query returned multiple results.",
                 "  Narrow filter(s) so that only one instance is returned.")
         instance = instances[0]
 
-        # Verify RSA private key file exists and set permissions
+        # Validate RSA private key file exists and set permissions
         if not os.path.isfile(config.RSA_PRIV_KEY_PEM):
             halt.err(f"{config.RSA_PRIV_KEY_PEM} not found.",
                 "  Namespace RSA private key PEM file required to SSH.")
@@ -81,11 +81,11 @@ class SSHServer(CommandBase):
 
     def add_documentation(self, argparse_obj):
         cmd_parser = super().add_documentation(argparse_obj)
-        verify_instances.argparse_args(cmd_parser)
+        validate_instances.argparse_args(cmd_parser)
 
 
     def blocked_actions(self):
-        return verify_perms.blocked(actions=[
+        return validate_perms.blocked(actions=[
             "ec2:DescribeRegions",
             "ec2:DescribeInstances"
         ])

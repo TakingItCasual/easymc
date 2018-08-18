@@ -8,8 +8,8 @@ IAM user is a part of.
 import sys
 import argparse
 
-from ec2mc.verify import verify_config
-from ec2mc.verify import verify_setup
+from ec2mc.validate import validate_config
+from ec2mc.validate import validate_setup
 from ec2mc.utils import halt
 
 from ec2mc.commands import configure
@@ -49,15 +49,15 @@ def main(args=None):
         chosen_cmd = next(cmd for cmd in commands
             if cmd.module_name() == kwargs['command'])
 
-        # If basic configuration being done, skip config verification
+        # If basic configuration being done, skip config validation
         if not (chosen_cmd.module_name() == "configure" and
                 kwargs["swap_user"] is None):
-            # Verify config's config.json and server_titles.json
-            verify_config.main()
-            # Verify config's aws_setup.json and YAML instance templates
-            verify_setup.main()
+            # Validate config's config.json and server_titles.json
+            validate_config.main()
+            # Validate config's aws_setup.json and YAML instance templates
+            validate_setup.main()
 
-        # Verify that the IAM user has needed permissions to use the command
+        # Validate IAM user has needed permissions to use the command
         halt.assert_empty(chosen_cmd.blocked_actions(kwargs))
         # Use the command
         chosen_cmd.main(kwargs)

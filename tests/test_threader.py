@@ -29,7 +29,7 @@ def test_threader_fifo():
     assert threader.get_results() == [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
 
 
-def test_threader_add_thread_type_verification():
+def test_threader_add_thread_type_validation():
     """test that add_thread only accepts function and tuple as args 1 and 2"""
     def func(index):
         return index

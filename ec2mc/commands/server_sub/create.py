@@ -10,7 +10,7 @@ from ec2mc.utils import aws
 from ec2mc.utils import halt
 from ec2mc.utils import os2
 from ec2mc.utils import pem
-from ec2mc.verify import verify_perms
+from ec2mc.validate import validate_perms
 
 class CreateServer(CommandBase):
 
@@ -33,10 +33,10 @@ class CreateServer(CommandBase):
         inst_template = os2.parse_yaml(f"{config.USER_DATA_DIR}"
             f"{kwargs['template']}.yaml")['ec2mc_template_info']
 
-        self.verify_type_and_size_allowed(
+        self.validate_type_and_size_allowed(
             inst_template['instance_type'], inst_template['volume_size'])
 
-        # Verify the specified region
+        # Validate specified region
         if kwargs['region'] not in aws.get_regions():
             halt.err(f"{kwargs['region']} is not a valid region.")
         self.ec2_client = aws.ec2_client(kwargs['region'])
@@ -44,7 +44,7 @@ class CreateServer(CommandBase):
         creation_kwargs = self.parse_run_instance_args(kwargs, inst_template)
         user_data = self.process_user_data(kwargs['template'], inst_template)
 
-        # Instance creation dry run to verify IAM permissions
+        # Instance creation dry run to validate template and IAM permissions
         try:
             self.create_instance(creation_kwargs, user_data, dry_run=True)
         except ClientError as e:
@@ -53,7 +53,7 @@ class CreateServer(CommandBase):
 
         print("")
         if kwargs['confirm'] is False:
-            print("Specified instance creation args verified as permitted.")
+            print("Instance template validated.")
             print("Please append the -c argument to confirm.")
         else:
             instance = self.create_instance(
@@ -61,7 +61,7 @@ class CreateServer(CommandBase):
             print("Instance created.")
 
             if kwargs['elastic_ip'] is True:
-                halt.assert_empty(verify_perms.blocked(actions=[
+                halt.assert_empty(validate_perms.blocked(actions=[
                     "ec2:AllocateAddress",
                     "ec2:AssociateAddress"
                 ]))
@@ -79,17 +79,15 @@ class CreateServer(CommandBase):
                 "tags" (list): Additional instance tag key-value pair(s).
             instance_template (dict):
                 "AMI_info" (dict):
-                    "AMI_ID" (str): EC2 AMI (determines instance OS).
-                    "device_name" (str): Device Name for operating system (?).
+                    "AMI_name" (str): EC2 image name (determines instance OS).
                     "default_user" (str): AMI's default user (for SSH).
                 "instance_type" (str): EC2 instance type to create.
                 "volume_size" (int): EC2 instance volume size (GiB).
-                "elastic_address" (bool): Whether to associate elastic IP.
                 "security_groups" (list[str]): VPC SG(s) to assign to instance.
 
         Returns:
             dict: Arguments needed for instance creation.
-                "ec2_ami" (str): EC2 AMI (determines instance OS).
+                "ami_id" (str): EC2 image ID (determines instance OS).
                 "device_name" (str): Device Name for operating system (?).
                 "instance_type" (str): EC2 instance type to create.
                 "volume_size" (int): EC2 instance size (GiB).
@@ -102,12 +100,20 @@ class CreateServer(CommandBase):
         ec2_client = aws.ec2_client(region)
         creation_kwargs = {}
 
-        # TODO: Update template AMI to AWS Linux 2 LTS when it comes out
         creation_kwargs.update({
-            'ec2_ami': instance_template['AMI_info']['AMI_ID'],
-            'device_name': instance_template['AMI_info']['device_name'],
             'instance_type': instance_template['instance_type'],
             'volume_size': instance_template['volume_size']
+        })
+
+        aws_images = ec2_client.describe_images(Filters=[{
+            'Name': "name",
+            'Values': [instance_template['AMI_info']['AMI_name']]
+        }])['Images']
+        if not aws_images:
+            halt.err("Template's AWS image name not found from AWS.")
+        creation_kwargs.update({
+            'ami_id': aws_images[0]['ImageId'],
+            'device_name': aws_images[0]['RootDeviceName']
         })
 
         creation_kwargs['tags'] = [
@@ -227,7 +233,7 @@ class CreateServer(CommandBase):
             DryRun=dry_run,
             KeyName=creation_kwargs['key_name'],
             MinCount=1, MaxCount=1,
-            ImageId=creation_kwargs['ec2_ami'],
+            ImageId=creation_kwargs['ami_id'],
             InstanceType=creation_kwargs['instance_type'],
             BlockDeviceMappings=[{
                 'DeviceName': creation_kwargs['device_name'],
@@ -262,13 +268,13 @@ class CreateServer(CommandBase):
             halt.err("Couldn't assign elastic IP to instance.")
 
 
-    def verify_type_and_size_allowed(self, instance_type, volume_size):
-        """verify user is allowed to create instance with type and size"""
-        if verify_perms.blocked(actions=["ec2:RunInstances"],
+    def validate_type_and_size_allowed(self, instance_type, volume_size):
+        """validate user is allowed to create instance with type and size"""
+        if validate_perms.blocked(actions=["ec2:RunInstances"],
                 resources=["arn:aws:ec2:*:*:instance/*"],
                 context={'ec2:InstanceType': [instance_type]}):
             halt.err(f"Instance type {instance_type} not permitted.")
-        if verify_perms.blocked(actions=["ec2:RunInstances"],
+        if validate_perms.blocked(actions=["ec2:RunInstances"],
                 resources=["arn:aws:ec2:*:*:volume/*"],
                 context={'ec2:VolumeSize': [volume_size]}):
             halt.err(f"Volume size {volume_size}GiB is too large.")
@@ -295,16 +301,17 @@ class CreateServer(CommandBase):
 
     def blocked_actions(self):
         denied_actions = []
-        denied_actions.extend(verify_perms.blocked(actions=[
+        denied_actions.extend(validate_perms.blocked(actions=[
             "ec2:DescribeRegions",
             "ec2:DescribeInstances",
             "ec2:DescribeVpcs",
             "ec2:DescribeSubnets",
             "ec2:DescribeSecurityGroups",
             "ec2:DescribeKeyPairs",
+            "ec2:DescribeImages",
             "ec2:CreateTags"
         ]))
-        denied_actions.extend(verify_perms.blocked(
+        denied_actions.extend(validate_perms.blocked(
             actions=["ec2:RunInstances"],
             resources=["arn:aws:ec2:*:*:instance/*"],
             context={'ec2:InstanceType': ["t2.nano"]}

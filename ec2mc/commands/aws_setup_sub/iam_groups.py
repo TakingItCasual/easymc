@@ -4,7 +4,7 @@ from ec2mc.utils import aws
 
 class IAMGroupSetup(ComponentSetup):
 
-    def verify_component(self, config_aws_setup):
+    def check_component(self, config_aws_setup):
         """determine which groups need creating/updating, and which don't
 
         Args:
@@ -77,7 +77,7 @@ class IAMGroupSetup(ComponentSetup):
         """create groups on AWS that don't exist, update groups that do
 
         Args:
-            group_names (dict): See what verify_component returns.
+            group_names (dict): See what check_component returns.
         """
         for local_group in group_names['ToCreate']:
             self.create_group(local_group)

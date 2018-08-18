@@ -1,7 +1,7 @@
 from ec2mc.commands.base_classes import CommandBase
 from ec2mc.utils import aws
 from ec2mc.utils import halt
-from ec2mc.verify import verify_perms
+from ec2mc.validate import validate_perms
 
 class DeleteServer(CommandBase):
 
@@ -14,7 +14,7 @@ class DeleteServer(CommandBase):
                 "id" (str): ID of instance to terminate.
                 "name" (str): Tag value for instance tag key "Name".
         """
-        # Verify the specified region
+        # Validate the specified region
         if kwargs['region'] not in aws.get_regions():
             halt.err(f"{kwargs['region']} is not a valid region.")
         ec2_client = aws.ec2_client(kwargs['region'])
@@ -33,7 +33,7 @@ class DeleteServer(CommandBase):
         # If elastic IP(s) associated with instance, disassociate and release
         print("")
         if elastic_ips:
-            halt.assert_empty(verify_perms.blocked(actions=[
+            halt.assert_empty(validate_perms.blocked(actions=[
                 "ec2:DisassociateAddress",
                 "ec2:ReleaseAddress"
             ]))
@@ -70,7 +70,7 @@ class DeleteServer(CommandBase):
 
 
     def blocked_actions(self):
-        return verify_perms.blocked(actions=[
+        return validate_perms.blocked(actions=[
             "ec2:DescribeRegions",
             "ec2:DescribeInstances",
             "ec2:DescribeAddresses",

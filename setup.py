@@ -46,7 +46,7 @@ setup(
         ],
     },
     package_data={
-        'ec2mc.verify.jsonschemas': ['*.json'],
+        'ec2mc.validate.jsonschemas': ['*.json'],
         'ec2mc.aws_setup_src': ['*.json'],
         'ec2mc.aws_setup_src.iam_policies': ['*.json'],
         'ec2mc.aws_setup_src.vpc_security_groups': ['*.json'],

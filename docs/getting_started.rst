@@ -44,7 +44,7 @@ To verify the previous steps, attempt to use the following command again::
 
     ec2mc servers check
 
-If the previous steps were done correctly, the script will output a "access key verified" notification.
+If the previous steps were done correctly, the script will output a "access key validated" notification.
 
 Upload the default AWS setup included with the script with the following command::
 
