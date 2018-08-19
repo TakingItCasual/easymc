@@ -3,7 +3,7 @@
     "properties": {
         "iam_id": {"type": "string"},
         "iam_secret": {"type": "string"},
-        "servers_dat": {"type": "string"},
+        "servers_dat": {"type": ["string", "null"]},
         "region_whitelist": {
             "type" : "array",
             "items": {"type": "string"},

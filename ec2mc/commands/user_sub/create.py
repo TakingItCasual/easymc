@@ -82,7 +82,7 @@ class CreateUser(CommandBase):
         if config.REGION_WHITELIST is not None:
             new_config['region_whitelist'] = config.REGION_WHITELIST
 
-        temp_dir = os.path.join(f"{config.CONFIG_DIR}.ec2mc", "")
+        temp_dir = os.path.join(f"{config.CONFIG_DIR}.ec2mc_tmp", "")
         if os.path.isdir(temp_dir):
             shutil.rmtree(temp_dir)
         os.mkdir(temp_dir)

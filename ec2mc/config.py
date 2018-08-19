@@ -33,10 +33,6 @@ IAM_SECRET = None
 IAM_ARN = None
 IAM_NAME = None
 
-# File path for Minecraft client's server list.
-# (Optionally) set in ec2mc.validate.validate_config:main
-SERVERS_DAT = None
-
 """This string is used for the following purposes:
 - Path prefix for IAM groups, policies, and users ("/" on both sides).
 - Name and Namespace tags of VPC created in each region.

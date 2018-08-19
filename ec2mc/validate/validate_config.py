@@ -28,12 +28,6 @@ def main():
     schema = os2.get_json_schema("config")
     os2.validate_dict(config_dict, schema, "config.json")
 
-    # Assign config.SERVERS_DAT if config's servers.dat path is valid.
-    if 'servers_dat' in config_dict:
-        servers_dat = config_dict['servers_dat']
-        if os.path.isfile(servers_dat) and servers_dat.endswith("servers.dat"):
-            config.SERVERS_DAT = servers_dat
-
     # Validate config's IAM user access key.
     validate_user(config_dict)
 

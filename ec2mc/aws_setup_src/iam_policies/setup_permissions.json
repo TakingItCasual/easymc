@@ -66,6 +66,7 @@
                 "ec2:CreateRouteTable",
                 "ec2:CreateRoute",
                 "ec2:CreateSubnet",
+                "ec2:ModifySubnetAttribute",
                 "ec2:AssociateRouteTable",
                 "ec2:CreateSecurityGroup",
                 "ec2:RevokeSecurityGroupIngress",

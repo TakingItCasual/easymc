@@ -263,6 +263,10 @@ class VPCSetup(ComponentSetup):
                 CidrBlock=f"172.31.{index*16}.0/20",
                 VpcId=vpc_id
             )['Subnet']['SubnetId']
+            ec2_client.modify_subnet_attribute(
+                MapPublicIpOnLaunch={'Value': True},
+                SubnetId=subnet_id
+            )
             ec2_client.associate_route_table(
                 RouteTableId=rt_id,
                 SubnetId=subnet_id
@@ -355,6 +359,7 @@ class VPCSetup(ComponentSetup):
             "ec2:CreateRouteTable",
             "ec2:CreateRoute",
             "ec2:CreateSubnet",
+            "ec2:ModifySubnetAttribute",
             "ec2:AssociateRouteTable",
             "ec2:CreateSecurityGroup",
             "ec2:RevokeSecurityGroupIngress",

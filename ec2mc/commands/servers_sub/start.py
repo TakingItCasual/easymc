@@ -1,6 +1,5 @@
 from botocore.exceptions import WaiterError
 
-from ec2mc import config
 from ec2mc.commands.base_classes import CommandBase
 from ec2mc.stuff import manage_titles
 from ec2mc.utils import aws
@@ -59,9 +58,8 @@ class StartServer(CommandBase):
             )['Reservations'][0]['Instances'][0]['PublicDnsName']
 
             print(f"  Instance DNS: {instance_dns}")
-            if config.SERVERS_DAT is not None:
-                manage_titles.update_title_dns(
-                    instance['region'], instance['id'], instance_dns)
+            manage_titles.update_title_dns(
+                instance['region'], instance['id'], instance_dns)
 
 
     def add_documentation(self, argparse_obj):

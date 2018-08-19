@@ -1,4 +1,4 @@
-import os.path
+import os
 import nbtlib
 
 from ec2mc import config
@@ -12,6 +12,10 @@ def update_title_dns(aws_region, instance_id, new_dns):
         instance_id (str): ID of instance.
         new_dns (str): Instance's new DNS to update client's server list with.
     """
+    servers_dat_path = find_minecraft_servers_dat()
+    if servers_dat_path is None:
+        return
+
     titles_dict = {'Instances': []}
     if os.path.isfile(config.SERVER_TITLES_JSON):
         titles_dict = os2.parse_json(config.SERVER_TITLES_JSON)
@@ -28,7 +32,7 @@ def update_title_dns(aws_region, instance_id, new_dns):
         })
         os2.save_json(titles_dict, config.SERVER_TITLES_JSON)
 
-    update_servers_dat(config.SERVERS_DAT, title, new_dns)
+    update_servers_dat(servers_dat_path, title, new_dns)
 
 
 # TODO: Make compatible with all possible forms of the servers.dat file
@@ -40,9 +44,9 @@ def update_servers_dat(servers_dat_path, server_title, new_dns):
         server_title (str): Name of the server within client's server list.
         new_dns (str): Instance's new DNS to update client's server list with.
     """
-    servers_dat_file = nbtlib.nbt.load(servers_dat_path, gzipped=False)
+    servers_dat_nbt = nbtlib.nbt.load(servers_dat_path, gzipped=False)
 
-    for server_list_entry in servers_dat_file.root['servers']:
+    for server_list_entry in servers_dat_nbt.root['servers']:
         if server_title == server_list_entry['name']:
             server_list_entry['ip'] = nbtlib.tag.String(new_dns)
             print(f"  Server titled \"{server_title}\" "
@@ -50,11 +54,29 @@ def update_servers_dat(servers_dat_path, server_title, new_dns):
             break
     # If server_title isn't in client's server list, add it.
     else:
-        servers_dat_file.root['servers'].append(nbtlib.tag.Compound({
+        servers_dat_nbt.root['servers'].append(nbtlib.tag.Compound({
             'ip': nbtlib.tag.String(new_dns),
             'name': nbtlib.tag.String(server_title)
         }))
         print(f"  Server titled \"{server_title}\" "
             "added to server list w/ instance's DNS.")
 
-    servers_dat_file.save(gzipped=False)
+    servers_dat_nbt.save(gzipped=False)
+
+
+def find_minecraft_servers_dat():
+    """retrieve servers.dat path from config, or search home directory"""
+    config_dict = os2.parse_json(config.CONFIG_JSON)
+    if 'servers_dat' in config_dict:
+        if config_dict['servers_dat'] is None:
+            return None
+        elif os.path.isfile(config_dict['servers_dat']):
+            return config_dict['servers_dat']
+
+    config_dict['servers_dat'] = None
+    for root, _, files in os.walk(os.path.expanduser("~")):
+        for f in files:
+            if f == "servers.dat" and root.endswith("minecraft"):
+                config_dict['servers_dat'] = os.path.join(root, f)
+    os2.save_json(config_dict, config.CONFIG_JSON)
+    return config_dict['servers_dat']

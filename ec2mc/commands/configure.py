@@ -7,6 +7,7 @@ from ec2mc.utils import halt
 from ec2mc.utils import os2
 from ec2mc.validate import validate_perms
 
+# TODO: Think through how to manage config's servers_dat entry
 class Configure(CommandBase):
 
     def main(self, kwargs):

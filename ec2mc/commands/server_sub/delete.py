@@ -1,6 +1,10 @@
+import os.path
+
+from ec2mc import config
 from ec2mc.commands.base_classes import CommandBase
 from ec2mc.utils import aws
 from ec2mc.utils import halt
+from ec2mc.utils import os2
 from ec2mc.validate import validate_perms
 
 class DeleteServer(CommandBase):
@@ -14,7 +18,7 @@ class DeleteServer(CommandBase):
                 "id" (str): ID of instance to terminate.
                 "name" (str): Tag value for instance tag key "Name".
         """
-        # Validate the specified region
+        # Validate specified region
         if kwargs['region'] not in aws.get_regions():
             halt.err(f"{kwargs['region']} is not a valid region.")
         ec2_client = aws.ec2_client(kwargs['region'])
@@ -25,6 +29,9 @@ class DeleteServer(CommandBase):
         ])['Reservations']
         if not reservations:
             halt.err("No instances matching given parameters found.")
+        instance_state = reservations[0]['Instances'][0]['State']['Name']
+        if instance_state in ("shutting-down", "terminated"):
+            halt.err("Instance has already been terminated.")
 
         elastic_ips = ec2_client.describe_addresses(Filters=[{
             'Name': "instance-id",
@@ -41,7 +48,7 @@ class DeleteServer(CommandBase):
             for elastic_ip in elastic_ips:
                 ec2_client.disassociate_address(
                     AssociationId=elastic_ip['AssociationId'])
-                if kwargs['preserve_ip'] is False:
+                if kwargs['save_ip'] is False:
                     ec2_client.release_address(
                         AllocationId=elastic_ip['AllocationId'])
                     print(f"Elastic IP {elastic_ip['PublicIp']} "
@@ -49,11 +56,20 @@ class DeleteServer(CommandBase):
                 else:
                     print(f"Elastic IP {elastic_ip['PublicIp']} "
                         "disassociated but preserved.")
-        elif kwargs['preserve_ip'] is True:
+        elif kwargs['save_ip'] is True:
             print("No elastic IPs associated with instance.")
 
         ec2_client.terminate_instances(InstanceIds=[kwargs['id']])
         print("Instance terminated.")
+
+        # Remove instance entry from server_titles.json, if present
+        if os.path.isfile(config.SERVER_TITLES_JSON):
+            titles_dict = os2.parse_json(config.SERVER_TITLES_JSON)
+            for index, server_title in enumerate(titles_dict['Instances']):
+                if (server_title['region'] == kwargs['region'] and
+                        server_title['id'] == kwargs['id']):
+                    del titles_dict['Instances'][index]
+                    os2.save_json(titles_dict, config.SERVER_TITLES_JSON)
 
 
     def add_documentation(self, argparse_obj):

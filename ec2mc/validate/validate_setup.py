@@ -45,10 +45,9 @@ def main():
 
 def get_config_aws_setup_dict():
     """return aws_setup.json from config in user's home dir as dict"""
-    config_aws_setup_file = config.AWS_SETUP_JSON
-    if not os.path.isfile(config_aws_setup_file):
+    if not os.path.isfile(config.AWS_SETUP_JSON):
         halt.err("aws_setup.json not found from config.")
-    return os2.parse_json(config_aws_setup_file)
+    return os2.parse_json(config.AWS_SETUP_JSON)
 
 
 def cp_aws_setup_to_config(src_aws_setup_dir):

@@ -27,6 +27,19 @@ def main(kwargs):
 
     all_instances = probe_regions(regions, tag_filter)
 
+    if not all_instances:
+        if kwargs['region_filter'] and not tag_filter:
+            halt.err("No instances found from specified region(s).",
+                "  Try removing the region filter.")
+        if not kwargs['region_filter'] and tag_filter:
+            halt.err("No instances with specified tag(s) found.",
+                "  Try removing the tag filter.")
+        if kwargs['region_filter'] and tag_filter:
+            halt.err(("No instances with specified tag(s) found "
+                "from specified region(s)."),
+                "  Try removing the region filter and/or the tag filter.")
+        halt.err("No instances found.")
+
     for region in regions:
         instances = [instance for instance in all_instances
             if instance['region'] == region]
@@ -42,19 +55,6 @@ def main(kwargs):
 
             for tag_key, tag_value in instance['tags'].items():
                 print(f"    {tag_key}: {tag_value}")
-
-    if not all_instances:
-        if kwargs['region_filter'] and not tag_filter:
-            halt.err("No instances found from specified region(s).",
-                "  Try removing the region filter.")
-        if not kwargs['region_filter'] and tag_filter:
-            halt.err("No instances with specified tag(s) found.",
-                "  Try removing the tag filter.")
-        if kwargs['region_filter'] and tag_filter:
-            halt.err(("No instances with specified tag(s) found "
-                "from specified region(s)."),
-                "  Try removing the region filter and/or the tag filter.")
-        halt.err("No instances found.")
 
     return all_instances
 
@@ -116,6 +116,8 @@ def probe_region(region, tag_filter=None):
     region_instances = []
     for reservation in reservations:
         for instance in reservation['Instances']:
+            if instance['State']['Name'] in ("shutting-down", "terminated"):
+                continue
             region_instances.append({
                 'id': instance['InstanceId'],
                 'name': None,

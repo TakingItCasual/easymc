@@ -1,7 +1,3 @@
-import zipfile
-from shutil import copyfile
-from botocore.exceptions import ClientError
-
 from ec2mc import config
 from ec2mc.commands.base_classes import CommandBase
 from ec2mc.utils import aws
