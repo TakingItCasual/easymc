@@ -90,7 +90,8 @@ class Configure(CommandBase):
 
         for index, access_key in enumerate(config_dict['iam_access_keys']):
             # TODO: Validate access key is active
-            if aws.access_key_owner(access_key['iam_id']) == user_name:
+            key_owner = aws.access_key_owner(access_key['iam_id'])
+            if key_owner.lower() == user_name.lower():
                 # Swap default access key with requested IAM user's in config
                 config_dict['iam_access_keys'].append({
                     'iam_id': config_dict['iam_id'],
@@ -102,7 +103,7 @@ class Configure(CommandBase):
                 })
                 del config_dict['iam_access_keys'][index]
 
-                print(f"{user_name}'s access key set as default in config.")
+                print(f"{key_owner}'s access key set as default in config.")
                 break
         else:
             halt.err(f"IAM User \"{user_name}\" backup access key not found.")

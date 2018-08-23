@@ -35,7 +35,7 @@ In step 2, switch to "Attach existing policies directly" and enable "Administrat
 Create the user.
 Keep the page that loads open for the next step.
 
-To set the access key for the script, you can download your IAM user's credentials.csv file (by clicking "Download .csv") and move the file to the script's configuration folder.
+To set the access key for the script, you can download your IAM user's accessKeys.csv file (by clicking "Download .csv") and move the file to the script's configuration folder.
 Alternatively, you can copy the IAM user's access key ID and secret access key, and paste them into the corresponding inputs given by the following command::
 
     ec2mc configure

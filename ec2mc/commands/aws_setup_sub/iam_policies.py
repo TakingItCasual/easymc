@@ -36,7 +36,7 @@ class IAMPolicySetup(ComponentSetup):
         # Names of local policies described in aws_setup.json
         policy_names = {
             'AWSExtra': [],
-            'ToCreate': [policy['Name'] for policy in self.iam_policy_setup],
+            'ToCreate': [policy_name for policy_name in self.iam_policy_setup],
             'ToUpdate': [],
             'UpToDate': []
         }
@@ -123,9 +123,7 @@ class IAMPolicySetup(ComponentSetup):
         """create new IAM policy on AWS"""
         local_policy_document = os2.parse_json(
             f"{self.policy_dir}{policy_name}.json")
-        policy_description = next(
-            policy['Desc'] for policy in self.iam_policy_setup
-                if policy['Name'] == policy_name)
+        policy_description = self.iam_policy_setup[policy_name]
 
         self.iam_client.create_policy(
             PolicyName=policy_name,

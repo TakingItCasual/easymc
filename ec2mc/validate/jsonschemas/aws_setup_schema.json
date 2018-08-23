@@ -7,35 +7,31 @@
             "type": "object",
             "properties": {
                 "Policies": {
-                    "type": "array",
-                    "items": {
-                        "type": "object",
-                        "properties": {
-                            "Name": {"type" : "string"},
-                            "Desc": {"type" : "string"}
-                        },
-                        "required": ["Name", "Desc"]
+                    "type": "object",
+                    "patternProperties": {
+                        "^[a-z0-9_]+$": {"type": "string"}
                     },
-                    "minItems": 1,
-                    "uniqueItems": true
+                    "minProperties": 1,
+                    "additionalProperties": false
                 },
                 "Groups": {
-                    "type": "array",
-                    "items": {
-                        "type": "object",
-                        "properties": {
-                            "Name": {"type" : "string"},
-                            "Policies": {
-                                "type" : "array",
-                                "items": {"type": "string"},
-                                "minItems": 1,
-                                "uniqueItems": true
-                            }
-                        },
-                        "required": ["Name", "Policies"]
+                    "type": "object",
+                    "patternProperties": {
+                        "^[a-z0-9_]+$": {
+                            "type": "object",
+                            "properties": {
+                                "Policies": {
+                                    "type" : "array",
+                                    "items": {"type": "string"},
+                                    "minItems": 1,
+                                    "uniqueItems": true
+                                }
+                            },
+                            "required": ["Policies"]
+                        }
                     },
-                    "minItems": 1,
-                    "uniqueItems": true
+                    "minProperties": 1,
+                    "additionalProperties": false
                 }
             },
             "required": ["Policies", "Groups"]
@@ -44,17 +40,12 @@
             "type": "object",
             "properties": {
                 "SecurityGroups": {
-                    "type": "array",
-                    "items": {
-                        "type": "object",
-                        "properties": {
-                            "Name": {"type": "string"},
-                            "Desc": {"type": "string"}
-                        },
-                        "required": ["Name", "Desc"]
+                    "type": "object",
+                    "patternProperties": {
+                        "^[a-z0-9_]+$": {"type": "string"}
                     },
-                    "minItems": 1,
-                    "uniqueItems": true
+                    "minProperties": 1,
+                    "additionalProperties": false
                 }
             },
             "required": ["SecurityGroups"]

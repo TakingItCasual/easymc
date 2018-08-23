@@ -60,7 +60,7 @@ def parse_yaml(file_path):
     with open(file_path, encoding="utf-8") as f:
         file_contents = f.read()
     try:
-        return yaml.load(file_contents, Loader=yaml.RoundTripLoader)
+        return yaml.safe_load(file_contents)
     except Exception: # Multiple exceptions possible. Idk what they all are.
         halt.err(f"{file_path} is not a valid YAML file.")
 

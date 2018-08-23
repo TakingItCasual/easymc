@@ -29,35 +29,34 @@ class IAMGroupSetup(ComponentSetup):
         # Names of local policies described in aws_setup.json
         group_names = {
             'AWSExtra': [],
-            'ToCreate': [group['Name'] for group in self.iam_group_setup],
+            'ToCreate': [group_name for group_name in self.iam_group_setup],
             'ToUpdate': [],
             'UpToDate': []
         }
 
         # Check if group(s) described by aws_setup.json already on AWS
-        for local_group in group_names['ToCreate'][:]:
+        for group_name in group_names['ToCreate'][:]:
             for aws_group in aws_groups:
-                if local_group == aws_group['GroupName']:
+                if group_name == aws_group['GroupName']:
                     # Group already exists on AWS, so next check if to update
-                    group_names['ToCreate'].remove(local_group)
-                    group_names['ToUpdate'].append(local_group)
+                    group_names['ToCreate'].remove(group_name)
+                    group_names['ToUpdate'].append(group_name)
                     break
 
         # Check if group(s) on AWS need attachment(s) updated
-        for local_group in group_names['ToUpdate'][:]:
+        for group_name in group_names['ToUpdate'][:]:
             aws_attachments = [policy['PolicyName'] for policy in
                 self.iam_client.list_attached_group_policies(
-                    GroupName=local_group,
+                    GroupName=group_name,
                     PathPrefix=self.path_prefix
                 )['AttachedPolicies']]
 
-            local_attachments = next(group['Policies'] for group in
-                self.iam_group_setup if group['Name'] == local_group)
+            local_attachments = self.iam_group_setup[group_name]['Policies']
 
             if set(aws_attachments) == set(local_attachments):
                 # Local group and AWS group match, so no need to update
-                group_names['ToUpdate'].remove(local_group)
-                group_names['UpToDate'].append(local_group)
+                group_names['ToUpdate'].remove(group_name)
+                group_names['UpToDate'].append(group_name)
 
         return group_names
 
@@ -79,16 +78,16 @@ class IAMGroupSetup(ComponentSetup):
         Args:
             group_names (dict): See what check_component returns.
         """
-        for local_group in group_names['ToCreate']:
-            self.create_group(local_group)
-            print(f"IAM group {local_group} created on AWS.")
+        for group_name in group_names['ToCreate']:
+            self.create_group(group_name)
+            print(f"IAM group {group_name} created on AWS.")
 
-        for local_group in group_names['ToUpdate']:
-            self.update_group(local_group)
-            print(f"IAM group {local_group} on AWS updated.")
+        for group_name in group_names['ToUpdate']:
+            self.update_group(group_name)
+            print(f"IAM group {group_name} on AWS updated.")
 
-        for local_group in group_names['UpToDate']:
-            print(f"IAM group {local_group} on AWS already up to date.")
+        for group_name in group_names['UpToDate']:
+            print(f"IAM group {group_name} on AWS already up to date.")
 
 
     def delete_component(self):
@@ -125,17 +124,16 @@ class IAMGroupSetup(ComponentSetup):
 
     def attach_group_policies(self, group_name):
         """attach IAM policy(s) described in iam_group_setup to group"""
-        local_attachments = next(group['Policies'] for group in
-            self.iam_group_setup if group['Name'] == group_name)
+        policy_names = self.iam_group_setup[group_name]['Policies']
         aws_policies = self.iam_client.list_policies(
             Scope="Local",
             OnlyAttached=False,
             PathPrefix=self.path_prefix
         )['Policies']
 
-        for attachment in local_attachments:
+        for policy_name in policy_names:
             aws_policy_arn = next(aws_policy['Arn'] for aws_policy in
-                aws_policies if aws_policy['PolicyName'] == attachment)
+                aws_policies if aws_policy['PolicyName'] == policy_name)
             self.iam_client.attach_group_policy(
                 GroupName=group_name,
                 PolicyArn=aws_policy_arn

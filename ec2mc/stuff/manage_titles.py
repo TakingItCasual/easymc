@@ -75,8 +75,7 @@ def find_minecraft_servers_dat():
 
     config_dict['servers_dat'] = None
     for root, _, files in os.walk(os.path.expanduser("~")):
-        for f in files:
-            if f == "servers.dat" and root.endswith("minecraft"):
-                config_dict['servers_dat'] = os.path.join(root, f)
+        if "servers.dat" in files and root.endswith("minecraft"):
+            config_dict['servers_dat'] = os.path.join(root, "servers.dat")
     os2.save_json(config_dict, config.CONFIG_JSON)
     return config_dict['servers_dat']

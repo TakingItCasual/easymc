@@ -6,7 +6,7 @@ from ec2mc import config
 from ec2mc.utils import os2
 from ec2mc.utils import halt
 
-# TODO: Validate appropriate stuff against AWS, rather than local setup
+# TODO: Validate local AWS setup against AWS
 def main():
     """validate contents of user's config's aws_setup directory"""
     # Directory path for distribution's packaged aws_setup
@@ -17,13 +17,13 @@ def main():
         cp_aws_setup_to_config(src_aws_setup_dir)
     config_aws_setup = get_config_aws_setup_dict()
 
-    # Config's aws_setup.json must have "Modified" and "Namespace" keys
-    if not all(key in config_aws_setup for key in ("Modified", "Namespace")):
-        cp_aws_setup_to_config(src_aws_setup_dir)
-        config_aws_setup = get_config_aws_setup_dict()
+    # Config's aws_setup.json must contain the 'Modified' key
+    if 'Modified' not in config_aws_setup:
+        halt.err("'Modified' key missing from aws_setup.json.",
+            "  Delete your config's aws_setup folder and it will regenerate.")
 
-    # If "Modified" key is True, prevent overwriting config's aws_setup
-    if not config_aws_setup['Modified']:
+    # If 'Modified' key is True, prevent overwriting config's aws_setup
+    if config_aws_setup['Modified'] is False:
         files_to_compare = os2.list_files_with_sub_dirs(src_aws_setup_dir)
         diff = filecmp.cmpfiles(src_aws_setup_dir, config.AWS_SETUP_DIR,
             files_to_compare, shallow=False)
@@ -34,12 +34,13 @@ def main():
             config_aws_setup = get_config_aws_setup_dict()
 
     validate_aws_setup(config_aws_setup)
-    validate_instance_templates(config_aws_setup)
 
     config.NAMESPACE = config_aws_setup['Namespace']
     config.RSA_PRIV_KEY_PEM = f"{config.CONFIG_DIR}{config.NAMESPACE}.pem"
 
     validate_iam_policies(config_aws_setup)
+    validate_iam_groups(config_aws_setup)
+    validate_instance_templates(config_aws_setup)
     validate_vpc_security_groups(config_aws_setup)
 
 
@@ -62,16 +63,39 @@ def validate_aws_setup(config_aws_setup):
     schema = os2.get_json_schema("aws_setup")
     os2.validate_dict(config_aws_setup, schema, "aws_setup.json")
 
-    # TODO: Handle this with jsonschema once it's able to
-    if not unique_names(config_aws_setup['IAM']['Policies']):
-        halt.err("aws_setup.json incorrectly formatted:",
-            "IAM policy names must be unique.")
-    if not unique_names(config_aws_setup['IAM']['Groups']):
-        halt.err("aws_setup.json incorrectly formatted:",
-            "IAM group names must be unique.")
-    if not unique_names(config_aws_setup['VPC']['SecurityGroups']):
-        halt.err("aws_setup.json incorrectly formatted:",
-            "VPC security group names must be unique.")
+
+def validate_iam_policies(config_aws_setup):
+    """validate aws_setup.json reflects contents of iam_policies dir"""
+    policy_dir = os.path.join(f"{config.AWS_SETUP_DIR}iam_policies", "")
+
+    # Policies described in aws_setup/aws_setup.json
+    setup_policy_list = [f"{policy}.json" for policy
+        in config_aws_setup['IAM']['Policies']]
+    # Actual policy JSON files located in aws_setup/iam_policies/
+    iam_policy_files = os2.list_dir_files(policy_dir, ext=".json")
+
+    # Halt if any IAM policy file contains invalid JSON
+    for iam_policy_file in iam_policy_files:
+        os2.parse_json(f"{policy_dir}{iam_policy_file}")
+
+    # Halt if aws_setup.json describes policies not found in iam_policies
+    if not set(setup_policy_list).issubset(set(iam_policy_files)):
+        halt.err(
+            "Following policy(s) not found from aws_setup/iam_policies/:",
+            *[policy for policy in setup_policy_list
+                if policy not in iam_policy_files]
+        )
+
+
+def validate_iam_groups(config_aws_setup):
+    """validate IAM groups' policies are subsets of described IAM policies"""
+    setup_policies = set(config_aws_setup['IAM']['Policies'].keys())
+    for name, iam_group in config_aws_setup['IAM']['Groups'].items():
+        if not set(iam_group['Policies']).issubset(setup_policies):
+            halt.err("aws_setup.json incorrectly formatted:",
+                f"IAM group {name} contains following invalid policy(s):",
+                *[policy for policy in iam_group['Policies']
+                    if policy not in setup_policies])
 
 
 def validate_instance_templates(config_aws_setup):
@@ -79,7 +103,7 @@ def validate_instance_templates(config_aws_setup):
     template_yaml_files = os2.list_dir_files(config.USER_DATA_DIR, ext=".yaml")
 
     schema = os2.get_json_schema("instance_templates")
-    sg_names = [sg['Name'] for sg in config_aws_setup['VPC']['SecurityGroups']]
+    sg_names = [sg for sg in config_aws_setup['VPC']['SecurityGroups']]
     for template_yaml_file in template_yaml_files:
         user_data = os2.parse_yaml(
             f"{config.USER_DATA_DIR}{template_yaml_file}")
@@ -111,35 +135,12 @@ def validate_instance_templates(config_aws_setup):
     # write_files path uniqueness validated in create:process_user_data
 
 
-def validate_iam_policies(config_aws_setup):
-    """validate aws_setup.json reflects contents of iam_policies dir"""
-    policy_dir = os.path.join(f"{config.AWS_SETUP_DIR}iam_policies", "")
-
-    # Policies described in aws_setup/aws_setup.json
-    setup_policy_list = [f"{policy['Name']}.json" for policy
-        in config_aws_setup['IAM']['Policies']]
-    # Actual policy JSON files located in aws_setup/iam_policies/
-    iam_policy_files = os2.list_dir_files(policy_dir, ext=".json")
-
-    # Halt if any IAM policy file contains invalid JSON
-    for iam_policy_file in iam_policy_files:
-        os2.parse_json(f"{policy_dir}{iam_policy_file}")
-
-    # Halt if aws_setup.json describes policies not found in iam_policies
-    if not set(setup_policy_list).issubset(set(iam_policy_files)):
-        halt.err(
-            "Following policy(s) not found from aws_setup/iam_policies/:",
-            *[policy for policy in setup_policy_list
-                if policy not in iam_policy_files]
-        )
-
-
 def validate_vpc_security_groups(config_aws_setup):
     """validate aws_setup.json reflects contents of vpc_security_groups dir"""
     sg_dir = os.path.join(f"{config.AWS_SETUP_DIR}vpc_security_groups", "")
 
     # SGs described in aws_setup/aws_setup.json
-    setup_sg_list = [f"{sg['Name']}.json" for sg
+    setup_sg_list = [f"{sg_name}.json" for sg_name
         in config_aws_setup['VPC']['SecurityGroups']]
     # Actual SG json files located in aws_setup/vpc_security_groups/
     vpc_sg_json_files = os2.list_dir_files(sg_dir, ext=".json")

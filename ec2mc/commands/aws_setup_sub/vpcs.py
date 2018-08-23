@@ -38,11 +38,11 @@ class VPCSetup(ComponentSetup):
 
         self.security_group_setup = config_aws_setup['VPC']['SecurityGroups']
         # Status for each SG in each region
-        sg_names = {sg['Name']: {
+        sg_names = {sg_name: {
             'ToCreate': regions[:],
             'ToUpdate': [],
             'UpToDate': []
-        } for sg in self.security_group_setup}
+        } for sg_name in self.security_group_setup}
 
         vpc_threader = Threader()
         sg_threader = Threader()
@@ -288,8 +288,7 @@ class VPCSetup(ComponentSetup):
         """create new VPC security group on AWS"""
         ec2_client = aws.ec2_client(region)
         sg_id = ec2_client.create_security_group(
-            Description=next(sg['Desc'] for sg in self.security_group_setup
-                if sg['Name'] == sg_name),
+            Description=self.security_group_setup[sg_name],
             GroupName=sg_name,
             VpcId=vpc_id
         )['GroupId']

@@ -15,7 +15,7 @@ def main():
 
     # Retrieve the configuration. Halt if it doesn't exist.
     if not os.path.isfile(config.CONFIG_JSON):
-        credentials_csv = f"{config.CONFIG_DIR}credentials.csv"
+        credentials_csv = f"{config.CONFIG_DIR}accessKeys.csv"
         if not os.path.isfile(credentials_csv):
             halt.err(
                 "Configuration is not set. Set with \"ec2mc configure\".",
@@ -101,10 +101,10 @@ def validate_user(config_dict):
 def create_config_from_credentials_csv(file_path):
     """create JSON config file from IAM user's credentials.csv file"""
     with open(file_path, encoding="utf-8") as csv_file:
-        iam_user_info = csv_file.readlines()[1].strip().split(",")
+        iam_user_access_key = csv_file.readlines()[1].strip().split(",")
     config_dict = {
-        'iam_id': iam_user_info[2],
-        'iam_secret': iam_user_info[3]
+        'iam_id': iam_user_access_key[0],
+        'iam_secret': iam_user_access_key[1]
     }
     os2.save_json(config_dict, config.CONFIG_JSON)
     os.chmod(config.CONFIG_JSON, config.CONFIG_PERMS)

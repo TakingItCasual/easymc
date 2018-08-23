@@ -2,50 +2,35 @@
     "Modified": false,
     "Namespace": "ec2mc",
     "IAM": {
-        "Policies": [
-            {
-                "Name": "setup_permissions",
-                "Desc": "Permissions needed to modify AWS account setup."
-            },
-            {
-                "Name": "admin_permissions",
-                "Desc": "Admin privileges for ec2mc script user."
-            },
-            {
-                "Name": "basic_permissions",
-                "Desc": "Basic privileges for ec2mc script user."
-            }
-        ],
-        "Groups": [
-            {
-                "Name": "setup_users",
+        "Policies": {
+            "setup_permissions": "Permissions to modify AWS account setup.",
+            "admin_permissions": "Admin privileges for ec2mc script user.",
+            "basic_permissions": "Basic privileges for ec2mc script user."
+        },
+        "Groups": {
+            "setup_users": {
                 "Policies": [
                     "setup_permissions",
                     "admin_permissions",
                     "basic_permissions"
                 ]
             },
-            {
-                "Name": "admin_users",
+            "admin_users": {
                 "Policies": [
                     "admin_permissions",
                     "basic_permissions"
                 ]
             },
-            {
-                "Name": "basic_users",
+            "basic_users": {
                 "Policies": [
                     "basic_permissions"
                 ]
             }
-        ]
+        }
     },
     "VPC": {
-        "SecurityGroups": [
-            {
-                "Name": "ec2mc_sg",
-                "Desc": "Allow all traffic through ports 22 and 25565."
-            }
-        ]
+        "SecurityGroups": {
+            "ec2mc_sg": "Allow all traffic through ports 22 and 25565."
+        }
     }
 }
