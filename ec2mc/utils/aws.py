@@ -93,7 +93,7 @@ def attach_tags(region, resource_id, name_tag=None):
 
     The functionality of blocking until the resource exists is relied upon.
 
-    To account for newly created resources, InvalidID exceptions are checked 
+    To account for newly created resources, NotFound exceptions are checked 
     for and passed in a loop attempting to create tag(s). Why not use waiters? 
     Because waiters don't work reliably (in my experience), that's why.
 

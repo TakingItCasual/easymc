@@ -157,11 +157,3 @@ def validate_vpc_security_groups(config_aws_setup):
     for sg_file in vpc_sg_json_files:
         sg_dict = os2.parse_json(f"{sg_dir}{sg_file}")
         os2.validate_dict(sg_dict, schema, f"SG {sg_file}")
-
-
-def unique_names(dict_list):
-    """validate each Name key value is unique within list of dicts"""
-    names = [list_dict['Name'] for list_dict in dict_list]
-    if len(names) != len(set(names)):
-        return False
-    return True
