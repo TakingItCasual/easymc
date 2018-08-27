@@ -1,6 +1,6 @@
 import os
 
-from ec2mc import config
+from ec2mc import consts
 from ec2mc.commands.base_classes import CommandBase
 from ec2mc.utils import aws
 from ec2mc.utils import halt
@@ -13,13 +13,13 @@ class Configure(CommandBase):
     def main(self, kwargs):
         """set IAM access key, servers.dat path, and region whitelist"""
         # validate_config:main normally does this, but it wasn't called.
-        if not os.path.isdir(config.CONFIG_DIR):
-            os.mkdir(config.CONFIG_DIR)
+        if not os.path.isdir(consts.CONFIG_DIR):
+            os.mkdir(consts.CONFIG_DIR)
 
         config_dict = {}
-        if os.path.isfile(config.CONFIG_JSON):
+        if os.path.isfile(consts.CONFIG_JSON):
             schema = os2.get_json_schema("config")
-            config_dict = os2.parse_json(config.CONFIG_JSON)
+            config_dict = os2.parse_json(consts.CONFIG_JSON)
             os2.validate_dict(config_dict, schema, "config.json")
 
         if kwargs['swap_user'] is not None:
@@ -29,8 +29,8 @@ class Configure(CommandBase):
             config_dict = self.default_set_config(config_dict)
 
         if config_dict:
-            os2.save_json(config_dict, config.CONFIG_JSON)
-            os.chmod(config.CONFIG_JSON, config.CONFIG_PERMS)
+            os2.save_json(config_dict, consts.CONFIG_JSON)
+            os.chmod(consts.CONFIG_JSON, consts.CONFIG_PERMS)
 
 
     def default_set_config(self, config_dict):

@@ -30,7 +30,7 @@ class StartServer(CommandBase):
                 InstanceIds=[instance['id']]
             )['Reservations'][0]['Instances'][0]['State']['Name']
 
-            if instance_state != "running" and instance_state != "stopped":
+            if instance_state not in ("running", "stopped"):
                 print(f"  Instance is currently {instance_state}.")
                 print("  Cannot start an instance from a transitional state.")
                 continue

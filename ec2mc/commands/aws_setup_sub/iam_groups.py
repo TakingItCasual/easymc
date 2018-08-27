@@ -1,4 +1,4 @@
-from ec2mc import config
+from ec2mc import consts
 from ec2mc.commands.base_classes import ComponentSetup
 from ec2mc.utils import aws
 
@@ -18,7 +18,7 @@ class IAMGroupSetup(ComponentSetup):
                 'UpToDate': Groups on AWS up to date with local versions.
         """
         self.iam_client = aws.iam_client()
-        self.path_prefix = f"/{config.NAMESPACE}/"
+        self.path_prefix = f"/{consts.NAMESPACE}/"
 
         # Local IAM group(s) list
         self.iam_group_setup = config_aws_setup['IAM']['Groups']

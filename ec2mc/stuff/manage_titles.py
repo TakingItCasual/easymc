@@ -1,7 +1,7 @@
 import os
 import nbtlib
 
-from ec2mc import config
+from ec2mc import consts
 from ec2mc.utils import os2
 
 def update_title_dns(aws_region, instance_id, new_dns):
@@ -17,8 +17,8 @@ def update_title_dns(aws_region, instance_id, new_dns):
         return
 
     titles_dict = {'Instances': []}
-    if os.path.isfile(config.SERVER_TITLES_JSON):
-        titles_dict = os2.parse_json(config.SERVER_TITLES_JSON)
+    if os.path.isfile(consts.SERVER_TITLES_JSON):
+        titles_dict = os2.parse_json(consts.SERVER_TITLES_JSON)
 
     try:
         title = next(x['title'] for x in titles_dict['Instances']
@@ -30,7 +30,7 @@ def update_title_dns(aws_region, instance_id, new_dns):
             'id': instance_id,
             'title': title
         })
-        os2.save_json(titles_dict, config.SERVER_TITLES_JSON)
+        os2.save_json(titles_dict, consts.SERVER_TITLES_JSON)
 
     update_servers_dat(servers_dat_path, title, new_dns)
 
@@ -66,7 +66,7 @@ def update_servers_dat(servers_dat_path, server_title, new_dns):
 
 def find_minecraft_servers_dat():
     """retrieve servers.dat path from config, or search home directory"""
-    config_dict = os2.parse_json(config.CONFIG_JSON)
+    config_dict = os2.parse_json(consts.CONFIG_JSON)
     if 'servers_dat' in config_dict:
         if config_dict['servers_dat'] is None:
             return None
@@ -77,5 +77,5 @@ def find_minecraft_servers_dat():
     for root, _, files in os.walk(os.path.expanduser("~")):
         if "servers.dat" in files and root.endswith("minecraft"):
             config_dict['servers_dat'] = os.path.join(root, "servers.dat")
-    os2.save_json(config_dict, config.CONFIG_JSON)
+    os2.save_json(config_dict, consts.CONFIG_JSON)
     return config_dict['servers_dat']

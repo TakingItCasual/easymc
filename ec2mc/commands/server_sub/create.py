@@ -4,7 +4,7 @@ from time import sleep
 from ruamel import yaml
 from botocore.exceptions import ClientError
 
-from ec2mc import config
+from ec2mc import consts
 from ec2mc.commands.base_classes import CommandBase
 from ec2mc.utils import aws
 from ec2mc.utils import halt
@@ -26,11 +26,11 @@ class CreateServer(CommandBase):
                 "elastic_ip" (bool): Whether to associate a new elastic IP.
                 "tags" (list): Additional instance tag key-value pair(s).
         """
-        template_yaml_files = os2.list_dir_files(config.USER_DATA_DIR)
+        template_yaml_files = os2.list_dir_files(consts.USER_DATA_DIR)
         if f"{kwargs['template']}.yaml" not in template_yaml_files:
             halt.err(f"Template {kwargs['template']} not found.")
 
-        inst_template = os2.parse_yaml(f"{config.USER_DATA_DIR}"
+        inst_template = os2.parse_yaml(f"{consts.USER_DATA_DIR}"
             f"{kwargs['template']}.yaml")['ec2mc_template_info']
 
         self.validate_type_and_size_allowed(
@@ -135,7 +135,7 @@ class CreateServer(CommandBase):
 
         vpc_info = aws.get_region_vpc(region)
         if vpc_info is None:
-            halt.err(f"VPC {config.NAMESPACE} not found.",
+            halt.err(f"VPC {consts.NAMESPACE} not found.",
                 "  Have you uploaded the AWS setup?")
         vpc_id = vpc_info['VpcId']
         vpc_sgs = aws.get_region_security_groups(region, vpc_id)
@@ -151,13 +151,13 @@ class CreateServer(CommandBase):
 
         ec2_key_pairs = ec2_client.describe_key_pairs(Filters=[{
             'Name': "key-name",
-            'Values': [config.NAMESPACE]
+            'Values': [consts.NAMESPACE]
         }])['KeyPairs']
         if not ec2_key_pairs:
-            halt.err(f"EC2 key pair {config.NAMESPACE} not found from AWS.",
+            halt.err(f"EC2 key pair {consts.NAMESPACE} not found from AWS.",
                 "  Have you uploaded the AWS setup?")
-        if not os.path.isfile(config.RSA_PRIV_KEY_PEM):
-            rsa_key_file = os.path.basename(config.RSA_PRIV_KEY_PEM)
+        if not os.path.isfile(consts.RSA_PRIV_KEY_PEM):
+            rsa_key_file = os.path.basename(consts.RSA_PRIV_KEY_PEM)
             halt.err(f"{rsa_key_file} not found from config.")
         if pem.local_key_fingerprint() != ec2_key_pairs[0]['KeyFingerprint']:
             halt.err("Local RSA key fingerprint doesn't match EC2 key pair's.")
@@ -179,11 +179,11 @@ class CreateServer(CommandBase):
             str: YAML file string to initialize instance on first boot.
         """
         user_data = os2.parse_yaml(
-            f"{config.USER_DATA_DIR}{template_name}.yaml")
+            f"{consts.USER_DATA_DIR}{template_name}.yaml")
 
         if 'write_directories' in template:
             template_dir = os.path.join(
-                f"{config.USER_DATA_DIR}{template_name}", "")
+                f"{consts.USER_DATA_DIR}{template_name}", "")
 
             write_files = []
             for write_dir in template['write_directories']:

@@ -6,7 +6,7 @@ import jsonschema
 from jsonschema.exceptions import ValidationError
 from ruamel import yaml
 
-from ec2mc import config
+from ec2mc import consts
 from ec2mc.utils import halt
 
 def list_dir_files(target_dir, *, prefix="", ext=""):
@@ -23,7 +23,7 @@ def list_dir_dirs(target_dir):
 
 def get_json_schema(schema_name):
     """return schema from ec2mc.validate.jsonschemas as dictionary"""
-    return parse_json(os.path.join(f"{config.DIST_DIR}validate",
+    return parse_json(os.path.join(f"{consts.DIST_DIR}validate",
         "jsonschemas", f"{schema_name}_schema.json"))
 
 

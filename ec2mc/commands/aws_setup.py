@@ -1,4 +1,4 @@
-from ec2mc import config
+from ec2mc import consts
 from ec2mc.commands.base_classes import CommandBase
 from ec2mc.utils import aws
 from ec2mc.utils import halt
@@ -31,7 +31,7 @@ class AWSSetup(CommandBase):
                 'action': Whether to check, upload, or delete setup on AWS
         """
         if kwargs['action'] == "delete":
-            path_prefix = f"/{config.NAMESPACE}/"
+            path_prefix = f"/{consts.NAMESPACE}/"
             if not self.namespace_groups_empty(path_prefix):
                 halt.err("IAM User(s) attached to Namespace IAM group(s).")
             if not self.namespace_policies_empty(path_prefix):
@@ -40,7 +40,7 @@ class AWSSetup(CommandBase):
                 halt.err("EC2 instance(s) found under Namespace VPC(s).")
 
         # AWS setup JSON config dictionary
-        config_aws_setup = os2.parse_json(config.AWS_SETUP_JSON)
+        config_aws_setup = os2.parse_json(consts.AWS_SETUP_JSON)
 
         for component in self.aws_components:
             component_info = component.check_component(config_aws_setup)

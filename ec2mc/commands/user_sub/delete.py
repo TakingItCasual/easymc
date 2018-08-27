@@ -1,4 +1,4 @@
-from ec2mc import config
+from ec2mc import consts
 from ec2mc.commands.base_classes import CommandBase
 from ec2mc.utils import aws
 from ec2mc.utils import halt
@@ -10,11 +10,11 @@ class DeleteUser(CommandBase):
     def main(self, kwargs):
         """delete an existing Namespace IAM user from AWS"""
         self.iam_client = aws.iam_client()
-        path_prefix = f"/{config.NAMESPACE}/"
+        path_prefix = f"/{consts.NAMESPACE}/"
         user_name = kwargs['name']
 
         # IAM user names cannot differ only by case
-        if user_name.lower() == config.IAM_NAME.lower():
+        if user_name.lower() == consts.IAM_NAME.lower():
             halt.err("You cannot delete yourself.")
 
         iam_users = self.iam_client.list_users(PathPrefix=path_prefix)['Users']
@@ -45,14 +45,14 @@ class DeleteUser(CommandBase):
             )
 
             # Remove IAM user's backed up access key from config
-            config_dict = os2.parse_json(config.CONFIG_JSON)
+            config_dict = os2.parse_json(consts.CONFIG_JSON)
             if 'iam_access_keys' in config_dict:
                 config_dict['iam_access_keys'][:] = [
                     access_key for access_key in config_dict['iam_access_keys']
                     if access_key['iam_id'] != aws_access_key['AccessKeyId']]
                 if not config_dict['iam_access_keys']:
                     del config_dict['iam_access_keys']
-                os2.save_json(config_dict, config.CONFIG_JSON)
+                os2.save_json(config_dict, consts.CONFIG_JSON)
 
 
     def remove_user_from_groups(self, user_name):

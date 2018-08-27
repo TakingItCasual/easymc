@@ -1,6 +1,6 @@
 import os.path
 
-from ec2mc import config
+from ec2mc import consts
 from ec2mc.commands.base_classes import ComponentSetup
 from ec2mc.utils import aws
 from ec2mc.utils import halt
@@ -16,7 +16,7 @@ class SSHKeyPairSetup(ComponentSetup):
             dict: Which regions Namespace EC2 key pair exists in.
                 Region name (str/None): Public key fingerprint, if pair exists.
         """
-        self.pem_file = os.path.basename(config.RSA_PRIV_KEY_PEM)
+        self.pem_file = os.path.basename(consts.RSA_PRIV_KEY_PEM)
         self.key_pair_name = os.path.splitext(self.pem_file)[0]
 
         threader = Threader()
@@ -38,7 +38,7 @@ class SSHKeyPairSetup(ComponentSetup):
         # TODO: Redo this whole section
         if len(set(aws_fingerprints)) > 1:
             print("Warning: Differing EC2 key pairs found.")
-        if os.path.isfile(config.RSA_PRIV_KEY_PEM) and aws_fingerprints:
+        if os.path.isfile(consts.RSA_PRIV_KEY_PEM) and aws_fingerprints:
             local_key_fingerprint = pem.local_key_fingerprint()
             if local_key_fingerprint not in aws_fingerprints:
                 print("Warning: Local key fingerprint doesn't match any "
@@ -57,7 +57,7 @@ class SSHKeyPairSetup(ComponentSetup):
         aws_fingerprints = [fp for fp in fingerprint_regions.values()
             if fp is not None]
 
-        if os.path.isfile(config.RSA_PRIV_KEY_PEM):
+        if os.path.isfile(consts.RSA_PRIV_KEY_PEM):
             pub_key_bytes = pem.pem_to_public_key()
         # If SSH key pair doesn't exist in any regions, create a new one
         elif not aws_fingerprints:

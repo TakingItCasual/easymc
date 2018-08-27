@@ -3,7 +3,7 @@ import shutil
 import zipfile
 from botocore.exceptions import ClientError
 
-from ec2mc import config
+from ec2mc import consts
 from ec2mc.commands.base_classes import CommandBase
 from ec2mc.utils import aws
 from ec2mc.utils import halt
@@ -15,7 +15,7 @@ class CreateUser(CommandBase):
     def main(self, kwargs):
         """create a new Namespace IAM user under an IAM group on AWS"""
         iam_client = aws.iam_client()
-        path_prefix = f"/{config.NAMESPACE}/"
+        path_prefix = f"/{consts.NAMESPACE}/"
 
         # Validate specified IAM group exists
         iam_groups = iam_client.list_groups(PathPrefix=path_prefix)['Groups']
@@ -45,7 +45,7 @@ class CreateUser(CommandBase):
         # IAM user access key generated and saved to dictionary
         new_access_key = iam_client.create_access_key(
             UserName=kwargs['name'])['AccessKey']
-        config_dict = os2.parse_json(config.CONFIG_JSON)
+        config_dict = os2.parse_json(consts.CONFIG_JSON)
         if 'iam_access_keys' not in config_dict:
             config_dict['iam_access_keys'] = []
 
@@ -59,7 +59,7 @@ class CreateUser(CommandBase):
                 'iam_id': new_access_key['AccessKeyId'],
                 'iam_secret': new_access_key['SecretAccessKey']
             })
-            os2.save_json(config_dict, config.CONFIG_JSON)
+            os2.save_json(config_dict, consts.CONFIG_JSON)
             print("  User's access key set as default in config.")
         else:
             # Back up new IAM user's access key in config file
@@ -67,7 +67,7 @@ class CreateUser(CommandBase):
                 'iam_id': new_access_key['AccessKeyId'],
                 'iam_secret': new_access_key['SecretAccessKey']
             })
-            os2.save_json(config_dict, config.CONFIG_JSON)
+            os2.save_json(config_dict, consts.CONFIG_JSON)
 
             #self.create_configuration_zip(new_access_key, kwargs['ssh_key'])
             #print("  User's zipped config folder created in config.")
@@ -79,10 +79,10 @@ class CreateUser(CommandBase):
             'iam_id': new_access_key['AccessKeyId'],
             'iam_secret': new_access_key['SecretAccessKey']
         }
-        if config.REGION_WHITELIST is not None:
-            new_config['region_whitelist'] = config.REGION_WHITELIST
+        if consts.REGION_WHITELIST is not None:
+            new_config['region_whitelist'] = consts.REGION_WHITELIST
 
-        temp_dir = os.path.join(f"{config.CONFIG_DIR}.ec2mc_tmp", "")
+        temp_dir = os.path.join(f"{consts.CONFIG_DIR}.ec2mc_tmp", "")
         if os.path.isdir(temp_dir):
             shutil.rmtree(temp_dir)
         os.mkdir(temp_dir)

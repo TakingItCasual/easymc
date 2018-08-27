@@ -1,6 +1,6 @@
 import os.path
 
-from ec2mc import config
+from ec2mc import consts
 from ec2mc.commands.base_classes import CommandBase
 from ec2mc.utils import aws
 from ec2mc.utils import halt
@@ -63,13 +63,13 @@ class DeleteServer(CommandBase):
         print("Instance terminated.")
 
         # Remove instance entry from server_titles.json, if present
-        if os.path.isfile(config.SERVER_TITLES_JSON):
-            titles_dict = os2.parse_json(config.SERVER_TITLES_JSON)
+        if os.path.isfile(consts.SERVER_TITLES_JSON):
+            titles_dict = os2.parse_json(consts.SERVER_TITLES_JSON)
             for index, server_title in enumerate(titles_dict['Instances']):
                 if (server_title['region'] == kwargs['region'] and
                         server_title['id'] == kwargs['id']):
                     del titles_dict['Instances'][index]
-                    os2.save_json(titles_dict, config.SERVER_TITLES_JSON)
+                    os2.save_json(titles_dict, consts.SERVER_TITLES_JSON)
 
 
     def add_documentation(self, argparse_obj):

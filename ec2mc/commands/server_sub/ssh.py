@@ -3,7 +3,7 @@ import platform
 import subprocess
 import shutil
 
-from ec2mc import config
+from ec2mc import consts
 from ec2mc.commands.base_classes import CommandBase
 from ec2mc.utils import aws
 from ec2mc.utils import halt
@@ -15,10 +15,10 @@ class SSHServer(CommandBase):
     def main(self, kwargs):
         """SSH into an EC2 instance using its .pem private key
 
-        Attempts to open an interactive SSH session using either OpenSSH or 
-        PuTTY (OpenSSH is prioritized). .pem/.ppk private key file is expected 
-        to exist within user's config. Instance's user@hostname is printed, 
-        for if an alternative SSH method is desired.
+        Attempts to open an interactive SSH session using either OpenSSH 
+        or PuTTY (OpenSSH is prioritized). A .pem/.ppk private key file is 
+        expected to exist within user's config. Instance's user@hostname 
+        is printed, for if an alternative SSH method is desired.
 
         Args:
             kwargs (dict): See validate.validate_instances:argparse_args
@@ -29,6 +29,9 @@ class SSHServer(CommandBase):
                 "  Narrow filter(s) so that only one instance is returned.")
         instance = instances[0]
 
+        if 'DefaultUser' not in instance['tags']:
+            halt.err("Instance missing DefaultUser tag key-value pair.")
+
         ec2_client = aws.ec2_client(instance['region'])
 
         response = ec2_client.describe_instances(
@@ -36,22 +39,17 @@ class SSHServer(CommandBase):
         )['Reservations'][0]['Instances'][0]
         instance_state = response['State']['Name']
         instance_dns = response['PublicDnsName']
-        try:
-            default_user = next(pair['Value'] for pair in response['Tags']
-                if pair['Key'] == "DefaultUser")
-        except StopIteration:
-            halt.err("Instance missing DefaultUser tag key-value pair.")
 
         if instance_state != "running":
             halt.err("Cannot SSH into an instance that isn't running.")
 
-        user_and_hostname = f"{default_user}@{instance_dns}"
+        user_and_hostname = f"{instance['tags']['DefaultUser']}@{instance_dns}"
 
         print("")
         print("Instance's user and hostname (seperated by \"@\"):")
         print(user_and_hostname)
 
-        pem_key_path = config.RSA_PRIV_KEY_PEM
+        pem_key_path = consts.RSA_PRIV_KEY_PEM
         if shutil.which("ssh") is not None:
             self.open_openssh_session(user_and_hostname, pem_key_path)
         elif shutil.which("putty") is not None:
@@ -72,7 +70,7 @@ class SSHServer(CommandBase):
             key_file_base = os.path.basename(pem_key_path)
             halt.err(f"{key_file_base} not found from config.",
                 f"  {key_file_base} file required to SSH with OpenSSH.")
-        os.chmod(pem_key_path, config.PK_PERMS)
+        os.chmod(pem_key_path, consts.PK_PERMS)
 
         print("")
         print("Attempting to SSH into instance with OpenSSH...")
@@ -94,7 +92,7 @@ class SSHServer(CommandBase):
             halt.err(f"{key_file_base} not found from config.",
                 f"  {key_file_base} file required to SSH with PuTTY.",
                 "  You can convert a .pem file to .ppk using puttygen.")
-        os.chmod(ppk_key_path, config.PK_PERMS)
+        os.chmod(ppk_key_path, consts.PK_PERMS)
 
         print("")
         print("Attempting to SSH into instance with PuTTY...")

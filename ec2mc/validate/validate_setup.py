@@ -2,7 +2,7 @@ import os.path
 import shutil
 import filecmp
 
-from ec2mc import config
+from ec2mc import consts
 from ec2mc.utils import os2
 from ec2mc.utils import halt
 
@@ -10,10 +10,10 @@ from ec2mc.utils import halt
 def main():
     """validate contents of user's config's aws_setup directory"""
     # Directory path for distribution's packaged aws_setup
-    src_aws_setup_dir = os.path.join(f"{config.DIST_DIR}aws_setup_src", "")
+    src_aws_setup_dir = os.path.join(f"{consts.DIST_DIR}aws_setup_src", "")
 
-    # If config.AWS_SETUP_DIR nonexistant, copy from ec2mc.aws_setup_src
-    if not os.path.isdir(config.AWS_SETUP_DIR):
+    # If consts.AWS_SETUP_DIR nonexistant, copy from ec2mc.aws_setup_src
+    if not os.path.isdir(consts.AWS_SETUP_DIR):
         cp_aws_setup_to_config(src_aws_setup_dir)
     config_aws_setup = get_config_aws_setup_dict()
 
@@ -25,7 +25,7 @@ def main():
     # If 'Modified' key is True, prevent overwriting config's aws_setup
     if config_aws_setup['Modified'] is False:
         files_to_compare = os2.list_files_with_sub_dirs(src_aws_setup_dir)
-        diff = filecmp.cmpfiles(src_aws_setup_dir, config.AWS_SETUP_DIR,
+        diff = filecmp.cmpfiles(src_aws_setup_dir, consts.AWS_SETUP_DIR,
             files_to_compare, shallow=False)
         # If source and config aws_setup differ, overwrite config aws_setup
         # If config aws_setup missing files, overwrite config aws_setup
@@ -35,8 +35,8 @@ def main():
 
     validate_aws_setup(config_aws_setup)
 
-    config.NAMESPACE = config_aws_setup['Namespace']
-    config.RSA_PRIV_KEY_PEM = f"{config.CONFIG_DIR}{config.NAMESPACE}.pem"
+    consts.NAMESPACE = config_aws_setup['Namespace']
+    consts.RSA_PRIV_KEY_PEM = f"{consts.CONFIG_DIR}{consts.NAMESPACE}.pem"
 
     validate_iam_policies(config_aws_setup)
     validate_iam_groups(config_aws_setup)
@@ -46,16 +46,16 @@ def main():
 
 def get_config_aws_setup_dict():
     """return aws_setup.json from config in user's home dir as dict"""
-    if not os.path.isfile(config.AWS_SETUP_JSON):
+    if not os.path.isfile(consts.AWS_SETUP_JSON):
         halt.err("aws_setup.json not found from config.")
-    return os2.parse_json(config.AWS_SETUP_JSON)
+    return os2.parse_json(consts.AWS_SETUP_JSON)
 
 
 def cp_aws_setup_to_config(src_aws_setup_dir):
     """delete config aws_setup, then copy source aws_setup to config"""
-    if os.path.isdir(config.AWS_SETUP_DIR):
-        shutil.rmtree(config.AWS_SETUP_DIR)
-    shutil.copytree(src_aws_setup_dir, config.AWS_SETUP_DIR)
+    if os.path.isdir(consts.AWS_SETUP_DIR):
+        shutil.rmtree(consts.AWS_SETUP_DIR)
+    shutil.copytree(src_aws_setup_dir, consts.AWS_SETUP_DIR)
 
 
 def validate_aws_setup(config_aws_setup):
@@ -66,7 +66,7 @@ def validate_aws_setup(config_aws_setup):
 
 def validate_iam_policies(config_aws_setup):
     """validate aws_setup.json reflects contents of iam_policies dir"""
-    policy_dir = os.path.join(f"{config.AWS_SETUP_DIR}iam_policies", "")
+    policy_dir = os.path.join(f"{consts.AWS_SETUP_DIR}iam_policies", "")
 
     # Policies described in aws_setup/aws_setup.json
     setup_policy_list = [f"{policy}.json" for policy
@@ -100,13 +100,13 @@ def validate_iam_groups(config_aws_setup):
 
 def validate_instance_templates(config_aws_setup):
     """validate config aws_setup user_data YAML instance templates"""
-    template_yaml_files = os2.list_dir_files(config.USER_DATA_DIR, ext=".yaml")
+    template_yaml_files = os2.list_dir_files(consts.USER_DATA_DIR, ext=".yaml")
 
     schema = os2.get_json_schema("instance_templates")
     sg_names = [sg for sg in config_aws_setup['VPC']['SecurityGroups']]
     for template_yaml_file in template_yaml_files:
         user_data = os2.parse_yaml(
-            f"{config.USER_DATA_DIR}{template_yaml_file}")
+            f"{consts.USER_DATA_DIR}{template_yaml_file}")
         os2.validate_dict(user_data, schema, template_yaml_file)
 
         template_info = user_data['ec2mc_template_info']
@@ -118,7 +118,7 @@ def validate_instance_templates(config_aws_setup):
 
         template_name = os.path.splitext(template_yaml_file)[0]
         template_dir = os.path.join(
-            f"{config.USER_DATA_DIR}{template_name}", "")
+            f"{consts.USER_DATA_DIR}{template_name}", "")
         # If write_directories not empty, validate template directory exists
         if not os.path.isdir(template_dir):
             if ('write_directories' in template_info
@@ -137,7 +137,7 @@ def validate_instance_templates(config_aws_setup):
 
 def validate_vpc_security_groups(config_aws_setup):
     """validate aws_setup.json reflects contents of vpc_security_groups dir"""
-    sg_dir = os.path.join(f"{config.AWS_SETUP_DIR}vpc_security_groups", "")
+    sg_dir = os.path.join(f"{consts.AWS_SETUP_DIR}vpc_security_groups", "")
 
     # SGs described in aws_setup/aws_setup.json
     setup_sg_list = [f"{sg_name}.json" for sg_name

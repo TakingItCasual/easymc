@@ -1,7 +1,7 @@
 import os.path
 from deepdiff import DeepDiff
 
-from ec2mc import config
+from ec2mc import consts
 from ec2mc.commands.base_classes import ComponentSetup
 from ec2mc.utils import aws
 from ec2mc.utils import halt
@@ -29,7 +29,7 @@ class VPCSetup(ComponentSetup):
         """
         regions = aws.get_regions()
 
-        self.vpc_name = config.NAMESPACE
+        self.vpc_name = consts.NAMESPACE
         # Region(s) to create VPC in, and region(s) already containing VPC
         vpc_regions = {
             'ToCreate': regions[:],
@@ -335,7 +335,7 @@ class VPCSetup(ComponentSetup):
     def get_json_sg_ingress(self, sg_name):
         """retrieve local security group ingress rule(s) dict"""
         security_group_dir = os.path.join(
-            f"{config.AWS_SETUP_DIR}vpc_security_groups", "")
+            f"{consts.AWS_SETUP_DIR}vpc_security_groups", "")
         return os2.parse_json(f"{security_group_dir}{sg_name}.json")['Ingress']
 
 

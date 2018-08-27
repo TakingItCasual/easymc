@@ -5,7 +5,7 @@ from time import sleep
 import boto3
 from botocore.exceptions import ClientError
 
-from ec2mc import config
+from ec2mc import consts
 from ec2mc.utils import halt
 
 def get_regions():
@@ -14,13 +14,13 @@ def get_regions():
     Requires ec2:DescribeRegions permission.
     """
     region_whitelist = []
-    if config.REGION_WHITELIST is not None:
+    if consts.REGION_WHITELIST is not None:
         region_whitelist.append({
             'Name': "region-name",
-            'Values': config.REGION_WHITELIST
+            'Values': consts.REGION_WHITELIST
         })
 
-    response = ec2_client(config.DEFAULT_REGION).describe_regions(
+    response = ec2_client(consts.DEFAULT_REGION).describe_regions(
         Filters=region_whitelist)
     return [region['RegionName'] for region in response['Regions']]
 
@@ -28,23 +28,16 @@ def get_regions():
 def ec2_client(region):
     """create and return EC2 client using IAM user access key and a region"""
     return boto3.client("ec2",
-        aws_access_key_id=config.IAM_ID,
-        aws_secret_access_key=config.IAM_SECRET,
+        aws_access_key_id=consts.IAM_ID,
+        aws_secret_access_key=consts.IAM_SECRET,
         region_name=region
     )
 
 def iam_client():
     """create and return IAM client using IAM user access key"""
     return boto3.client("iam",
-        aws_access_key_id=config.IAM_ID,
-        aws_secret_access_key=config.IAM_SECRET
-    )
-
-def ssm_client():
-    """create and return SSM client using IAM user access key"""
-    return boto3.client("ssm",
-        aws_access_key_id=config.IAM_ID,
-        aws_secret_access_key=config.IAM_SECRET
+        aws_access_key_id=consts.IAM_ID,
+        aws_secret_access_key=consts.IAM_SECRET
     )
 
 
@@ -55,11 +48,11 @@ def get_region_vpc(region):
     """
     vpcs = ec2_client(region).describe_vpcs(Filters=[{
         'Name': "tag:Namespace",
-        'Values': [config.NAMESPACE]
+        'Values': [consts.NAMESPACE]
     }])['Vpcs']
 
     if len(vpcs) > 1:
-        halt.err(f"Multiple VPCs with Namespace tag {config.NAMESPACE} "
+        halt.err(f"Multiple VPCs with Namespace tag {consts.NAMESPACE} "
             f"found in {region} region.")
     elif vpcs:
         return vpcs[0]
@@ -73,7 +66,7 @@ def get_region_security_groups(region, vpc_id=None):
     """
     sg_filter = [{
         'Name': "tag:Namespace",
-        'Values': [config.NAMESPACE]
+        'Values': [consts.NAMESPACE]
     }]
     if vpc_id:
         sg_filter.append({
@@ -104,7 +97,7 @@ def attach_tags(region, resource_id, name_tag=None):
     """
     new_tags = [{
         'Key': "Namespace",
-        'Value': config.NAMESPACE
+        'Value': consts.NAMESPACE
     }]
     if name_tag is not None:
         new_tags.append({

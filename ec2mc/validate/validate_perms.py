@@ -1,4 +1,4 @@
-from ec2mc import config
+from ec2mc import consts
 from ec2mc.utils import aws
 
 def blocked(actions, resources=None, context=None):
@@ -35,7 +35,7 @@ def blocked(actions, resources=None, context=None):
         context = [{}]
 
     results = aws.iam_client().simulate_principal_policy(
-        PolicySourceArn=config.IAM_ARN,
+        PolicySourceArn=consts.IAM_ARN,
         ActionNames=actions,
         ResourceArns=resources,
         ContextEntries=context

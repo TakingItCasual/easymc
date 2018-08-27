@@ -5,8 +5,6 @@
             "Sid": "AdminPermissions",
             "Effect": "Allow",
             "Action": [
-                "ssm:SendCommand",
-                "ssm:GetCommandInvocation",
                 "ec2:DescribeSecurityGroups",
                 "ec2:DescribeAddresses",
                 "ec2:DescribeImages",

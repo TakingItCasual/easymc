@@ -2,7 +2,7 @@ import os.path
 import json
 from deepdiff import DeepDiff
 
-from ec2mc import config
+from ec2mc import consts
 from ec2mc.commands.base_classes import ComponentSetup
 from ec2mc.utils import aws
 from ec2mc.utils import os2
@@ -24,8 +24,8 @@ class IAMPolicySetup(ComponentSetup):
         """
         self.iam_client = aws.iam_client()
         self.policy_dir = os.path.join(
-            f"{config.AWS_SETUP_DIR}iam_policies", "")
-        self.path_prefix = f"/{config.NAMESPACE}/"
+            f"{consts.AWS_SETUP_DIR}iam_policies", "")
+        self.path_prefix = f"/{consts.NAMESPACE}/"
 
         # Local IAM policy(s) list
         self.iam_policy_setup = config_aws_setup['IAM']['Policies']
