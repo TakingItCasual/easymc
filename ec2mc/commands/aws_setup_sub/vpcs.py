@@ -19,13 +19,13 @@ class VPCSetup(ComponentSetup):
         Returns:
             tuple:
                 dict: Which regions Namespace VPC exists in.
-                    "ToCreate" (list): AWS region(s) to create VPC in.
-                    "Existing" (list): AWS region(s) already containing VPC.
+                    'ToCreate' (list): AWS region(s) to create VPC in.
+                    'Existing' (list): AWS region(s) already containing VPC.
                 dict: VPC security group status(es) for each region.
                     Name of security group (dict):
-                        "ToCreate" (list): AWS region(s) to create SG in.
-                        "ToUpdate" (list): AWS region(s) to update SG in.
-                        "UpToDate" (list): AWS region(s) SG is up to date in.
+                        'ToCreate' (list): AWS region(s) to create SG in.
+                        'ToUpdate' (list): AWS region(s) to update SG in.
+                        'UpToDate' (list): AWS region(s) SG is up to date in.
         """
         regions = aws.get_regions()
 

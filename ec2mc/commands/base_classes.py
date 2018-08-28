@@ -1,6 +1,7 @@
 """base classes to be inherited from for various purposes"""
 
-from abc import ABC, abstractmethod
+from abc import ABC
+from abc import abstractmethod
 
 from ec2mc.validate import validate_perms
 

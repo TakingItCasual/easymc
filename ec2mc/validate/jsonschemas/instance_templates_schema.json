@@ -20,6 +20,7 @@
                     "minItems": 1,
                     "uniqueItems": true
                 },
+                "ip_handler": {"type": ["string", "null"]},
                 "write_directories": {
                     "type" : "array",
                     "items": {
@@ -43,7 +44,8 @@
                 "AMI_info",
                 "instance_type",
                 "volume_size",
-                "security_groups"
+                "security_groups",
+                "ip_handler"
             ]
         }
     },

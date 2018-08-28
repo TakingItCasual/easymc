@@ -30,7 +30,7 @@
     },
     "VPC": {
         "SecurityGroups": {
-            "ec2mc_sg": "Allow all traffic through ports 22 and 25565."
+            "minecraft_sg": "Allow all traffic through ports 22 and 25565."
         }
     }
 }

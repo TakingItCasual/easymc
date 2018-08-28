@@ -32,9 +32,7 @@ class SSHServer(CommandBase):
         if 'DefaultUser' not in instance['tags']:
             halt.err("Instance missing DefaultUser tag key-value pair.")
 
-        ec2_client = aws.ec2_client(instance['region'])
-
-        response = ec2_client.describe_instances(
+        response = aws.ec2_client(instance['region']).describe_instances(
             InstanceIds=[instance['id']]
         )['Reservations'][0]['Instances'][0]
         instance_state = response['State']['Name']

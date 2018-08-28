@@ -1,3 +1,4 @@
+from ec2mc import consts
 from ec2mc.utils import aws
 from ec2mc.utils import halt
 from ec2mc.utils.threader import Threader
@@ -11,11 +12,11 @@ def main(kwargs):
 
     Args:
         kwargs (dict):
-            "region_filter" (list[str]): AWS region(s) to probe. If None, 
+            'region_filter' (list[str]): AWS region(s) to probe. If None, 
                 probe all regions (in whitelist, if defined).
-            "tag_filters" (list[list[str]]): Instance tag key-value(s) 
+            'tag_filters' (list[list[str]]): Instance tag key-value(s) 
                 filter(s). For inner lists with one item, filter by key.
-            "name_filter" (list[str]): Instance tag value(s) filter for 
+            'name_filter' (list[str]): Instance tag value(s) filter for 
                 tag key "Name".
 
     Returns: See what probe_regions returns.
@@ -28,17 +29,7 @@ def main(kwargs):
     all_instances = probe_regions(regions, tag_filter)
 
     if not all_instances:
-        if kwargs['region_filter'] and not tag_filter:
-            halt.err("No instances found from specified region(s).",
-                "  Try removing the region filter.")
-        if not kwargs['region_filter'] and tag_filter:
-            halt.err("No instances with specified tag(s) found.",
-                "  Try removing the tag filter.")
-        if kwargs['region_filter'] and tag_filter:
-            halt.err(("No instances with specified tag(s) found "
-                "from specified region(s)."),
-                "  Try removing the region filter and/or the tag filter.")
-        halt.err("No instances found.")
+        halt.err("No Namespace instances found.")
 
     for region in regions:
         instances = [instance for instance in all_instances
@@ -72,7 +63,7 @@ def probe_regions(regions, tag_filter=None):
 
     Returns:
         list[dict]: Found instance(s).
-            "region" (str): AWS region that an instance is in.
+            'region' (str): AWS region that an instance is in.
             For other key-value pairs, see what probe_region returns.
     """
     threader = Threader()
@@ -103,9 +94,9 @@ def probe_region(region, tag_filter=None):
 
     Returns:
         list[dict]: Instance(s) found in region.
-            "id" (str): ID of instance.
-            "name" (str/None): Tag value for instance tag key "Name".
-            "tags" (dict): Instance tag key-value pair(s).
+            'id' (str): ID of instance.
+            'name' (str/None): Tag value for instance tag key "Name".
+            'tags' (dict): Instance tag key-value pair(s).
     """
     if tag_filter is None:
         tag_filter = []
@@ -161,7 +152,10 @@ def parse_filters(kwargs):
                 *(region_filter - set(regions)))
         regions = list(region_filter)
 
-    tag_filter = []
+    tag_filter = [{
+        'Name': "tag:Namespace",
+        'Values': [consts.NAMESPACE]
+    }]
     if kwargs['tag_filters']:
         # Convert dict(s) list to what describe_instances' Filters expects.
         for filter_elements in kwargs['tag_filters']:

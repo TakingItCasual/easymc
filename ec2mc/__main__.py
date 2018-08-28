@@ -51,7 +51,7 @@ def main(args=None):
 
         # If basic configuration being done, skip config validation
         if not (chosen_cmd.module_name() == "configure" and
-                kwargs["swap_user"] is None):
+                kwargs['action'] != "swap_user"):
             # Validate config's config.json and server_titles.json
             validate_config.main()
             # Validate config's aws_setup.json and YAML instance templates
@@ -62,7 +62,8 @@ def main(args=None):
         # Use the command
         chosen_cmd.main(kwargs)
     except SystemExit:
-        pass
+        return False
+    return True
 
 
 def argv_to_kwargs(args, commands):

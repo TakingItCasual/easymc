@@ -49,8 +49,8 @@ class Threader(object):
         """block all threads, sort by thread index, then return thread results
 
         Args:
-            return_dict (bool): Return dict instead of list. Threads' 
-                function's first argument used as key.
+            return_dict (bool): Return dict instead of list. Threaded 
+                functions' first arguments used as keys.
         """
         for thread in self.threads:
             thread.join()

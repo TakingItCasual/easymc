@@ -1,6 +1,8 @@
 import os
 import shutil
+from time import sleep
 import zipfile
+import boto3
 from botocore.exceptions import ClientError
 
 from ec2mc import consts
@@ -45,27 +47,29 @@ class CreateUser(CommandBase):
         # IAM user access key generated and saved to dictionary
         new_access_key = iam_client.create_access_key(
             UserName=kwargs['name'])['AccessKey']
+        self.access_key_usable_waiter(new_access_key)
+
         config_dict = os2.parse_json(consts.CONFIG_JSON)
-        if 'iam_access_keys' not in config_dict:
-            config_dict['iam_access_keys'] = []
+        if 'backup_access_keys' not in config_dict:
+            config_dict['backup_access_keys'] = []
 
         if kwargs['default']:
             # Modify existing config instead of creating new one
-            config_dict['iam_access_keys'].append({
-                'iam_id': config_dict['iam_id'],
-                'iam_secret': config_dict['iam_secret']
+            config_dict['backup_access_keys'].append({
+                'id': config_dict['access_key']['id'],
+                'secret': config_dict['access_key']['secret']
             })
-            config_dict.update({
-                'iam_id': new_access_key['AccessKeyId'],
-                'iam_secret': new_access_key['SecretAccessKey']
-            })
+            config_dict['access_key'] = {
+                'id': new_access_key['AccessKeyId'],
+                'secret': new_access_key['SecretAccessKey']
+            }
             os2.save_json(config_dict, consts.CONFIG_JSON)
-            print("  User's access key set as default in config.")
+            print("  IAM user's access key set as default in config.")
         else:
             # Back up new IAM user's access key in config file
-            config_dict['iam_access_keys'].append({
-                'iam_id': new_access_key['AccessKeyId'],
-                'iam_secret': new_access_key['SecretAccessKey']
+            config_dict['backup_access_keys'].append({
+                'id': new_access_key['AccessKeyId'],
+                'secret': new_access_key['SecretAccessKey']
             })
             os2.save_json(config_dict, consts.CONFIG_JSON)
 
@@ -76,8 +80,10 @@ class CreateUser(CommandBase):
     def create_configuration_zip(self, new_access_key, give_ssh_key):
         """create zipped config folder containing new IAM user access key"""
         new_config = {
-            'iam_id': new_access_key['AccessKeyId'],
-            'iam_secret': new_access_key['SecretAccessKey']
+            'access_key': {
+                'id': new_access_key['AccessKeyId'],
+                'secret': new_access_key['SecretAccessKey']
+            }
         }
         if consts.REGION_WHITELIST is not None:
             new_config['region_whitelist'] = consts.REGION_WHITELIST
@@ -89,6 +95,23 @@ class CreateUser(CommandBase):
 
         if give_ssh_key is True:
             pass
+
+
+    def access_key_usable_waiter(self, new_access_key):
+        """aws doesn't provide a waiter for checking if access keys usable"""
+        iam_client = boto3.client("iam",
+            aws_access_key_id=new_access_key['AccessKeyId'],
+            aws_secret_access_key=new_access_key['SecretAccessKey']
+        )
+        for _ in range(60):
+            try:
+                # New IAM user is assumed to have the iam:GetUser permission.
+                iam_client.get_user()
+                break
+            except ClientError as e:
+                sleep(1)
+        else:
+            halt.err("Access key not usable even after waiting 1 minute.")
 
 
     def add_documentation(self, argparse_obj):

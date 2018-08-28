@@ -19,12 +19,12 @@ class CreateServer(CommandBase):
 
         Args:
             kwargs (dict):
-                "template" (str): Config instance setup template name.
-                "region" (str): AWS region to create instance in.
-                "name" (str): Tag value for instance tag key "Name".
-                "confirm" (bool): Whether to actually create the instance.
-                "elastic_ip" (bool): Whether to associate a new elastic IP.
-                "tags" (list): Additional instance tag key-value pair(s).
+                'template' (str): Config instance setup template name.
+                'region' (str): AWS region to create instance in.
+                'name' (str): Tag value for instance tag key "Name".
+                'confirm' (bool): Whether to actually create the instance.
+                'elastic_ip' (bool): Whether to associate a new elastic IP.
+                'tags' (list): Additional instance tag key-value pair(s).
         """
         template_yaml_files = os2.list_dir_files(consts.USER_DATA_DIR)
         if f"{kwargs['template']}.yaml" not in template_yaml_files:
@@ -74,27 +74,27 @@ class CreateServer(CommandBase):
 
         Args:
             kwargs (dict):
-                "region" (str): AWS region to create instance in.
-                "name" (str): Tag value for instance tag key "Name".
-                "tags" (list): Additional instance tag key-value pair(s).
+                'region' (str): AWS region to create instance in.
+                'name' (str): Tag value for instance tag key "Name".
+                'tags' (list): Additional instance tag key-value pair(s).
             instance_template (dict):
-                "AMI_info" (dict):
-                    "AMI_name" (str): EC2 image name (determines instance OS).
-                    "default_user" (str): AMI's default user (for SSH).
-                "instance_type" (str): EC2 instance type to create.
-                "volume_size" (int): EC2 instance volume size (GiB).
-                "security_groups" (list[str]): VPC SG(s) to assign to instance.
+                'AMI_info' (dict):
+                    'AMI_name' (str): EC2 image name (determines instance OS).
+                    'default_user' (str): AMI's default user (for SSH).
+                'instance_type' (str): EC2 instance type to create.
+                'volume_size' (int): EC2 instance volume size (GiB).
+                'security_groups' (list[str]): VPC SG(s) to assign to instance.
 
         Returns:
             dict: Arguments needed for instance creation.
-                "ami_id" (str): EC2 image ID (determines instance OS).
-                "device_name" (str): Device Name for operating system (?).
-                "instance_type" (str): EC2 instance type to create.
-                "volume_size" (int): EC2 instance size (GiB).
-                "tags" (list[dict]): All instance tag key-value pair(s).
-                "sg_ids" (list[str]): ID(s) of VPC SG(s) to assign to instance.
-                "subnet_id" (str): ID of VPC subnet to assign to instance.
-                "key_name" (str): Name of EC2 key pair to assign (for SSH).
+                'ami_id' (str): EC2 image ID (determines instance OS).
+                'device_name' (str): Device Name for operating system (?).
+                'instance_type' (str): EC2 instance type to create.
+                'volume_size' (int): EC2 instance size (GiB).
+                'tags' (list[dict]): All instance tag key-value pair(s).
+                'sg_ids' (list[str]): ID(s) of VPC SG(s) to assign to instance.
+                'subnet_id' (str): ID of VPC subnet to assign to instance.
+                'key_name' (str): Name of EC2 key pair to assign (for SSH).
         """
         region = kwargs['region']
         ec2_client = aws.ec2_client(region)
@@ -122,6 +122,10 @@ class CreateServer(CommandBase):
                 'Value': kwargs['name']
             },
             {
+                'Key': "Namespace",
+                'Value': consts.NAMESPACE
+            },
+            {
                 'Key': "DefaultUser",
                 'Value': instance_template['AMI_info']['default_user']
             }
@@ -132,6 +136,11 @@ class CreateServer(CommandBase):
                     'Key': tag_key,
                     'Value': tag_value
                 })
+        if instance_template['ip_handler'] is not None:
+            creation_kwargs['tags'].append({
+                'Key': "IpHandler",
+                'Value': instance_template['ip_handler']
+            })
 
         vpc_info = aws.get_region_vpc(region)
         if vpc_info is None:
@@ -172,7 +181,7 @@ class CreateServer(CommandBase):
         Args:
             template_name (str): Name of the YAML instance template.
             template (dict):
-                "write_directories" (str): Info on directory(s) to copy files 
+                'write_directories' (str): Info on directory(s) to copy files 
                     from to user_data's write_files.
 
         Returns:

@@ -22,86 +22,52 @@ class Configure(CommandBase):
             config_dict = os2.parse_json(consts.CONFIG_JSON)
             os2.validate_dict(config_dict, schema, "config.json")
 
-        if kwargs['swap_user'] is not None:
+        # TODO: Implement use_handler configuring
+        if kwargs['action'] == "access_key":
+            config_dict = self.set_access_key(
+                config_dict, kwargs['key_id'], kwargs['key_secret'])
+        elif kwargs['action'] == "swap_user":
             config_dict = self.switch_access_key(
-                config_dict, kwargs['swap_user'])
-        else:
-            config_dict = self.default_set_config(config_dict)
+                config_dict, kwargs['user_name'])
+        elif kwargs['action'] == "whitelist":
+            config_dict = self.set_whitelist(config_dict, kwargs["regions"])
 
         if config_dict:
             os2.save_json(config_dict, consts.CONFIG_JSON)
             os.chmod(consts.CONFIG_JSON, consts.CONFIG_PERMS)
 
 
-    def default_set_config(self, config_dict):
-        """default behavior when no argparse arguments are specified"""
-        iam_id_str = "None"
-        iam_secret_str = "None"
-        servers_dat_str = "None"
-        whitelist_str = "All"
-
-        if 'iam_id' in config_dict:
-            iam_id_str = "*"*16 + config_dict['iam_id'][-4:]
-        if 'iam_secret' in config_dict:
-            iam_secret_str = "*"*16 + config_dict['iam_secret'][-4:]
-        if 'servers_dat' in config_dict:
-            servers_dat_str = config_dict['servers_dat']
-        if ('region_whitelist' in config_dict
-                and config_dict['region_whitelist']):
-            whitelist_str = ",".join(config_dict['region_whitelist'])
-
-        iam_id = input(f"AWS Access Key ID [{iam_id_str}]: ")
-        iam_secret = input(f"AWS Secret Access Key [{iam_secret_str}]: ")
-
-        servers_dat = input(
-            f"MC client's servers.dat path [{servers_dat_str}]: ")
-        # If given servers.dat path isn't valid, loop until valid or empty.
-        while servers_dat and not (
-                os.path.isfile(servers_dat) and
-                servers_dat.endswith("servers.dat")):
-            servers_dat = input(
-                f"{servers_dat} is not valid. Try again or leave empty: ")
-
-        region_whitelist = [input(
-            f"AWS region whitelist [{whitelist_str}] (first item): ")]
-        while region_whitelist[-1] != "":
-            region_whitelist.append(input(
-                "Additional whitelist item (or leave empty): "))
-        del region_whitelist[-1]
-
-        # Only modify key value(s) if non-empty string(s) given.
-        if iam_id:
-            config_dict['iam_id'] = iam_id
-        if iam_secret:
-            config_dict['iam_secret'] = iam_secret
-        if servers_dat:
-            config_dict['servers_dat'] = servers_dat
-        if region_whitelist:
-            config_dict['region_whitelist'] = region_whitelist
-
+    def set_access_key(self, config_dict, key_id, key_secret):
+        """set id and secret of config's default access key"""
+        if 'access_key' in config_dict:
+            print("Existing access key overwritten.")
+        else:
+            print("Access key set.")
+        config_dict['access_key'] = {'id': key_id, 'secret': key_secret}
         return config_dict
 
 
     def switch_access_key(self, config_dict, user_name):
-        """set access key stored under iam_access_keys list as primary"""
-        if not ('iam_access_keys' in config_dict and
-                config_dict['iam_access_keys']):
+        """set access key stored under backup_access_keys list as default"""
+        if 'backup_access_keys' not in config_dict:
             halt.err("No backup access keys stored in config.")
 
-        for index, access_key in enumerate(config_dict['iam_access_keys']):
+        for index, access_key in enumerate(config_dict['backup_access_keys']):
             # TODO: Validate access key is active
-            key_owner = aws.access_key_owner(access_key['iam_id'])
+            key_owner = aws.access_key_owner(access_key['id'])
+            if key_owner is None:
+                continue
             if key_owner.lower() == user_name.lower():
                 # Swap default access key with requested IAM user's in config
-                config_dict['iam_access_keys'].append({
-                    'iam_id': config_dict['iam_id'],
-                    'iam_secret': config_dict['iam_secret']
+                config_dict['backup_access_keys'].append({
+                    'id': config_dict['access_key']['id'],
+                    'secret': config_dict['access_key']['secret']
                 })
-                config_dict.update({
-                    'iam_id': access_key['iam_id'],
-                    'iam_secret': access_key['iam_secret']
-                })
-                del config_dict['iam_access_keys'][index]
+                config_dict['access_key'] = {
+                    'id': access_key['id'],
+                    'secret': access_key['secret']
+                }
+                del config_dict['backup_access_keys'][index]
 
                 print(f"{key_owner}'s access key set as default in config.")
                 break
@@ -111,14 +77,41 @@ class Configure(CommandBase):
         return config_dict
 
 
+    def set_whitelist(self, config_dict, regions):
+        """set whitelist for AWS regions the script interacts with"""
+        if regions:
+            config_dict['region_whitelist'] = regions
+        elif 'region_whitelist' in config_dict:
+            del config_dict['region_whitelist']
+        return config_dict
+
+
     def add_documentation(self, argparse_obj):
         cmd_parser = super().add_documentation(argparse_obj)
-        cmd_parser.add_argument(
-            "--swap_user", metavar="",
-            help="swap default access key in config")
+        actions = cmd_parser.add_subparsers(
+            metavar="{action}    ", dest="action")
+        actions.required = True
+
+        access_key_parser = actions.add_parser(
+            "access_key", help="set default IAM user access key")
+        access_key_parser.add_argument(
+            "key_id", help="ID of access key")
+        access_key_parser.add_argument(
+            "key_secret", help="secret access key")
+
+        swap_user_parser = actions.add_parser(
+            "swap_user", help="switch default IAM user access key for another")
+        swap_user_parser.add_argument(
+            "user_name", help="name of desired access key owner")
+
+        whitelist_parser = actions.add_parser(
+            "whitelist", help="set whitelist for AWS regions")
+        whitelist_parser.add_argument(
+            "regions", nargs="*",
+            help="list of regions (leave empty to disable whitelist)")
 
 
     def blocked_actions(self, kwargs):
-        if kwargs['swap_user'] is not None:
+        if kwargs['action'] == "swap_user":
             return validate_perms.blocked(actions=["iam:GetAccessKeyLastUsed"])
         return []

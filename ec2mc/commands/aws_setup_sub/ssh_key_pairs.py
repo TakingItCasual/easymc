@@ -35,17 +35,14 @@ class SSHKeyPairSetup(ComponentSetup):
         print(f"EC2 key pair {self.key_pair_name} exists in {existing} of "
             f"{total_regions} AWS regions.")
 
-        # TODO: Redo this whole section
         if len(set(aws_fingerprints)) > 1:
             print("Warning: Differing EC2 key pairs found.")
+            print("  Please delete EC2 key pairs and reupload.")
         if os.path.isfile(consts.RSA_PRIV_KEY_PEM) and aws_fingerprints:
-            local_key_fingerprint = pem.local_key_fingerprint()
-            if local_key_fingerprint not in aws_fingerprints:
-                print("Warning: Local key fingerprint doesn't match any "
-                    "EC2 key pair.")
+            if pem.local_key_fingerprint() not in aws_fingerprints:
+                print("Warning: Local RSA key does not match EC2 key pair(s).")
         elif aws_fingerprints:
-            print("Warning: No local key found, despite existence of "
-                "EC2 key pair(s).")
+            print("Warning: Local RSA .pem key not found.")
 
 
     def upload_component(self, fingerprint_regions):

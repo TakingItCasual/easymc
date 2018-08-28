@@ -1,26 +1,32 @@
 {
     "type": "object",
     "properties": {
-        "iam_id": {"type": "string"},
-        "iam_secret": {"type": "string"},
-        "servers_dat": {"type": ["string", "null"]},
-        "region_whitelist": {
-            "type" : "array",
-            "items": {"type": "string"},
-            "minItems": 0,
-            "uniqueItems": true
+        "access_key": {
+            "type": "object",
+            "properties": {
+                "id": {"type": "string"},
+                "secret": {"type": "string"}
+            },
+            "required": ["id", "secret"]
         },
-        "iam_access_keys": {
+        "backup_access_keys": {
             "type": "array",
             "items": {
                 "type": "object",
                 "properties": {
-                    "iam_id": {"type": "string"},
-                    "iam_secret": {"type": "string"}
+                    "id": {"type": "string"},
+                    "secret": {"type": "string"}
                 },
-                "required": ["iam_id", "iam_secret"]
+                "required": ["id", "secret"]
             },
-            "minItems": 0,
+            "minItems": 1,
+            "uniqueItems": true
+        },
+        "servers_dat": {"type": ["string", "null"]},
+        "region_whitelist": {
+            "type" : "array",
+            "items": {"type": "string"},
+            "minItems": 1,
             "uniqueItems": true
         }
     }

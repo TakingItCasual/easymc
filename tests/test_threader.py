@@ -6,14 +6,14 @@ from ec2mc.utils.threader import Threader
 
 def test_threader_dict_return():
     """test that functions' first args set as function returns' dict keys"""
-    def func(dict_key, multiplier):
-        return dict_key * multiplier
+    def func(dict_key):
+        return dict_key * 2
 
     threader = Threader()
     for index in range(5):
-        threader.add_thread(func, (index, 10))
+        threader.add_thread(func, (index,))
     assert threader.get_results(return_dict=True) == {
-        0: 0, 1: 10, 2: 20, 3: 30, 4: 40
+        0: 0, 1: 2, 2: 4, 3: 6, 4: 8
     }
 
 

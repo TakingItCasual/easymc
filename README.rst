@@ -3,7 +3,7 @@ AWS EC2 instance manager for Minecraft servers
 
 |PyPI Version| |Python Version|
 
-A Python console script for managing Minecraft servers hosted on AWS EC2 instances (cloud computing).
+A Python console script for managing Minecraft servers hosted on AWS EC2 On-Demand instances (cloud computing).
 Functionality is included for automating later parts of the AWS account setup process.
 Templates are provided for the simple creation of vanilla and modded Minecraft servers.
 

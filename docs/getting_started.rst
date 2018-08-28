@@ -28,7 +28,7 @@ This script requires an AWS IAM user access key to interact with your account.
 To set up your AWS account, a temporary IAM user is needed.
 To create the temporary IAM user, visit your `IAM Management Console`_ and create a new user.
 
-Please note that the AdministratorAccess policy given to the temporary IAM user is potentially dangerous (AWS provides some very expensive services (>$10,000/day)), so the user should be deleted after creating another IAM user with the script.
+Please note that the AdministratorAccess policy given to the temporary IAM user is potentially dangerous (running costs of over $10,000 a day can be incurred), so the user should be deleted after creating another IAM user with the script.
 
 In step 1, name the IAM user, and enable "Programmatic access" for "Access type".
 In step 2, switch to "Attach existing policies directly" and enable "AdministratorAccess".
@@ -38,7 +38,7 @@ Keep the page that loads open for the next step.
 To set the access key for the script, you can download your IAM user's accessKeys.csv file (by clicking "Download .csv") and move the file to the script's configuration folder.
 Alternatively, you can copy the IAM user's access key ID and secret access key, and paste them into the corresponding inputs given by the following command::
 
-    ec2mc configure
+    ec2mc configure access_key
 
 To verify the previous steps, attempt to use the following command again::
 

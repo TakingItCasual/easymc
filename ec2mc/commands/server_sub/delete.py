@@ -14,9 +14,9 @@ class DeleteServer(CommandBase):
 
         Args:
             kwargs (dict):
-                "region" (str): AWS region to terminate instance from.
-                "id" (str): ID of instance to terminate.
-                "name" (str): Tag value for instance tag key "Name".
+                'region' (str): AWS region to terminate instance from.
+                'id' (str): ID of instance to terminate.
+                'name' (str): Tag value for instance tag key "Name".
         """
         # Validate specified region
         if kwargs['region'] not in aws.get_regions():

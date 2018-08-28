@@ -17,9 +17,10 @@ def main():
     if not os.path.isfile(consts.CONFIG_JSON):
         credentials_csv = f"{consts.CONFIG_DIR}accessKeys.csv"
         if not os.path.isfile(credentials_csv):
-            halt.err(
-                "Configuration is not set. Set with \"ec2mc configure\".",
-                "  An IAM user access key is needed to interact with AWS."
+            config_base = os.path.basename(consts.CONFIG_JSON)
+            halt.err(f"{config_base} not found from config directory.",
+                "  An IAM user access key is needed to interact with AWS.",
+                "  Set access key with \"ec2mc configure access_key\"."
             )
         create_config_from_credentials_csv(credentials_csv)
     config_dict = os2.parse_json(consts.CONFIG_JSON)
@@ -32,7 +33,7 @@ def main():
     validate_user(config_dict)
 
     # Validate config's region whitelist is valid.
-    if 'region_whitelist' in config_dict and config_dict['region_whitelist']:
+    if 'region_whitelist' in config_dict:
         consts.REGION_WHITELIST = tuple(config_dict['region_whitelist'])
         if len(aws.get_regions()) != len(consts.REGION_WHITELIST):
             halt.err("Following invalid region(s) in config whitelist:",
@@ -50,21 +51,21 @@ def main():
 def validate_user(config_dict):
     """validate config's IAM user access key and minimal permissions
 
-    iam:GetUser, iam:SimulatePrincipalPolicy, and ec2:DescribeRegions 
-    permissions required for successful validation.
+    iam:GetUser, iam:SimulatePrincipalPolicy, iam:GetAccessKeyLastUsed, and 
+    ec2:DescribeRegions permissions required for successful validation.
 
     Args:
         config_dict (dict): Should contain config's IAM user access key.
-            "iam_id" (str): IAM user's access key ID.
-            "iam_secret" (str): IAM user's secret access key.
+            'access_key' (dict): IAM user's access key.
+                'id' (str): ID of access key ID.
+                'secret' (str): Secret access key.
     """
-    if 'iam_id' not in config_dict:
-        halt.err("IAM user ID not set. Set with \"ec2mc configure\".")
-    if 'iam_secret' not in config_dict:
-        halt.err("IAM user secret not set. Set with \"ec2mc configure\".")
+    if 'access_key' not in config_dict:
+        halt.err("IAM user access key not set.",
+            "  Set with \"ec2mc configure access_key\".")
 
-    consts.IAM_ID = config_dict['iam_id']
-    consts.IAM_SECRET = config_dict['iam_secret']
+    consts.IAM_ID = config_dict['access_key']['id']
+    consts.IAM_SECRET = config_dict['access_key']['secret']
 
     # IAM User access key must be validated before validate_perms can be used.
     try:
@@ -72,9 +73,9 @@ def validate_user(config_dict):
     except ClientError as e:
         # TODO: Use client exceptions instead once they're documented
         if e.response['Error']['Code'] == "InvalidClientTokenId":
-            halt.err("IAM ID is invalid.")
+            halt.err("Access key ID is invalid.")
         elif e.response['Error']['Code'] == "SignatureDoesNotMatch":
-            halt.err("IAM ID is valid, but its secret is invalid.")
+            halt.err("Access key ID is valid, but its secret is invalid.")
         elif e.response['Error']['Code'] == "AccessDenied":
             halt.assert_empty(["iam:GetUser"])
         halt.err(str(e))
@@ -93,8 +94,8 @@ def validate_user(config_dict):
 
     # Validate IAM user can use other basic permissions needed for the script
     halt.assert_empty(validate_perms.blocked(actions=[
-        "ec2:DescribeRegions",
-        "iam:GetAccessKeyLastUsed"
+        "iam:GetAccessKeyLastUsed",
+        "ec2:DescribeRegions"
     ]))
 
 
@@ -103,8 +104,10 @@ def create_config_from_credentials_csv(file_path):
     with open(file_path, encoding="utf-8") as csv_file:
         iam_user_access_key = csv_file.readlines()[1].strip().split(",")
     config_dict = {
-        'iam_id': iam_user_access_key[0],
-        'iam_secret': iam_user_access_key[1]
+        'access_key': {
+            'id': iam_user_access_key[0],
+            'secret': iam_user_access_key[1]
+        }
     }
     os2.save_json(config_dict, consts.CONFIG_JSON)
     os.chmod(consts.CONFIG_JSON, consts.CONFIG_PERMS)
