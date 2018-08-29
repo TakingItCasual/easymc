@@ -63,7 +63,7 @@ class IAMGroupSetup(ComponentSetup):
 
     def notify_state(self, group_names):
         for group in group_names['AWSExtra']:
-            print(f"IAM group {group} found on AWS but not locally.")
+            print(f"IAM group {group} found from AWS but not locally.")
         for group in group_names['ToCreate']:
             print(f"Local IAM group {group} to be created on AWS.")
         for group in group_names['ToUpdate']:

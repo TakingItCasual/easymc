@@ -25,6 +25,10 @@ def main():
         create_config_from_credentials_csv(credentials_csv)
     config_dict = os2.parse_json(consts.CONFIG_JSON)
 
+    if 'use_handler' not in config_dict:
+        config_dict['use_handler'] = True
+    consts.USE_HANDLER = config_dict['use_handler']
+
     # Validate config.json adheres to its schema.
     schema = os2.get_json_schema("config")
     os2.validate_dict(config_dict, schema, "config.json")
@@ -38,12 +42,6 @@ def main():
         if len(aws.get_regions()) != len(consts.REGION_WHITELIST):
             halt.err("Following invalid region(s) in config whitelist:",
                 *(set(consts.REGION_WHITELIST) - set(aws.get_regions())))
-
-    # Validate server_titles.json adheres to its schema.
-    if os.path.isfile(consts.SERVER_TITLES_JSON):
-        server_titles_dict = os2.parse_json(consts.SERVER_TITLES_JSON)
-        schema = os2.get_json_schema("server_titles")
-        os2.validate_dict(server_titles_dict, schema, "server_titles.json")
 
     print(f"Access key validated as IAM user \"{consts.IAM_NAME}\".")
 

@@ -40,19 +40,16 @@ setup(
     keywords='mc minecraft ssh server aws ec2 iam',
     packages=find_packages(exclude=['docs', 'tests']),
     python_requires='~=3.6',
-    entry_points={
-        'console_scripts': [
-            'ec2mc=ec2mc.__main__:main',
-        ],
-    },
+    entry_points={'console_scripts': ['ec2mc=ec2mc.__main__:main']},
     package_data={
         'ec2mc.validate.jsonschemas': ['*.json'],
         'ec2mc.aws_setup_src': ['*.json'],
+        'ec2mc.aws_setup_src.ip_handlers': ['*.py'],
         'ec2mc.aws_setup_src.iam_policies': ['*.json'],
         'ec2mc.aws_setup_src.vpc_security_groups': ['*.json'],
         'ec2mc.aws_setup_src.user_data': ['*.yaml'],
         'ec2mc.aws_setup_src.user_data.mc_template.crontabs': ['*'],
-        'ec2mc.aws_setup_src.user_data.mc_template.manage_scripts': ['*'],
+        'ec2mc.aws_setup_src.user_data.mc_template.manage_scripts': ['*']
     },
     install_requires=[
         'boto3',

@@ -2,6 +2,7 @@ from ec2mc.commands.base_classes import ParentCommand
 
 from ec2mc.commands.user_sub import create
 from ec2mc.commands.user_sub import delete
+from ec2mc.commands.user_sub import groups
 
 class User(ParentCommand):
 
@@ -9,7 +10,8 @@ class User(ParentCommand):
         super().__init__()
         self.sub_commands = [
             create.CreateUser(),
-            delete.DeleteUser()
+            delete.DeleteUser(),
+            groups.UserGroups()
         ]
 
     def main(self, kwargs):

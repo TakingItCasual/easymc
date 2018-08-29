@@ -22,7 +22,7 @@
             "minItems": 1,
             "uniqueItems": true
         },
-        "servers_dat": {"type": ["string", "null"]},
+        "use_handler": {"type": "boolean"},
         "region_whitelist": {
             "type" : "array",
             "items": {"type": "string"},

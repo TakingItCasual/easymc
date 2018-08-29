@@ -84,7 +84,7 @@ class DeleteUser(CommandBase):
             "name", help="name of IAM user to be deleted")
 
 
-    def blocked_actions(self):
+    def blocked_actions(self, _):
         return validate_perms.blocked(actions=[
             "iam:ListUsers",
             "iam:ListAccessKeys",

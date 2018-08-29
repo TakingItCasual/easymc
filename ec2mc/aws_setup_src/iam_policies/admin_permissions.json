@@ -18,6 +18,7 @@
             "Effect": "Allow",
             "Action": [
                 "iam:ListGroups",
+                "iam:GetGroup",
                 "iam:CreateUser",
                 "iam:AddUserToGroup",
                 "iam:CreateAccessKey",

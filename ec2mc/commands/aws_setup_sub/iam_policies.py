@@ -80,7 +80,7 @@ class IAMPolicySetup(ComponentSetup):
 
     def notify_state(self, policy_names):
         for policy in policy_names['AWSExtra']:
-            print(f"IAM policy {policy} found on AWS but not locally.")
+            print(f"IAM policy {policy} found from AWS but not locally.")
         for policy in policy_names['ToCreate']:
             print(f"Local IAM policy {policy} to be created on AWS.")
         for policy in policy_names['ToUpdate']:

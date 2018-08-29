@@ -128,7 +128,7 @@ class CreateUser(CommandBase):
             help="copy RSA private key to new user's zipped configuration")
 
 
-    def blocked_actions(self):
+    def blocked_actions(self, _):
         return validate_perms.blocked(actions=[
             "iam:ListGroups",
             "iam:CreateUser",

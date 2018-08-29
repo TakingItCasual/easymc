@@ -1,6 +1,7 @@
+from ec2mc import consts
 from ec2mc.commands.base_classes import CommandBase
-from ec2mc.stuff import manage_titles
 from ec2mc.utils import aws
+from ec2mc.utils import handle_ip
 from ec2mc.validate import validate_instances
 from ec2mc.validate import validate_perms
 
@@ -16,10 +17,7 @@ class CheckServer(CommandBase):
 
         for instance in instances:
             print("")
-            if instance['name'] is not None:
-                print(f"Checking {instance['name']} ({instance['id']})...")
-            else:
-                print(f"Checking instance {instance['id']}...")
+            print(f"Checking {instance['name']} ({instance['id']})...")
 
             ec2_client = aws.ec2_client(instance['region'])
 
@@ -30,11 +28,14 @@ class CheckServer(CommandBase):
             instance_dns = response['PublicDnsName']
 
             print(f"  Instance is currently {instance_state}.")
+            if instance_state != "running":
+                continue
 
-            if instance_state == "running":
-                print(f"  Instance DNS: {instance_dns}")
-                manage_titles.update_title_dns(
-                    instance['region'], instance['id'], instance_dns)
+            print(f"  Instance DNS: {instance_dns}")
+            if 'IpHandler' in instance['tags']:
+                handle_ip.main(
+                    instance['tags']['IpHandler'], instance['region'],
+                    instance['name'], instance['id'], instance_dns)
 
 
     def add_documentation(self, argparse_obj):
@@ -42,7 +43,7 @@ class CheckServer(CommandBase):
         validate_instances.argparse_args(cmd_parser)
 
 
-    def blocked_actions(self):
+    def blocked_actions(self, _):
         return validate_perms.blocked(actions=[
             "ec2:DescribeRegions",
             "ec2:DescribeInstances"

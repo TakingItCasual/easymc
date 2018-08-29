@@ -58,7 +58,7 @@ class ParentCommand(CommandBase):
         """pass along selected subcommand's required permissions"""
         chosen_cmd = next(cmd for cmd in self.sub_commands
             if cmd.module_name() == kwargs['action'])
-        return chosen_cmd.blocked_actions()
+        return chosen_cmd.blocked_actions(kwargs)
 
 
 class ComponentSetup(ABC):

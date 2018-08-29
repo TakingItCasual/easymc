@@ -17,11 +17,8 @@ class StopServer(CommandBase):
 
         for instance in instances:
             print("")
-            if instance['name'] is not None:
-                print(f"Attempting to stop {instance['name']} "
-                    f"({instance['id']})...")
-            else:
-                print(f"Attempting to stop instance {instance['id']}...")
+            print(f"Attempting to stop {instance['name']} "
+                f"({instance['id']})...")
 
             ec2_client = aws.ec2_client(instance['region'])
 
@@ -54,7 +51,7 @@ class StopServer(CommandBase):
         validate_instances.argparse_args(cmd_parser)
 
 
-    def blocked_actions(self):
+    def blocked_actions(self, _):
         return validate_perms.blocked(actions=[
             "ec2:DescribeRegions",
             "ec2:DescribeInstances",

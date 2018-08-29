@@ -12,8 +12,6 @@ DIST_DIR = os.path.join(os.path.dirname(__file__), "")
 CONFIG_DIR = os.path.join(os.path.expanduser("~"), ".ec2mc", "")
 # JSON file containing IAM access keys, servers.dat path, and region whitelist.
 CONFIG_JSON = f"{CONFIG_DIR}config.json"
-# JSON file containing instance title(s) for the MC client's server list.
-SERVER_TITLES_JSON = f"{CONFIG_DIR}server_titles.json"
 # PEM file containing RSA private key for SSHing into instances.
 # Set in ec2mc.validate.validate_setup:main (Namespace used as file name)
 RSA_PRIV_KEY_PEM = None
@@ -25,6 +23,12 @@ AWS_SETUP_JSON = f"{AWS_SETUP_DIR}aws_setup.json"
 
 # Directory for ec2mc to find YAML instance templates
 USER_DATA_DIR = os.path.join(f"{AWS_SETUP_DIR}user_data", "")
+# Directory for ec2mc to find IP handlers for checked/started instances
+IP_HANDLER_DIR = os.path.join(f"{AWS_SETUP_DIR}ip_handlers", "")
+
+# Use IP handler script described by an instance's IpHandler tag.
+# Set in ec2mc.validate.validate_config:main
+USE_HANDLER = None
 
 # IAM user data needed for AWS programmatic access.
 # Set in ec2mc.validate.validate_config:validate_user

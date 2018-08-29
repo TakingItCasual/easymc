@@ -52,7 +52,7 @@ def main(args=None):
         # If basic configuration being done, skip config validation
         if not (chosen_cmd.module_name() == "configure" and
                 kwargs['action'] != "swap_user"):
-            # Validate config's config.json and server_titles.json
+            # Validate config's config.json
             validate_config.main()
             # Validate config's aws_setup.json and YAML instance templates
             validate_setup.main()

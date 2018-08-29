@@ -1,8 +1,9 @@
 from botocore.exceptions import WaiterError
 
+from ec2mc import consts
 from ec2mc.commands.base_classes import CommandBase
-from ec2mc.stuff import manage_titles
 from ec2mc.utils import aws
+from ec2mc.utils import handle_ip
 from ec2mc.validate import validate_instances
 from ec2mc.validate import validate_perms
 
@@ -18,11 +19,8 @@ class StartServer(CommandBase):
 
         for instance in instances:
             print("")
-            if instance['name'] is not None:
-                print(f"Attempting to start {instance['name']} "
-                    f"({instance['id']})...")
-            else:
-                print(f"Attempting to start instance {instance['id']}...")
+            print(f"Attempting to start {instance['name']} "
+                f"({instance['id']})...")
 
             ec2_client = aws.ec2_client(instance['region'])
 
@@ -58,8 +56,10 @@ class StartServer(CommandBase):
             )['Reservations'][0]['Instances'][0]['PublicDnsName']
 
             print(f"  Instance DNS: {instance_dns}")
-            manage_titles.update_title_dns(
-                instance['region'], instance['id'], instance_dns)
+            if 'IpHandler' in instance['tags']:
+                handle_ip.main(
+                    instance['tags']['IpHandler'], instance['region'],
+                    instance['name'], instance['id'], instance_dns)
 
 
     def add_documentation(self, argparse_obj):
@@ -67,7 +67,7 @@ class StartServer(CommandBase):
         validate_instances.argparse_args(cmd_parser)
 
 
-    def blocked_actions(self):
+    def blocked_actions(self, _):
         return validate_perms.blocked(actions=[
             "ec2:DescribeRegions",
             "ec2:DescribeInstances",

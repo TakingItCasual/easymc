@@ -61,10 +61,6 @@ class CreateServer(CommandBase):
             print("Instance created.")
 
             if kwargs['elastic_ip'] is True:
-                halt.assert_empty(validate_perms.blocked(actions=[
-                    "ec2:AllocateAddress",
-                    "ec2:AssociateAddress"
-                ]))
                 self.create_and_associate_elastic_ip(instance['InstanceId'])
                 print("New elastic IP associated with created instance.")
 
@@ -84,6 +80,7 @@ class CreateServer(CommandBase):
                 'instance_type' (str): EC2 instance type to create.
                 'volume_size' (int): EC2 instance volume size (GiB).
                 'security_groups' (list[str]): VPC SG(s) to assign to instance.
+                'ip_handler' (str): Name of local IpHandler to handle IPs with.
 
         Returns:
             dict: Arguments needed for instance creation.
@@ -144,7 +141,7 @@ class CreateServer(CommandBase):
 
         vpc_info = aws.get_region_vpc(region)
         if vpc_info is None:
-            halt.err(f"VPC {consts.NAMESPACE} not found.",
+            halt.err(f"VPC {consts.NAMESPACE} not found from AWS region.",
                 "  Have you uploaded the AWS setup?")
         vpc_id = vpc_info['VpcId']
         vpc_sgs = aws.get_region_security_groups(region, vpc_id)
@@ -296,7 +293,7 @@ class CreateServer(CommandBase):
         cmd_parser.add_argument(
             "region", help="AWS region to create the instance in")
         cmd_parser.add_argument(
-            "name", help="value for instance tag key \"Name\"")
+            "name", help="value for instance's tag key \"Name\"")
         cmd_parser.add_argument(
             "-c", "--confirm", action="store_true",
             help="confirm instance creation")
@@ -308,7 +305,7 @@ class CreateServer(CommandBase):
             help="instance tag key-value pair to attach to instance")
 
 
-    def blocked_actions(self):
+    def blocked_actions(self, kwargs):
         denied_actions = []
         denied_actions.extend(validate_perms.blocked(actions=[
             "ec2:DescribeRegions",
@@ -325,4 +322,9 @@ class CreateServer(CommandBase):
             resources=["arn:aws:ec2:*:*:instance/*"],
             context={'ec2:InstanceType': ["t2.nano"]}
         ))
+        if kwargs['elastic_ip'] is True:
+            denied_actions.extend(validate_perms.blocked(actions=[
+                "ec2:AllocateAddress",
+                "ec2:AssociateAddress"
+            ]))
         return denied_actions

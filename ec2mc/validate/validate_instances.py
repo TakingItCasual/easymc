@@ -39,11 +39,7 @@ def main(kwargs):
 
         print(f"{region}: {len(instances)} instance(s) found:")
         for instance in instances:
-            if instance['name'] is not None:
-                print(f"  {instance['name']} ({instance['id']})")
-            else:
-                print(f"  {instance['id']}")
-
+            print(f"  {instance['name']} ({instance['id']})")
             for tag_key, tag_value in instance['tags'].items():
                 print(f"    {tag_key}: {tag_value}")
 
@@ -111,14 +107,14 @@ def probe_region(region, tag_filter=None):
                 continue
             region_instances.append({
                 'id': instance['InstanceId'],
-                'name': None,
                 'tags': {tag['Key']: tag['Value'] for tag in instance['Tags']}
             })
+            if 'Name' not in region_instances[-1]['tags']:
+                del region_instances[-1]
 
     for instance in region_instances:
-        if 'Name' in instance['tags']:
-            instance['name'] = instance['tags']['Name']
-            del instance['tags']['Name']
+        instance['name'] = instance['tags']['Name']
+        del instance['tags']['Name']
 
     return region_instances
 

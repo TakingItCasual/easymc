@@ -107,7 +107,7 @@ class SSHServer(CommandBase):
         validate_instances.argparse_args(cmd_parser)
 
 
-    def blocked_actions(self):
+    def blocked_actions(self, _):
         return validate_perms.blocked(actions=[
             "ec2:DescribeRegions",
             "ec2:DescribeInstances"

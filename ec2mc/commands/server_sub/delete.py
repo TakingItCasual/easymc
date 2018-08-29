@@ -62,15 +62,6 @@ class DeleteServer(CommandBase):
         ec2_client.terminate_instances(InstanceIds=[kwargs['id']])
         print("Instance terminated.")
 
-        # Remove instance entry from server_titles.json, if present
-        if os.path.isfile(consts.SERVER_TITLES_JSON):
-            titles_dict = os2.parse_json(consts.SERVER_TITLES_JSON)
-            for index, server_title in enumerate(titles_dict['Instances']):
-                if (server_title['region'] == kwargs['region'] and
-                        server_title['id'] == kwargs['id']):
-                    del titles_dict['Instances'][index]
-                    os2.save_json(titles_dict, consts.SERVER_TITLES_JSON)
-
 
     def add_documentation(self, argparse_obj):
         cmd_parser = super().add_documentation(argparse_obj)
@@ -85,7 +76,7 @@ class DeleteServer(CommandBase):
             help="preserve any associated elastic IP")
 
 
-    def blocked_actions(self):
+    def blocked_actions(self, _):
         return validate_perms.blocked(actions=[
             "ec2:DescribeRegions",
             "ec2:DescribeInstances",

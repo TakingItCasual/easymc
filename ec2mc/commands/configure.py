@@ -7,7 +7,6 @@ from ec2mc.utils import halt
 from ec2mc.utils import os2
 from ec2mc.validate import validate_perms
 
-# TODO: Think through how to manage config's servers_dat entry
 class Configure(CommandBase):
 
     def main(self, kwargs):
@@ -30,7 +29,10 @@ class Configure(CommandBase):
             config_dict = self.switch_access_key(
                 config_dict, kwargs['user_name'])
         elif kwargs['action'] == "whitelist":
-            config_dict = self.set_whitelist(config_dict, kwargs["regions"])
+            config_dict = self.set_whitelist(config_dict, kwargs['regions'])
+        elif kwargs['action'] == "use_handler":
+            config_dict['use_handler'] = kwargs['boolean']
+            print(f"IP handler usage set to {str(kwargs['boolean']).lower()}.")
 
         if config_dict:
             os2.save_json(config_dict, consts.CONFIG_JSON)
@@ -80,16 +82,20 @@ class Configure(CommandBase):
     def set_whitelist(self, config_dict, regions):
         """set whitelist for AWS regions the script interacts with"""
         if regions:
-            config_dict['region_whitelist'] = regions
+            config_dict['region_whitelist'] = list(set(regions))
+            print("Region whitelist set.")
         elif 'region_whitelist' in config_dict:
             del config_dict['region_whitelist']
+            print("Region whitelist disabled.")
+        else:
+            print("Region whitelist is already disabled.")
         return config_dict
 
 
     def add_documentation(self, argparse_obj):
         cmd_parser = super().add_documentation(argparse_obj)
         actions = cmd_parser.add_subparsers(
-            metavar="{action}    ", dest="action")
+            metavar="{action}"+" "*5, dest="action")
         actions.required = True
 
         access_key_parser = actions.add_parser(
@@ -109,6 +115,13 @@ class Configure(CommandBase):
         whitelist_parser.add_argument(
             "regions", nargs="*",
             help="list of regions (leave empty to disable whitelist)")
+
+        use_handler_parser = actions.add_parser(
+            "use_handler", help="use IP handlers described by instance tags")
+        use_handler_parser.add_argument(
+            "-f", "--false", dest="boolean", action="store_false",
+            help="do not use the handler")
+        use_handler_parser.set_defaults(boolean=True)
 
 
     def blocked_actions(self, kwargs):
