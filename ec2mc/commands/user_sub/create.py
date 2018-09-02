@@ -77,7 +77,8 @@ class CreateUser(CommandBase):
             #print("  User's zipped config folder created in config.")
 
 
-    def create_configuration_zip(self, new_access_key, give_ssh_key):
+    @staticmethod
+    def create_configuration_zip(new_access_key, give_ssh_key):
         """create zipped config folder containing new IAM user access key"""
         new_config = {
             'access_key': {
@@ -97,7 +98,8 @@ class CreateUser(CommandBase):
             pass
 
 
-    def access_key_usable_waiter(self, new_access_key):
+    @staticmethod
+    def access_key_usable_waiter(new_access_key):
         """aws doesn't provide a waiter for checking if access keys usable"""
         iam_client = boto3.client("iam",
             aws_access_key_id=new_access_key['AccessKeyId'],
@@ -108,7 +110,7 @@ class CreateUser(CommandBase):
                 # New IAM user is assumed to have the iam:GetUser permission.
                 iam_client.get_user()
                 break
-            except ClientError as e:
+            except ClientError:
                 sleep(1)
         else:
             halt.err("Access key not usable even after waiting 1 minute.")

@@ -1,7 +1,6 @@
 #!/bin/bash
 
-parent_path=$( cd "$(dirname "${BASH_SOURCE[0]}")" ; pwd -P )
-cd "$parent_path"
+cd /home/ec2-user/manage-scripts/
 
 read MINUTES_NEEDED < minutes_needed.txt
 read MINUTES_PASSED < minutes_passed.txt
@@ -16,7 +15,7 @@ else
 fi
 echo $MINUTES_PASSED > minutes_passed.txt
 
-echo $(date +"%D, %T: ")$CONNECTION_COUNT" "$MINUTES_PASSED >> minutes_passed.log
+#echo $(date +"%D, %T: ")$CONNECTION_COUNT" "$MINUTES_PASSED >> minutes_passed.log
 
 if [ "$MINUTES_PASSED" -ge "$MINUTES_NEEDED" ]; then
     . ./shutdown_script.sh

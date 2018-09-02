@@ -28,16 +28,16 @@ def get_regions():
 def ec2_client(region):
     """create and return EC2 client using IAM user access key and a region"""
     return boto3.client("ec2",
-        aws_access_key_id=consts.IAM_ID,
-        aws_secret_access_key=consts.IAM_SECRET,
+        aws_access_key_id=consts.KEY_ID,
+        aws_secret_access_key=consts.KEY_SECRET,
         region_name=region
     )
 
 def iam_client():
     """create and return IAM client using IAM user access key"""
     return boto3.client("iam",
-        aws_access_key_id=consts.IAM_ID,
-        aws_secret_access_key=consts.IAM_SECRET
+        aws_access_key_id=consts.KEY_ID,
+        aws_secret_access_key=consts.KEY_SECRET
     )
 
 
@@ -81,13 +81,13 @@ def get_region_security_groups(region, vpc_id=None):
 # TODO: Attach tag(s) on resource (e.g. VPC) creation when it becomes supported
 def attach_tags(region, resource_id, name_tag=None):
     """attempt to attach tag(s) to resource (including Namespace tag) for 60s
-    
+
     Requires ec2:CreateTags permission.
 
     The functionality of blocking until the resource exists is relied upon.
 
-    To account for newly created resources, NotFound exceptions are checked 
-    for and passed in a loop attempting to create tag(s). Why not use waiters? 
+    To account for newly created resources, NotFound exceptions are checked
+    for and passed in a loop attempting to create tag(s). Why not use waiters?
     Because waiters don't work reliably (in my experience), that's why.
 
     Args:

@@ -8,7 +8,7 @@ def test_user_commands():
         "user", "create", "ec2mc_test_user", "basic_users", "--default"
     ]) is not False
     assert __main__.main([
-        "configure", "swap_user", "TakingItCasual"
+        "configure", "swap_key", "TakingItCasual"
     ]) is not False
     assert __main__.main([
         "user", "groups"

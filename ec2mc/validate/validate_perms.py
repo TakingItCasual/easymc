@@ -6,9 +6,9 @@ def blocked(actions, resources=None, context=None):
 
     Args:
         actions (list): AWS action(s) to validate IAM user can use.
-        resources (list): Check if action(s) can be used on resource(s). 
+        resources (list): Check if action(s) can be used on resource(s).
             If None, action(s) must be usable on all resources ("*").
-        context (dict): Check if action(s) can be used with context(s). 
+        context (dict): Check if action(s) can be used with context(s).
             If None, it is expected that no context restrictions were set.
 
     Returns:
@@ -41,9 +41,5 @@ def blocked(actions, resources=None, context=None):
         ContextEntries=context
     )['EvaluationResults']
 
-    blocked_actions = []
-    for result in results:
-        if result['EvalDecision'] != "allowed":
-            blocked_actions.append(result['EvalActionName'])
-
-    return sorted(blocked_actions)
+    return sorted([result['EvalActionName'] for result in results
+        if result['EvalDecision'] != "allowed"])

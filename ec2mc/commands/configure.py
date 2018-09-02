@@ -21,11 +21,10 @@ class Configure(CommandBase):
             config_dict = os2.parse_json(consts.CONFIG_JSON)
             os2.validate_dict(config_dict, schema, "config.json")
 
-        # TODO: Implement use_handler configuring
         if kwargs['action'] == "access_key":
             config_dict = self.set_access_key(
                 config_dict, kwargs['key_id'], kwargs['key_secret'])
-        elif kwargs['action'] == "swap_user":
+        elif kwargs['action'] == "swap_key":
             config_dict = self.switch_access_key(
                 config_dict, kwargs['user_name'])
         elif kwargs['action'] == "whitelist":
@@ -39,7 +38,8 @@ class Configure(CommandBase):
             os.chmod(consts.CONFIG_JSON, consts.CONFIG_PERMS)
 
 
-    def set_access_key(self, config_dict, key_id, key_secret):
+    @staticmethod
+    def set_access_key(config_dict, key_id, key_secret):
         """set id and secret of config's default access key"""
         if 'access_key' in config_dict:
             print("Existing access key overwritten.")
@@ -49,7 +49,8 @@ class Configure(CommandBase):
         return config_dict
 
 
-    def switch_access_key(self, config_dict, user_name):
+    @staticmethod
+    def switch_access_key(config_dict, user_name):
         """set access key stored under backup_access_keys list as default"""
         if 'backup_access_keys' not in config_dict:
             halt.err("No backup access keys stored in config.")
@@ -79,7 +80,8 @@ class Configure(CommandBase):
         return config_dict
 
 
-    def set_whitelist(self, config_dict, regions):
+    @staticmethod
+    def set_whitelist(config_dict, regions):
         """set whitelist for AWS regions the script interacts with"""
         if regions:
             config_dict['region_whitelist'] = list(set(regions))
@@ -105,9 +107,9 @@ class Configure(CommandBase):
         access_key_parser.add_argument(
             "key_secret", help="secret access key")
 
-        swap_user_parser = actions.add_parser(
-            "swap_user", help="switch default IAM user access key for another")
-        swap_user_parser.add_argument(
+        swap_key_parser = actions.add_parser(
+            "swap_key", help="switch default IAM user access key for another")
+        swap_key_parser.add_argument(
             "user_name", help="name of desired access key owner")
 
         whitelist_parser = actions.add_parser(
@@ -121,10 +123,9 @@ class Configure(CommandBase):
         use_handler_parser.add_argument(
             "-f", "--false", dest="boolean", action="store_false",
             help="do not use the handler")
-        use_handler_parser.set_defaults(boolean=True)
 
 
     def blocked_actions(self, kwargs):
-        if kwargs['action'] == "swap_user":
+        if kwargs['action'] == "swap_key":
             return validate_perms.blocked(actions=["iam:GetAccessKeyLastUsed"])
         return []

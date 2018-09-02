@@ -82,7 +82,7 @@ class IAMPolicySetup(ComponentSetup):
         for policy in policy_names['AWSExtra']:
             print(f"IAM policy {policy} found from AWS but not locally.")
         for policy in policy_names['ToCreate']:
-            print(f"Local IAM policy {policy} to be created on AWS.")
+            print(f"Local IAM policy {policy} not found from AWS.")
         for policy in policy_names['ToUpdate']:
             print(f"IAM policy {policy} on AWS to be updated.")
         for policy in policy_names['UpToDate']:

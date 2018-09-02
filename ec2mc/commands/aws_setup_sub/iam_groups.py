@@ -65,7 +65,7 @@ class IAMGroupSetup(ComponentSetup):
         for group in group_names['AWSExtra']:
             print(f"IAM group {group} found from AWS but not locally.")
         for group in group_names['ToCreate']:
-            print(f"Local IAM group {group} to be created on AWS.")
+            print(f"Local IAM group {group} not found from AWS.")
         for group in group_names['ToUpdate']:
             print(f"IAM group {group} on AWS to be updated.")
         for group in group_names['UpToDate']:

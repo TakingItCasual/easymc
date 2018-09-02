@@ -17,7 +17,7 @@ class Threader(object):
     def __worker(self, func, fargs):
         """insert threaded function into queue to make its return retrievable
 
-        The index of the thread and the threaded function's first arg are 
+        The index of the thread and the threaded function's first arg are
         inserted into the queue, preceding the threaded function itself.
 
         Args: See add_thread
@@ -49,7 +49,7 @@ class Threader(object):
         """block all threads, sort by thread index, then return thread results
 
         Args:
-            return_dict (bool): Return dict instead of list. Threaded 
+            return_dict (bool): Return dict instead of list. Threaded
                 functions' first arguments used as keys.
         """
         for thread in self.threads:

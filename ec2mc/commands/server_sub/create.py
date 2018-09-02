@@ -28,18 +28,17 @@ class CreateServer(CommandBase):
         """
         template_yaml_files = os2.list_dir_files(consts.USER_DATA_DIR)
         if f"{kwargs['template']}.yaml" not in template_yaml_files:
-            halt.err(f"Template {kwargs['template']} not found.")
+            halt.err(f"Template {kwargs['template']} not found from config.")
+
+        if kwargs['region'] not in aws.get_regions():
+            halt.err(f"{kwargs['region']} is not a valid region.")
+        self.ec2_client = aws.ec2_client(kwargs['region'])
 
         inst_template = os2.parse_yaml(f"{consts.USER_DATA_DIR}"
             f"{kwargs['template']}.yaml")['ec2mc_template_info']
 
         self.validate_type_and_size_allowed(
             inst_template['instance_type'], inst_template['volume_size'])
-
-        # Validate specified region
-        if kwargs['region'] not in aws.get_regions():
-            halt.err(f"{kwargs['region']} is not a valid region.")
-        self.ec2_client = aws.ec2_client(kwargs['region'])
 
         creation_kwargs = self.parse_run_instance_args(kwargs, inst_template)
         user_data = self.process_user_data(kwargs['template'], inst_template)
@@ -65,7 +64,8 @@ class CreateServer(CommandBase):
                 print("New elastic IP associated with created instance.")
 
 
-    def parse_run_instance_args(self, kwargs, instance_template):
+    @staticmethod
+    def parse_run_instance_args(kwargs, instance_template):
         """parse arguments for run_instances from argparse kwargs and template
 
         Args:
@@ -172,14 +172,15 @@ class CreateServer(CommandBase):
         return creation_kwargs
 
 
-    def process_user_data(self, template_name, template):
+    @staticmethod
+    def process_user_data(template_name, template):
         """add b64 template files to user_data's write_files
 
         Args:
             template_name (str): Name of the YAML instance template.
             template (dict):
-                'write_directories' (str): Info on directory(s) to copy files 
-                    from to user_data's write_files.
+                'write_directories' (str): Info on template subdirectory(s) to
+                    copy files from to user_data's write_files.
 
         Returns:
             str: YAML file string to initialize instance on first boot.
@@ -202,7 +203,7 @@ class CreateServer(CommandBase):
                         file_b64 = base64.b64encode(bytes(f.read(), "utf-8"))
                     write_files.append({
                         'encoding': "b64",
-                        'content': file_b64,
+                        'content': file_b64.decode("utf-8"),
                         'path': f"{write_dir['instance_dir']}{dir_file}"
                     })
                     if 'owner' in write_dir:
@@ -223,8 +224,12 @@ class CreateServer(CommandBase):
                 halt.err("Duplicate template write_files paths.")
 
         # Make user_data valid cloud-config by removing additional setup info
+        shebang_str = user_data['shebang']
+        del user_data['shebang']
         del user_data['ec2mc_template_info']
-        return yaml.dump(user_data, Dumper=yaml.RoundTripDumper)
+        user_data_str = yaml.dump(user_data, Dumper=yaml.RoundTripDumper)
+
+        return f"{shebang_str}\n{user_data_str}"
 
 
     def create_instance(self, creation_kwargs, user_data, *, dry_run):
@@ -274,7 +279,8 @@ class CreateServer(CommandBase):
             halt.err("Couldn't assign elastic IP to instance.")
 
 
-    def validate_type_and_size_allowed(self, instance_type, volume_size):
+    @staticmethod
+    def validate_type_and_size_allowed(instance_type, volume_size):
         """validate user is allowed to create instance with type and size"""
         if validate_perms.blocked(actions=["ec2:RunInstances"],
                 resources=["arn:aws:ec2:*:*:instance/*"],

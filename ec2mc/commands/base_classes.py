@@ -42,7 +42,7 @@ class ParentCommand(CommandBase):
         """Execute subcommand (action) based on argparse input (kwargs)"""
         chosen_cmd = next(cmd for cmd in self.sub_commands
             if cmd.module_name() == kwargs['action'])
-        chosen_cmd.main(kwargs)    
+        chosen_cmd.main(kwargs)
 
 
     def add_documentation(self, argparse_obj):

@@ -49,7 +49,7 @@ def main():
 def validate_user(config_dict):
     """validate config's IAM user access key and minimal permissions
 
-    iam:GetUser, iam:SimulatePrincipalPolicy, iam:GetAccessKeyLastUsed, and 
+    iam:GetUser, iam:SimulatePrincipalPolicy, iam:GetAccessKeyLastUsed, and
     ec2:DescribeRegions permissions required for successful validation.
 
     Args:
@@ -62,8 +62,8 @@ def validate_user(config_dict):
         halt.err("IAM user access key not set.",
             "  Set with \"ec2mc configure access_key\".")
 
-    consts.IAM_ID = config_dict['access_key']['id']
-    consts.IAM_SECRET = config_dict['access_key']['secret']
+    consts.KEY_ID = config_dict['access_key']['id']
+    consts.KEY_SECRET = config_dict['access_key']['secret']
 
     # IAM User access key must be validated before validate_perms can be used.
     try:

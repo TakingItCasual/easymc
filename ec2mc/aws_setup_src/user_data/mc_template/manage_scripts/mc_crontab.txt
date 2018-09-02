@@ -1,0 +1,2 @@
+@reboot /home/ec2-user/manage-scripts/startup_script.sh
+* * * * * /home/ec2-user/manage-scripts/connection_listener.sh

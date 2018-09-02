@@ -1,2 +1,0 @@
-@reboot root ~/manage-scripts/startup_script.sh
-* * * * * root ~/manage-scripts/connection_listener.sh

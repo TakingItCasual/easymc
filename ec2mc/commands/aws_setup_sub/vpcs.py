@@ -29,7 +29,6 @@ class VPCSetup(ComponentSetup):
         """
         regions = aws.get_regions()
 
-        self.vpc_name = consts.NAMESPACE
         # Region(s) to create VPC in, and region(s) already containing VPC
         vpc_regions = {
             'ToCreate': regions[:],
@@ -57,7 +56,7 @@ class VPCSetup(ComponentSetup):
         # Check each region has VPC with correct Name tag value
         for region in regions:
             if aws_vpcs[region] is not None:
-                if ({'Key': "Name", 'Value': self.vpc_name}
+                if ({'Key': "Name", 'Value': consts.NAMESPACE}
                         in aws_vpcs[region]['Tags']):
                     vpc_regions['ToCreate'].remove(region)
                     vpc_regions['Existing'].append(region)
@@ -94,13 +93,17 @@ class VPCSetup(ComponentSetup):
 
         total_regions = len(aws.get_regions())
         existing = len(vpc_regions['Existing'])
-        print(f"VPC {self.vpc_name} exists in {existing} of "
+        print(f"VPC {consts.NAMESPACE} exists in {existing} of "
             f"{total_regions} AWS regions.")
 
         for sg_name, sg_regions in sg_names.items():
-            up_to_date = len(sg_regions['UpToDate'])
-            print(f"Local SG {sg_name} exists in {up_to_date} of "
+            to_update_num = len(sg_regions['ToUpdate'])
+            exists_num = len(sg_regions['UpToDate']) + to_update_num
+            print(f"Local SG {sg_name} exists in {exists_num} of "
                 f"{total_regions} AWS regions.")
+            if to_update_num > 0:
+                print(f"  SG to be updated in {to_update_num} of "
+                    f"{exists_num} AWS regions.")
 
 
     def upload_component(self, vpc_and_sg_info):
@@ -116,11 +119,11 @@ class VPCSetup(ComponentSetup):
             vpc_threader.add_thread(self.create_vpc, (region,))
         vpc_threader.get_results()
 
-        create_count = len(vpc_regions['ToCreate'])
-        if create_count > 0:
-            print(f"VPC {self.vpc_name} created in {create_count} region(s).")
+        create_num = len(vpc_regions['ToCreate'])
+        if create_num > 0:
+            print(f"VPC {consts.NAMESPACE} created in {create_num} region(s).")
         else:
-            print(f"VPC {self.vpc_name} already present in all regions.")
+            print(f"VPC {consts.NAMESPACE} already present in all regions.")
 
         vpc_ids = {}
         threader = Threader()
@@ -133,9 +136,10 @@ class VPCSetup(ComponentSetup):
 
         sg_threader = Threader()
         for sg_name, sg_regions in sg_names.items():
+            sg_desc = self.security_group_setup[sg_name]
             for region in sg_regions['ToCreate']:
                 sg_threader.add_thread(self.create_sg,
-                    (region, sg_name, vpc_ids[region]))
+                    (region, sg_name, sg_desc, vpc_ids[region]))
             for region in sg_regions['ToUpdate']:
                 sg_threader.add_thread(self.update_sg,
                     (region, sg_name, vpc_ids[region]))
@@ -160,19 +164,20 @@ class VPCSetup(ComponentSetup):
         deleted_vpcs = threader.get_results()
 
         if any(deleted_vpcs):
-            print(f"VPC {self.vpc_name} deleted from all AWS regions.")
+            print(f"VPC {consts.NAMESPACE} deleted from all AWS regions.")
         else:
             print("No VPCs to delete.")
 
 
-    def create_vpc(self, region):
+    @classmethod
+    def create_vpc(cls, region):
         """create VPC with subnet(s) in region and attach tags"""
         ec2_client = aws.ec2_client(region)
         vpc_id = ec2_client.create_vpc(
             CidrBlock="172.31.0.0/16",
             AmazonProvidedIpv6CidrBlock=False
         )['Vpc']['VpcId']
-        aws.attach_tags(region, vpc_id, self.vpc_name)
+        aws.attach_tags(region, vpc_id, consts.NAMESPACE)
         ec2_client.modify_vpc_attribute(
             EnableDnsSupport={'Value': True},
             VpcId=vpc_id
@@ -182,28 +187,30 @@ class VPCSetup(ComponentSetup):
             VpcId=vpc_id
         )
 
-        route_table_id = self.create_internet_gateway(region, vpc_id)
-        self.create_vpc_subnets(region, vpc_id, route_table_id)
+        route_table_id = cls.create_internet_gateway(region, vpc_id)
+        cls.create_vpc_subnets(region, vpc_id, route_table_id)
 
 
-    def delete_region_vpc(self, region):
+    @classmethod
+    def delete_region_vpc(cls, region):
         """delete VPC from AWS region with correct Namespace tag"""
         region_vpc = aws.get_region_vpc(region)
         if region_vpc is not None:
-            self.delete_vpc_sgs(region, region_vpc['VpcId'])
-            self.delete_vpc_subnets(region, region_vpc['VpcId'])
-            self.delete_vpc_internet_gateways(region, region_vpc['VpcId'])
+            cls.delete_vpc_sgs(region, region_vpc['VpcId'])
+            cls.delete_vpc_subnets(region, region_vpc['VpcId'])
+            cls.delete_vpc_internet_gateways(region, region_vpc['VpcId'])
             aws.ec2_client(region).delete_vpc(VpcId=region_vpc['VpcId'])
             return True
         return False
 
 
-    def create_internet_gateway(self, region, vpc_id):
+    @staticmethod
+    def create_internet_gateway(region, vpc_id):
         """create internet gateway, attach it to VPC, and configure route"""
         ec2_client = aws.ec2_client(region)
         ig_id = ec2_client.create_internet_gateway(
             )['InternetGateway']['InternetGatewayId']
-        aws.attach_tags(region, ig_id, self.vpc_name)
+        aws.attach_tags(region, ig_id, consts.NAMESPACE)
         ec2_client.attach_internet_gateway(
             InternetGatewayId=ig_id,
             VpcId=vpc_id
@@ -214,7 +221,7 @@ class VPCSetup(ComponentSetup):
             {'Name': "vpc-id", 'Values': [vpc_id]},
             {'Name': "association.main", 'Values': ["true"]}
         ])['RouteTables'][0]['RouteTableId']
-        aws.attach_tags(region, rt_id, self.vpc_name)
+        aws.attach_tags(region, rt_id, consts.NAMESPACE)
         ec2_client.create_route(
             DestinationCidrBlock="0.0.0.0/0",
             GatewayId=ig_id,
@@ -224,7 +231,8 @@ class VPCSetup(ComponentSetup):
         return rt_id
 
 
-    def delete_vpc_internet_gateways(self, region, vpc_id):
+    @staticmethod
+    def delete_vpc_internet_gateways(region, vpc_id):
         """detach (and delete) internet gateway(s) attached (solely) to VPC"""
         ec2_client = aws.ec2_client(region)
         gateways = ec2_client.describe_internet_gateways(Filters=[{
@@ -243,7 +251,8 @@ class VPCSetup(ComponentSetup):
                     InternetGatewayId=gateway['InternetGatewayId'])
 
 
-    def create_vpc_subnets(self, region, vpc_id, rt_id):
+    @staticmethod
+    def create_vpc_subnets(region, vpc_id, rt_id):
         """create VPC subnet in AWS region for each availability zone
 
         Args:
@@ -273,7 +282,8 @@ class VPCSetup(ComponentSetup):
             )
 
 
-    def delete_vpc_subnets(self, region, vpc_id):
+    @staticmethod
+    def delete_vpc_subnets(region, vpc_id):
         """delete VPC's subnet(s) from AWS region"""
         ec2_client = aws.ec2_client(region)
         vpc_subnets = ec2_client.describe_subnets(Filters=[{
@@ -284,17 +294,18 @@ class VPCSetup(ComponentSetup):
             ec2_client.delete_subnet(SubnetId=vpc_subnet['SubnetId'])
 
 
-    def create_sg(self, region, sg_name, vpc_id):
+    @classmethod
+    def create_sg(cls, region, sg_name, sg_desc, vpc_id):
         """create new VPC security group on AWS"""
         ec2_client = aws.ec2_client(region)
         sg_id = ec2_client.create_security_group(
-            Description=self.security_group_setup[sg_name],
+            Description=sg_desc,
             GroupName=sg_name,
             VpcId=vpc_id
         )['GroupId']
         aws.attach_tags(region, sg_id, sg_name)
 
-        local_sg_ingress = self.get_json_sg_ingress(sg_name)
+        local_sg_ingress = cls.get_json_sg_ingress(sg_name)
         if local_sg_ingress:
             ec2_client.authorize_security_group_ingress(
                 GroupId=sg_id,
@@ -302,7 +313,8 @@ class VPCSetup(ComponentSetup):
             )
 
 
-    def update_sg(self, region, sg_name, vpc_id):
+    @classmethod
+    def update_sg(cls, region, sg_name, vpc_id):
         """update VPC security group that already exists on AWS"""
         ec2_client = aws.ec2_client(region)
         aws_sgs = aws.get_region_security_groups(region, vpc_id)
@@ -316,7 +328,7 @@ class VPCSetup(ComponentSetup):
             IpPermissions=aws_sg_ingress
         )
 
-        local_sg_ingress = self.get_json_sg_ingress(sg_name)
+        local_sg_ingress = cls.get_json_sg_ingress(sg_name)
         if local_sg_ingress:
             ec2_client.authorize_security_group_ingress(
                 GroupId=sg_id,
@@ -324,7 +336,8 @@ class VPCSetup(ComponentSetup):
             )
 
 
-    def delete_vpc_sgs(self, region, vpc_id):
+    @staticmethod
+    def delete_vpc_sgs(region, vpc_id):
         """delete VPC's security group(s) from AWS region"""
         ec2_client = aws.ec2_client(region)
         aws_sgs = aws.get_region_security_groups(region, vpc_id)
@@ -332,7 +345,8 @@ class VPCSetup(ComponentSetup):
             ec2_client.delete_security_group(GroupId=aws_sg['GroupId'])
 
 
-    def get_json_sg_ingress(self, sg_name):
+    @staticmethod
+    def get_json_sg_ingress(sg_name):
         """retrieve local security group ingress rule(s) dict"""
         security_group_dir = os.path.join(
             f"{consts.AWS_SETUP_DIR}vpc_security_groups", "")

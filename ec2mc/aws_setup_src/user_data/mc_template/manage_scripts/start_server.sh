@@ -1,4 +1,4 @@
 #!/bin/bash
 
-cd ~
-java -jar forge-1.12.2-14.23.0.2491-universal.jar nogui
+cd /home/ec2-user/minecraft/
+java -jar server.1.13.1.jar nogui

@@ -1,4 +1,5 @@
-#cloud-config
+# Comments are lost on YAML loading, so an intermediate entry is needed
+shebang: "#cloud-config"
 
 # Other setup info for template (removed once processed)
 ec2mc_template_info:
@@ -13,24 +14,32 @@ ec2mc_template_info:
   write_directories:
   - local_dir: manage_scripts
     instance_dir: /home/ec2-user/manage-scripts/
-    chmod: '0775'
-  - local_dir: crontabs
-    instance_dir: /etc/cron.d/
+    chmod: "0775"
 
 # add security patches and bug fixes
-package_update: true
-package_upgrade: true
+repo_update: true
+repo_upgrade: all
 
 # If you want certain packages installed
 packages:
 - screen
+- java-1.8.0
 
 # Files copied from user_data template subdirectory(s) to write_files
 
-# Commands to run on the instance
+# Commands to run on instance's first boot
 runcmd:
-- [ sudo, yum, install, -y, java-1.8.0 ]
-- [ sudo, yum, remove, -y, java-1.7.0-openjdk ]
+- su ec2-user <<'EOF' # Run following commands as ec2-user
+- crontab < /home/ec2-user/manage-scripts/mc_crontab.txt
+- [ sudo, curl, "https://launcher.mojang.com/v1/objects/\
+  fe123682e9cb30031eae351764f653500b7396c9/server.jar",
+  --create-dirs, -o, /home/ec2-user/minecraft/server.1.13.1.jar' ]
+- cd /home/ec2-user/minecraft
+- /home/ec2-user/manage-scripts/start_server.sh
+- sed -i 's/eula=false/eula=true/g' eula.txt
+- /home/ec2-user/manage-scripts/startup_script.sh
+- EOF
+- cp /etc/skel/.bashrc /home/ec2-user/.bashrc
 
 # Reboot instance after completing setup
 power_state:
@@ -38,5 +47,5 @@ power_state:
   message: Rebooting
   timeout: 120
 
-# Capture all subprocess output into a logfile
-output: { all: '| tee -a /var/log/cloud-init-output.log' }
+# Capture all subprocess output into logfile (for debugging)
+output: { all: "| tee -a /var/log/cloud-init-output.log" }

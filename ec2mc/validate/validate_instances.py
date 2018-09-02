@@ -3,7 +3,7 @@ from ec2mc.utils import aws
 from ec2mc.utils import halt
 from ec2mc.utils.threader import Threader
 
-def main(kwargs):
+def main(kwargs, *, single_instance=False):
     """wrapper for probe_regions which prints found instances to the CLI
 
     Requires ec2:DescribeRegions and ec2:DescribeInstances permissions.
@@ -12,12 +12,14 @@ def main(kwargs):
 
     Args:
         kwargs (dict):
-            'region_filter' (list[str]): AWS region(s) to probe. If None, 
+            'region_filter' (list[str]): AWS region(s) to probe. If None,
                 probe all regions (in whitelist, if defined).
-            'tag_filters' (list[list[str]]): Instance tag key-value(s) 
+            'tag_filters' (list[list[str]]): Instance tag key-value(s)
                 filter(s). For inner lists with one item, filter by key.
-            'name_filter' (list[str]): Instance tag value(s) filter for 
+            'name_filter' (list[str]): Instance tag value(s) filter for
                 tag key "Name".
+            'id_filter' (list[str]): Instance ID filter.
+        single_instance (bool): Halt if multiple instances are found.
 
     Returns: See what probe_regions returns.
     """
@@ -43,6 +45,11 @@ def main(kwargs):
             for tag_key, tag_value in instance['tags'].items():
                 print(f"    {tag_key}: {tag_value}")
 
+    if single_instance:
+        if len(all_instances) > 1:
+            halt.err("Instance query returned multiple results.",
+                "  Narrow filter(s) so that only one instance is found.")
+        return all_instances[0]
     return all_instances
 
 
@@ -85,13 +92,13 @@ def probe_region(region, tag_filter=None):
 
     Args:
         region (str): AWS region to probe.
-        tag_filter (list[dict]): Filter out instances that don't have tags 
+        tag_filter (list[dict]): Filter out instances that don't have tags
             matching the filter. If None/empty, filter not used.
 
     Returns:
         list[dict]: Instance(s) found in region.
             'id' (str): ID of instance.
-            'name' (str/None): Tag value for instance tag key "Name".
+            'name' (str): Tag value for instance tag key "Name".
             'tags' (dict): Instance tag key-value pair(s).
     """
     if tag_filter is None:
@@ -105,12 +112,12 @@ def probe_region(region, tag_filter=None):
         for instance in reservation['Instances']:
             if instance['State']['Name'] in ("shutting-down", "terminated"):
                 continue
+            if not any(tag['Key'] == "Name" for tag in instance['Tags']):
+                continue
             region_instances.append({
                 'id': instance['InstanceId'],
                 'tags': {tag['Key']: tag['Value'] for tag in instance['Tags']}
             })
-            if 'Name' not in region_instances[-1]['tags']:
-                del region_instances[-1]
 
     for instance in region_instances:
         instance['name'] = instance['tags']['Name']
@@ -172,6 +179,11 @@ def parse_filters(kwargs):
             'Name': "tag:Name",
             'Values': kwargs['name_filter']
         })
+    if kwargs['id_filter']:
+        tag_filter.append({
+            'Name': "instance-id",
+            'Values': kwargs['id_filter']
+        })
 
     return (regions, tag_filter)
 
@@ -185,9 +197,11 @@ def argparse_args(cmd_parser):
     cmd_parser.add_argument(
         "-t", dest="tag_filters", nargs="+", action="append", metavar="",
         help=("Instance tag value filter. First value is the tag key, with "
-            "proceeding value(s) as the tag value(s). If not set, no filter "
-            "will be applied. If only 1 value given, the tag key itself will "
-            "be filtered for instead."))
+            "proceeding value(s) as the tag value(s). If only 1 value given, "
+            "the tag key itself will be filtered for instead."))
     cmd_parser.add_argument(
         "-n", dest="name_filter", nargs="+", metavar="",
         help="Instance tag value filter for the tag key \"Name\".")
+    cmd_parser.add_argument(
+        "--ids", dest="id_filter", nargs="+", metavar="",
+        help="Instance ID filter.")

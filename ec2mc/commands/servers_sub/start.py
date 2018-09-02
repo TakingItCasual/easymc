@@ -1,16 +1,15 @@
 from botocore.exceptions import WaiterError
 
-from ec2mc import consts
 from ec2mc.commands.base_classes import CommandBase
 from ec2mc.utils import aws
 from ec2mc.utils import handle_ip
 from ec2mc.validate import validate_instances
 from ec2mc.validate import validate_perms
 
-class StartServer(CommandBase):
+class StartServers(CommandBase):
 
     def main(self, kwargs):
-        """start stopped instance(s) & update client's server list
+        """start stopped instance(s)
 
         Args:
             kwargs (dict): See validate.validate_instances:argparse_args
@@ -47,19 +46,16 @@ class StartServer(CommandBase):
                     print("    Check instance's state in a minute.")
                     continue
 
-                print("  Instance started. The server will be available soon.")
+                print("  Instance started.")
             elif instance_state == "running":
-                print("  Instance is already running. Just join the server.")
+                print("  Instance is already running.")
 
             instance_dns = ec2_client.describe_instances(
                 InstanceIds=[instance['id']]
             )['Reservations'][0]['Instances'][0]['PublicDnsName']
 
             print(f"  Instance DNS: {instance_dns}")
-            if 'IpHandler' in instance['tags']:
-                handle_ip.main(
-                    instance['tags']['IpHandler'], instance['region'],
-                    instance['name'], instance['id'], instance_dns)
+            handle_ip.main(instance, instance_dns)
 
 
     def add_documentation(self, argparse_obj):

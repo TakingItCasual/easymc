@@ -9,9 +9,9 @@ class Servers(ParentCommand):
     def __init__(self):
         super().__init__()
         self.sub_commands = [
-            check.CheckServer(),
-            start.StartServer(),
-            stop.StopServer()
+            check.CheckServers(),
+            start.StartServers(),
+            stop.StopServers()
         ]
 
 

@@ -32,8 +32,8 @@ USE_HANDLER = None
 
 # IAM user data needed for AWS programmatic access.
 # Set in ec2mc.validate.validate_config:validate_user
-IAM_ID = None
-IAM_SECRET = None
+KEY_ID = None
+KEY_SECRET = None
 IAM_ARN = None
 IAM_NAME = None
 

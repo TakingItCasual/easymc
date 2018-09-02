@@ -53,7 +53,8 @@ class AWSSetup(CommandBase):
                 component.delete_component()
 
 
-    def namespace_groups_empty(self, path_prefix):
+    @staticmethod
+    def namespace_groups_empty(path_prefix):
         """return False if any users attached to Namespace groups"""
         iam_client = aws.iam_client()
         aws_groups = iam_client.list_groups(PathPrefix=path_prefix)['Groups']
@@ -63,7 +64,8 @@ class AWSSetup(CommandBase):
         return True
 
 
-    def namespace_policies_empty(self, path_prefix):
+    @staticmethod
+    def namespace_policies_empty(path_prefix):
         """return False if any users attached to Namespace policies"""
         iam_client = aws.iam_client()
         aws_policies = iam_client.list_policies(
@@ -80,18 +82,19 @@ class AWSSetup(CommandBase):
                 return False
         return True
 
-
-    def namespace_vpcs_empty(self):
+    @classmethod
+    def namespace_vpcs_empty(cls):
         """return False if any instances within Namespace VPCs found"""
         threader = Threader()
         for region in aws.get_regions():
-            threader.add_thread(self.region_vpc_empty, (region,))
+            threader.add_thread(cls.region_vpc_empty, (region,))
         if not all(threader.get_results()):
             return False
         return True
 
 
-    def region_vpc_empty(self, region):
+    @staticmethod
+    def region_vpc_empty(region):
         """return False if any instances found in region's Namespace VPC"""
         ec2_client = aws.ec2_client(region)
         namespace_vpc = aws.get_region_vpc(region)

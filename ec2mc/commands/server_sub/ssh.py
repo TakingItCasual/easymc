@@ -13,21 +13,17 @@ from ec2mc.validate import validate_perms
 class SSHServer(CommandBase):
 
     def main(self, kwargs):
-        """SSH into an EC2 instance using its .pem private key
+        """SSH into an EC2 instance using its .pem/.ppk private key
 
-        Attempts to open an interactive SSH session using either OpenSSH 
-        or PuTTY (OpenSSH is prioritized). A .pem/.ppk private key file is 
-        expected to exist within user's config. Instance's user@hostname 
+        Attempts to open an interactive SSH session using either OpenSSH
+        or PuTTY (OpenSSH is prioritized). A .pem/.ppk private key file is
+        expected to exist within user's config. Instance's user@hostname
         is printed, for if an alternative SSH method is desired.
 
         Args:
             kwargs (dict): See validate.validate_instances:argparse_args
         """
-        instances = validate_instances.main(kwargs)
-        if len(instances) > 1:
-            halt.err("Instance query returned multiple results.",
-                "  Narrow filter(s) so that only one instance is returned.")
-        instance = instances[0]
+        instance = validate_instances.main(kwargs, single_instance=True)
 
         if 'DefaultUser' not in instance['tags']:
             halt.err("Instance missing DefaultUser tag key-value pair.")
@@ -62,7 +58,8 @@ class SSHServer(CommandBase):
                 "  Please install one and ensure it is in PATH.")
 
 
-    def open_openssh_session(self, user_and_hostname, pem_key_path):
+    @staticmethod
+    def open_openssh_session(user_and_hostname, pem_key_path):
         """open interactive SSH session using the OpenSSH client"""
         if not os.path.isfile(pem_key_path):
             key_file_base = os.path.basename(pem_key_path)
@@ -82,7 +79,8 @@ class SSHServer(CommandBase):
         ])
 
 
-    def open_putty_session(self, user_and_hostname, pem_key_path):
+    @staticmethod
+    def open_putty_session(user_and_hostname, pem_key_path):
         """open interactive SSH session using the PuTTY client"""
         ppk_key_path = f"{os.path.splitext(pem_key_path)[0]}.ppk"
         if not os.path.isfile(ppk_key_path):

@@ -5,10 +5,10 @@ from ec2mc.utils import aws
 from ec2mc.validate import validate_instances
 from ec2mc.validate import validate_perms
 
-class StopServer(CommandBase):
+class StopServers(CommandBase):
 
     def main(self, kwargs):
-        """force instance(s) to stop, regardless of online players
+        """stop instance(s)
 
         Args:
             kwargs (dict): See validate.validate_instances:argparse_args
