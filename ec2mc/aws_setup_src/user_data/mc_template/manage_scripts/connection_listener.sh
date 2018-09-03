@@ -8,7 +8,6 @@ read MINUTES_PASSED < minutes_passed.txt
 CONNECTION_COUNT=$(/usr/sbin/ss -nt state established '( sport = :22 or sport = :25565 )' | wc -l)
 
 if [ "$CONNECTION_COUNT" != "1" ]; then
-    echo "0" > minutes_passed.txt
     MINUTES_PASSED="0"
 else
     MINUTES_PASSED=$(($MINUTES_PASSED+1))

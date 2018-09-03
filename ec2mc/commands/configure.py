@@ -10,7 +10,7 @@ from ec2mc.validate import validate_perms
 class Configure(CommandBase):
 
     def main(self, kwargs):
-        """set IAM access key, servers.dat path, and region whitelist"""
+        """configure, for example, the default IAM user access key"""
         # validate_config:main normally does this, but it wasn't called.
         if not os.path.isdir(consts.CONFIG_DIR):
             os.mkdir(consts.CONFIG_DIR)

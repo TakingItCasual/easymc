@@ -10,6 +10,7 @@ from ec2mc.utils import aws
 from ec2mc.utils import halt
 from ec2mc.utils import os2
 from ec2mc.utils import pem
+from ec2mc.validate import validate_instances
 from ec2mc.validate import validate_perms
 
 class CreateServer(CommandBase):
@@ -34,6 +35,8 @@ class CreateServer(CommandBase):
             halt.err(f"{kwargs['region']} is not a valid region.")
         self.ec2_client = aws.ec2_client(kwargs['region'])
 
+        self.validate_name_is_unique(kwargs['name'])
+
         inst_template = os2.parse_yaml(f"{consts.USER_DATA_DIR}"
             f"{kwargs['template']}.yaml")['ec2mc_template_info']
 
@@ -57,7 +60,9 @@ class CreateServer(CommandBase):
         else:
             instance = self.create_instance(
                 creation_kwargs, user_data, dry_run=False)['Instances'][0]
-            print("Instance created.")
+            print("Instance created. It may take a few minutes to initialize.")
+            if consts.USE_HANDLER is True:
+                print("  Utilize IP handler with \"ec2mc servers check\".")
 
             if kwargs['elastic_ip'] is True:
                 self.create_and_associate_elastic_ip(instance['InstanceId'])
@@ -290,6 +295,15 @@ class CreateServer(CommandBase):
                 resources=["arn:aws:ec2:*:*:volume/*"],
                 context={'ec2:VolumeSize': [volume_size]}):
             halt.err(f"Volume size {volume_size}GiB is too large.")
+
+
+    @staticmethod
+    def validate_name_is_unique(instance_name):
+        """validate desired instance name isn't in use by another instance"""
+        all_instances = validate_instances.probe_regions(aws.get_regions())
+        instance_names = [instance['name'] for instance in all_instances]
+        if instance_name in instance_names:
+            halt.err(f"Instance name {instance_name} already in use.")
 
 
     def add_documentation(self, argparse_obj):

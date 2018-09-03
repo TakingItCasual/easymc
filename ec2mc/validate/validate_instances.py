@@ -45,7 +45,7 @@ def main(kwargs, *, single_instance=False):
             for tag_key, tag_value in instance['tags'].items():
                 print(f"    {tag_key}: {tag_value}")
 
-    if single_instance:
+    if single_instance is True:
         if len(all_instances) > 1:
             halt.err("Instance query returned multiple results.",
                 "  Narrow filter(s) so that only one instance is found.")
@@ -124,15 +124,6 @@ def probe_region(region, tag_filter=None):
         del instance['tags']['Name']
 
     return region_instances
-
-
-def get_all_tags():
-    """get instance tags from all instances in all regions"""
-    tags = []
-    all_instances = probe_regions(aws.get_regions())
-    for instance in all_instances:
-        tags.append(instance['tags'])
-    return tags
 
 
 def parse_filters(kwargs):

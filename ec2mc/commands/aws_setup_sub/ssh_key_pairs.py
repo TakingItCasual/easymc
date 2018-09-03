@@ -56,9 +56,11 @@ class SSHKeyPairSetup(ComponentSetup):
 
         if os.path.isfile(consts.RSA_PRIV_KEY_PEM):
             pub_key_bytes = pem.pem_to_public_key()
+            print("Using existing RSA private key file for EC2 key pair(s).")
         # If SSH key pair doesn't exist in any regions, create a new one
         elif not aws_fingerprints:
             pub_key_bytes = pem.generate_rsa_key_pair()
+            print("Generating new RSA private key file for EC2 key pair(s).")
         # No private key file, and there are existing EC2 key pairs
         else:
             halt.err(f"RSA private key file {self.pem_file} not found.",

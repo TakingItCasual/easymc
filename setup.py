@@ -51,11 +51,11 @@ setup(
         'ec2mc.aws_setup_src.user_data.mc_template.manage_scripts': ['*']
     },
     install_requires=[
-        'boto3',
-        'nbtlib',
-        'deepdiff',
-        'cryptography',
-        'ruamel.yaml',
-        'jsonschema'
+        'boto3 ~= 1.8',
+        'nbtlib ~= 1.2',
+        'deepdiff ~= 3.3',
+        'cryptography ~= 2.3',
+        'ruamel.yaml >= 0.15, < 0.16',
+        'jsonschema ~= 2.6'
     ]
 )

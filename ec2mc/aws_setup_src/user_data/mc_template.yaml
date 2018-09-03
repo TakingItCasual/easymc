@@ -20,7 +20,7 @@ ec2mc_template_info:
 repo_update: true
 repo_upgrade: all
 
-# If you want certain packages installed
+# If you need certain packages installed
 packages:
 - screen
 - java-1.8.0
@@ -29,17 +29,19 @@ packages:
 
 # Commands to run on instance's first boot
 runcmd:
+- whoami
 - su ec2-user <<'EOF' # Run following commands as ec2-user
-- crontab < /home/ec2-user/manage-scripts/mc_crontab.txt
+- whoami
+- sudo crontab < /home/ec2-user/manage-scripts/mc_crontab.txt
 - [ sudo, curl, "https://launcher.mojang.com/v1/objects/\
   fe123682e9cb30031eae351764f653500b7396c9/server.jar",
-  --create-dirs, -o, /home/ec2-user/minecraft/server.1.13.1.jar' ]
-- cd /home/ec2-user/minecraft
-- /home/ec2-user/manage-scripts/start_server.sh
-- sed -i 's/eula=false/eula=true/g' eula.txt
-- /home/ec2-user/manage-scripts/startup_script.sh
+  --create-dirs, -o, /home/ec2-user/minecraft/server.1.13.1.jar ]
+- sudo /home/ec2-user/manage-scripts/start_server.sh &
+- wait $!
+- sudo sed -i 's/eula=false/eula=true/g' /home/ec2-user/minecraft/eula.txt
+- sudo /home/ec2-user/manage-scripts/startup_script.sh
 - EOF
-- cp /etc/skel/.bashrc /home/ec2-user/.bashrc
+- whoami
 
 # Reboot instance after completing setup
 power_state:

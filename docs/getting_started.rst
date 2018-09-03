@@ -7,7 +7,9 @@ Script Installation
 -------------------
 
 This script requires Python (version 3.6 or greater).
-Python can be downloaded from http://www.python.org/ (during installation, enable "Add Python3.x to PATH").
+Python can be downloaded from http://www.python.org/.
+If your OS is 64-bit, please find and download the latest 64-bit version of Python from the downloads page for your OS (32-bit Python can't use 64-bit exclusive executables).
+During installation, enable "Add Python3.x to PATH" so that Python can be used from a terminal.
 The script can then be installed from a terminal with pip::
 
     pip install ec2mc
@@ -25,7 +27,7 @@ Amazon Web Services Setup
 To create the necessary AWS account, visit https://aws.amazon.com/.
 
 This script requires an AWS IAM user access key to interact with your account.
-To set up your AWS account, a temporary IAM user is needed.
+To set up your AWS account with the configuration provided by the script, a temporary IAM user is needed.
 To create the temporary IAM user, visit your `IAM Management Console`_ and create a new user.
 
 Please note that the AdministratorAccess policy given to the temporary IAM user is potentially dangerous (running costs of over $10,000 a day can be incurred), so the user should be deleted after creating another IAM user with the script.
@@ -73,7 +75,7 @@ By default, the script creates an instance which changes its IP address after ev
 To maintain a constant IP address for an instance over its existence, append the --elastic_ip argument to the instance creation command.
 
 The script contains functionality to automatically update the local Minecraft client's server list with the current IP(s) of AWS instance(s).
-The path for the Minecraft client's servers.dat just needs to be specified in the config, and the server list will be updated whenever either of the two following script commands are run::
+The server list will be updated whenever either of the two following script commands are run::
 
     ec2mc servers check
     ec2mc servers start
@@ -83,7 +85,7 @@ You could create a Minecraft shortcut that automatically runs the check command,
 Creating The Server
 ~~~~~~~~~~~~~~~~~~~
 
-The script includes a template for creating a Minecraft 1.13 vanilla server.
+The script includes a template for creating a Minecraft 1.13.1 vanilla server.
 You must specify an `AWS Region`_ to place the instance in (ideally, the one closest to you).
 Create the instance (e.g. in the London region)::
 
@@ -93,7 +95,7 @@ Or if a persistent IP address is desired::
 
     ec2mc server create mc_template eu-west-2 server_name_goes_here --elastic_ip
 
-(A template for a modded server is also included: "cnb_template". See Customization_ for how to make your own template.)
+(A template for a Forge server is also included: "cnb_template". See Customization_ for how to make your own template.)
 
 
 .. _IAM Management Console: https://console.aws.amazon.com/iam/home#/users
