@@ -45,7 +45,7 @@ class DeleteServer(CommandBase):
     def disassociate_addresses(self, elastic_ips, preserve_ips):
         """disassociate (and release) elastic IP(s) associated with instance"""
         needed_actions = ["ec2:DisassociateAddress"]
-        if not preserve_ips:
+        if preserve_ips is False:
             needed_actions.append("ec2:ReleaseAddress")
         halt.assert_empty(validate_perms.blocked(actions=needed_actions))
 

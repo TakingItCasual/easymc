@@ -1,5 +1,4 @@
-# Comments are lost on YAML loading, so an intermediate entry is needed
-shebang: "#cloud-config"
+# Comments are lost on YAML loading, so "#cloud-config" is added via code
 
 # Other setup info for template (removed once processed)
 ec2mc_template_info:
@@ -15,6 +14,8 @@ ec2mc_template_info:
   - local_dir: manage_scripts
     instance_dir: /home/ec2-user/manage-scripts/
     chmod: "0775"
+  - local_dir: crontabs
+    instance_dir: /etc/cron.d/
 
 # add security patches and bug fixes
 repo_update: true
@@ -29,19 +30,13 @@ packages:
 
 # Commands to run on instance's first boot
 runcmd:
-- whoami
-- su ec2-user <<'EOF' # Run following commands as ec2-user
-- whoami
-- sudo crontab < /home/ec2-user/manage-scripts/mc_crontab.txt
-- [ sudo, curl, "https://launcher.mojang.com/v1/objects/\
+- crontab < /home/ec2-user/manage-scripts/mc_crontab.txt
+- [ curl, "https://launcher.mojang.com/v1/objects/\
   fe123682e9cb30031eae351764f653500b7396c9/server.jar",
   --create-dirs, -o, /home/ec2-user/minecraft/server.1.13.1.jar ]
-- sudo /home/ec2-user/manage-scripts/start_server.sh &
+- /home/ec2-user/manage-scripts/start_server.sh &
 - wait $!
-- sudo sed -i 's/eula=false/eula=true/g' /home/ec2-user/minecraft/eula.txt
-- sudo /home/ec2-user/manage-scripts/startup_script.sh
-- EOF
-- whoami
+- sed -i 's/eula=false/eula=true/g' /home/ec2-user/minecraft/eula.txt
 
 # Reboot instance after completing setup
 power_state:

@@ -1,6 +1,7 @@
 #!/bin/bash
 
-screen -d -m -S minecraft /home/ec2-user/manage-scripts/start_server.sh
+runuser -l ec2-user -c \
+'screen -d -m -S minecraft /home/ec2-user/manage-scripts/start_server.sh'
 
 cd /home/ec2-user/manage-scripts/
 echo "10" > minutes_needed.txt

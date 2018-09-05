@@ -1,7 +1,6 @@
 {
     "type": "object",
     "properties": {
-        "shebang": {"type": "string"},
         "ec2mc_template_info": {
             "type": "object",
             "properties": {
@@ -50,5 +49,5 @@
             ]
         }
     },
-    "required": ["shebang", "ec2mc_template_info"]
+    "required": ["ec2mc_template_info"]
 }

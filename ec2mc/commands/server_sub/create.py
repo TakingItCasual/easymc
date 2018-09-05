@@ -13,6 +13,7 @@ from ec2mc.utils import pem
 from ec2mc.validate import validate_instances
 from ec2mc.validate import validate_perms
 
+# TODO: Implement elastic IP reuse/recovery
 class CreateServer(CommandBase):
 
     def main(self, kwargs):
@@ -59,7 +60,7 @@ class CreateServer(CommandBase):
             print("Please append the -c argument to confirm.")
         else:
             instance = self.create_instance(
-                creation_kwargs, user_data, dry_run=False)['Instances'][0]
+                creation_kwargs, user_data, dry_run=False)
             print("Instance created. It may take a few minutes to initialize.")
             if consts.USE_HANDLER is True:
                 print("  Utilize IP handler with \"ec2mc servers check\".")
@@ -67,6 +68,8 @@ class CreateServer(CommandBase):
             if kwargs['elastic_ip'] is True:
                 self.create_and_associate_elastic_ip(instance['InstanceId'])
                 print("New elastic IP associated with created instance.")
+            elif kwargs['use_ip'] is not None:
+                pass
 
 
     @staticmethod
@@ -229,12 +232,10 @@ class CreateServer(CommandBase):
                 halt.err("Duplicate template write_files paths.")
 
         # Make user_data valid cloud-config by removing additional setup info
-        shebang_str = user_data['shebang']
-        del user_data['shebang']
         del user_data['ec2mc_template_info']
         user_data_str = yaml.dump(user_data, Dumper=yaml.RoundTripDumper)
 
-        return f"{shebang_str}\n{user_data_str}"
+        return f"#cloud-config\n{user_data_str}"
 
 
     def create_instance(self, creation_kwargs, user_data, *, dry_run):
@@ -262,7 +263,7 @@ class CreateServer(CommandBase):
             SecurityGroupIds=creation_kwargs['sg_ids'],
             SubnetId=creation_kwargs['subnet_id'],
             UserData=user_data
-        )
+        )['Instances'][0]
 
 
     def create_and_associate_elastic_ip(self, instance_id):
@@ -282,6 +283,11 @@ class CreateServer(CommandBase):
                 sleep(1)
         else:
             halt.err("Couldn't assign elastic IP to instance.")
+
+
+    def reuse_or_recover_elastic_ip(self, elastic_ip):
+        """reuse elastic IP if already owned, or attempt to recover if not"""
+        pass
 
 
     @staticmethod
@@ -318,11 +324,15 @@ class CreateServer(CommandBase):
             "-c", "--confirm", action="store_true",
             help="confirm instance creation")
         cmd_parser.add_argument(
-            "-e", "--elastic_ip", action="store_true",
-            help="create and associate elastic IP to instance")
-        cmd_parser.add_argument(
             "-t", dest="tags", nargs=2, action="append", metavar="",
             help="instance tag key-value pair to attach to instance")
+        elastic_ip_group = cmd_parser.add_mutually_exclusive_group()
+        elastic_ip_group.add_argument(
+            "-e", "--elastic_ip", action="store_true",
+            help="create and associate new elastic IP to instance")
+        elastic_ip_group.add_argument(
+            "--use_ip", metavar="",
+            help="desired elastic IP address (to reuse/recover)")
 
 
     def blocked_actions(self, kwargs):
@@ -345,6 +355,11 @@ class CreateServer(CommandBase):
         if kwargs['elastic_ip'] is True:
             denied_actions.extend(validate_perms.blocked(actions=[
                 "ec2:AllocateAddress",
+                "ec2:AssociateAddress"
+            ]))
+        elif kwargs['use_ip'] is not None:
+            denied_actions.extend(validate_perms.blocked(actions=[
+                "ec2:DescribeAddresses",
                 "ec2:AssociateAddress"
             ]))
         return denied_actions

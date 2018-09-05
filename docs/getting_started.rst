@@ -38,9 +38,9 @@ Create the user.
 Keep the page that loads open for the next step.
 
 To set the access key for the script, you can download your IAM user's accessKeys.csv file (by clicking "Download .csv") and move the file to the script's configuration folder.
-Alternatively, you can copy the IAM user's access key ID and secret access key, and paste them into the corresponding inputs given by the following command::
+Alternatively, you can copy the IAM user's access key ID and secret access key, and paste them into the corresponding inputs for the access key configuration command. For example::
 
-    ec2mc configure access_key
+    ec2mc configure access_key AKIAIOSFODNN7EXAMPLE wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
 
 To verify the previous steps, attempt to use the following command again::
 
@@ -85,7 +85,7 @@ You could create a Minecraft shortcut that automatically runs the check command,
 Creating The Server
 ~~~~~~~~~~~~~~~~~~~
 
-The script includes a template for creating a Minecraft 1.13.1 vanilla server.
+The script includes the template "mc_template" for creating a Minecraft 1.13.1 vanilla server.
 You must specify an `AWS Region`_ to place the instance in (ideally, the one closest to you).
 Create the instance (e.g. in the London region)::
 

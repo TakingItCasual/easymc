@@ -1,9 +1,9 @@
 import os.path
 #from codecs import open # For Python2.x
-
 from setuptools import setup, find_packages
 
-VERSION = "0.1.3"
+from ec2mc import __version__
+
 REPO_URL = 'https://github.com/TakingItCasual/ec2mc'
 
 README_PATH = os.path.join(
@@ -14,13 +14,13 @@ with open(README_PATH, encoding='utf-8') as f:
 # The OS restrictions are due to the cryptography package.
 setup(
     name='ec2mc',
-    version=VERSION,
+    version=__version__,
     description='AWS EC2 instance manager for Minecraft servers',
     long_description=LONG_DESC,
     author='TakingItCasual',
     author_email='takingitcasual+gh@gmail.com',
     url=REPO_URL,
-    download_url=f'{REPO_URL}/archive/v{VERSION}.tar.gz',
+    download_url=f'{REPO_URL}/archive/v{__version__}.tar.gz',
     license='MIT',
     classifiers=[
         'Development Status :: 3 - Alpha',
@@ -48,6 +48,7 @@ setup(
         'ec2mc.aws_setup_src.iam_policies': ['*.json'],
         'ec2mc.aws_setup_src.vpc_security_groups': ['*.json'],
         'ec2mc.aws_setup_src.user_data': ['*.yaml'],
+        'ec2mc.aws_setup_src.user_data.mc_template.crontabs': ['*'],
         'ec2mc.aws_setup_src.user_data.mc_template.manage_scripts': ['*']
     },
     install_requires=[
