@@ -1,17 +1,17 @@
 from ec2mc.commands.base_classes import ParentCommand
 
-from ec2mc.commands.user_sub import create
-from ec2mc.commands.user_sub import delete
-from ec2mc.commands.user_sub import groups
+from ec2mc.commands.user_sub import create_cmd
+from ec2mc.commands.user_sub import delete_cmd
+from ec2mc.commands.user_sub import list_cmd
 
 class User(ParentCommand):
 
     def __init__(self):
         super().__init__()
         self.sub_commands = [
-            create.CreateUser(),
-            delete.DeleteUser(),
-            groups.UserGroups()
+            create_cmd.CreateUser(),
+            delete_cmd.DeleteUser(),
+            list_cmd.ListUsers()
         ]
 
     def main(self, kwargs):

@@ -10,11 +10,11 @@ def main(instance, new_ip):
         return
     if 'IpHandler' not in instance['tags']:
         return
-    handler_script = instance['tags']['IpHandler']
 
-    handler_path = f"{consts.IP_HANDLER_DIR}{handler_script}"
+    handler_base = instance['tags']['IpHandler']
+    handler_path = f"{consts.IP_HANDLER_DIR}{handler_base}"
     if not os.path.isfile(handler_path):
-        print(f"  {handler_script} not found from config's ip_handlers.")
+        print(f"  {handler_base} not found from config's ip_handlers.")
         return
 
     handler = load_script(handler_path)

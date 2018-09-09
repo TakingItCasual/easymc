@@ -42,40 +42,32 @@ def iam_client():
 
 
 def get_region_vpc(region):
-    """get VPC from region with config's Namespace tag
+    """get VPC from region with name of aws_setup's Namespace
 
     Requires ec2:DescribeVpcs permission.
     """
     vpcs = ec2_client(region).describe_vpcs(Filters=[{
-        'Name': "tag:Namespace",
+        'Name': "tag:Name",
         'Values': [consts.NAMESPACE]
     }])['Vpcs']
 
     if len(vpcs) > 1:
-        halt.err(f"Multiple VPCs with Namespace tag {consts.NAMESPACE} "
-            f"found in {region} region.")
+        halt.err(f"Multiple VPCs named {consts.NAMESPACE} in {region} region.")
     elif vpcs:
         return vpcs[0]
     return None
 
 
-def get_region_security_groups(region, vpc_id=None):
-    """get security groups from region with config's Namespace tag
+def get_vpc_security_groups(region, vpc_id):
+    """get non-default security groups in specified VPC
 
     Requires ec2:DescribeSecurityGroups permission.
     """
-    sg_filter = [{
-        'Name': "tag:Namespace",
-        'Values': [consts.NAMESPACE]
-    }]
-    if vpc_id:
-        sg_filter.append({
-            'Name': "vpc-id",
-            'Values': [vpc_id]
-        })
-
-    return ec2_client(region).describe_security_groups(
-        Filters=sg_filter)['SecurityGroups']
+    aws_sgs = ec2_client(region).describe_security_groups(Filters=[{
+        'Name': "vpc-id",
+        'Values': [vpc_id]
+    }])['SecurityGroups']
+    return [sg for sg in aws_sgs if sg['GroupName'] != "default"]
 
 
 # TODO: Attach tag(s) on resource (e.g. VPC) creation when it becomes supported

@@ -47,6 +47,10 @@ class CreateUser(CommandBase):
         # IAM user access key generated and saved to dictionary
         new_access_key = iam_client.create_access_key(
             UserName=kwargs['name'])['AccessKey']
+        new_access_key = {
+            'id': new_access_key['AccessKeyId'],
+            'secret': new_access_key['SecretAccessKey']
+        }
         self.access_key_usable_waiter(new_access_key)
 
         config_dict = os2.parse_json(consts.CONFIG_JSON)
@@ -55,22 +59,13 @@ class CreateUser(CommandBase):
 
         if kwargs['default']:
             # Modify existing config instead of creating new one
-            config_dict['backup_access_keys'].append({
-                'id': config_dict['access_key']['id'],
-                'secret': config_dict['access_key']['secret']
-            })
-            config_dict['access_key'] = {
-                'id': new_access_key['AccessKeyId'],
-                'secret': new_access_key['SecretAccessKey']
-            }
+            config_dict['backup_access_keys'].append(config_dict['access_key'])
+            config_dict['access_key'] = new_access_key
             os2.save_json(config_dict, consts.CONFIG_JSON)
             print("  IAM user's access key set as default in config.")
         else:
             # Back up new IAM user's access key in config file
-            config_dict['backup_access_keys'].append({
-                'id': new_access_key['AccessKeyId'],
-                'secret': new_access_key['SecretAccessKey']
-            })
+            config_dict['backup_access_keys'].append(new_access_key)
             os2.save_json(config_dict, consts.CONFIG_JSON)
 
             #self.create_configuration_zip(new_access_key, kwargs['ssh_key'])
@@ -80,12 +75,7 @@ class CreateUser(CommandBase):
     @staticmethod
     def create_configuration_zip(new_access_key, give_ssh_key):
         """create zipped config folder containing new IAM user access key"""
-        new_config = {
-            'access_key': {
-                'id': new_access_key['AccessKeyId'],
-                'secret': new_access_key['SecretAccessKey']
-            }
-        }
+        new_config = {'access_key': new_access_key}
         if consts.REGION_WHITELIST is not None:
             new_config['region_whitelist'] = consts.REGION_WHITELIST
 
@@ -102,8 +92,8 @@ class CreateUser(CommandBase):
     def access_key_usable_waiter(new_access_key):
         """aws doesn't provide a waiter for checking if access keys usable"""
         iam_client = boto3.client("iam",
-            aws_access_key_id=new_access_key['AccessKeyId'],
-            aws_secret_access_key=new_access_key['SecretAccessKey']
+            aws_access_key_id=new_access_key['id'],
+            aws_secret_access_key=new_access_key['secret']
         )
         for _ in range(60):
             try:

@@ -12,11 +12,11 @@ from ec2mc.validate import validate_config
 from ec2mc.validate import validate_setup
 from ec2mc.utils import halt
 
-from ec2mc.commands import configure
-from ec2mc.commands import aws_setup
-from ec2mc.commands import server
-from ec2mc.commands import servers
-from ec2mc.commands import user
+from ec2mc.commands import configure_cmd
+from ec2mc.commands import aws_setup_cmd
+from ec2mc.commands import server_cmds
+from ec2mc.commands import servers_cmds
+from ec2mc.commands import user_cmds
 
 #import pprint
 #pp = pprint.PrettyPrinter(indent=2)
@@ -36,21 +36,21 @@ def main(args=None):
 
         # Available commands from the ec2mc.commands directory
         commands = [
-            configure.Configure(),
-            aws_setup.AWSSetup(),
-            server.Server(),
-            servers.Servers(),
-            user.User()
+            configure_cmd.Configure(),
+            aws_setup_cmd.AWSSetup(),
+            server_cmds.Server(),
+            servers_cmds.Servers(),
+            user_cmds.User()
         ]
 
         # Use argparse to turn args into dict of arguments
         kwargs = argv_to_kwargs(args, commands)
         # Get the command class object from the commands list
         chosen_cmd = next(cmd for cmd in commands
-            if cmd.module_name() == kwargs['command'])
+            if cmd.cmd_name() == kwargs['command'])
 
         # If basic configuration being done, skip config validation
-        if not (chosen_cmd.module_name() == "configure" and
+        if not (chosen_cmd.cmd_name() == "configure" and
                 kwargs['action'] != "swap_key"):
             # Validate config's config.json
             validate_config.main()

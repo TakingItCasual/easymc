@@ -44,14 +44,10 @@ class VPCSetup(ComponentSetup):
         } for sg_name in self.security_group_setup}
 
         vpc_threader = Threader()
-        sg_threader = Threader()
         for region in regions:
             vpc_threader.add_thread(aws.get_region_vpc, (region,))
-            sg_threader.add_thread(aws.get_region_security_groups, (region,))
         # VPCs already present in AWS regions
         aws_vpcs = vpc_threader.get_results(return_dict=True)
-        # VPC security groups already present in AWS regions
-        aws_sgs = sg_threader.get_results(return_dict=True)
 
         # Check each region has VPC with correct Name tag value
         for region in regions:
@@ -62,12 +58,19 @@ class VPCSetup(ComponentSetup):
                     vpc_regions['Existing'].append(region)
         # TODO: Detect and repair incomplete VPCs (missing subnets, etc.)
 
+        sg_threader = Threader()
+        for region in regions:
+            if aws_vpcs[region] is not None:
+                sg_threader.add_thread(aws.get_vpc_security_groups,
+                    (region, aws_vpcs[region]['VpcId']))
+        # VPC security groups already present in AWS regions
+        aws_sgs = sg_threader.get_results(return_dict=True)
+
         # Check each region for VPC SG(s) described by aws_setup.json
         for sg_name, sg_regions in sg_names.items():
             for region in regions:
                 if aws_vpcs[region] is not None:
-                    if any(aws_sg['GroupName'] == sg_name and
-                            aws_sg['VpcId'] == aws_vpcs[region]['VpcId']
+                    if any(aws_sg['GroupName'] == sg_name
                             for aws_sg in aws_sgs[region]):
                         sg_regions['ToCreate'].remove(region)
                         sg_regions['ToUpdate'].append(region)
@@ -317,7 +320,7 @@ class VPCSetup(ComponentSetup):
     def update_sg(cls, region, sg_name, vpc_id):
         """update VPC security group that already exists on AWS"""
         ec2_client = aws.ec2_client(region)
-        aws_sgs = aws.get_region_security_groups(region, vpc_id)
+        aws_sgs = aws.get_vpc_security_groups(region, vpc_id)
 
         sg_id = next(sg['GroupId'] for sg in aws_sgs
             if sg['GroupName'] == sg_name)
@@ -340,7 +343,7 @@ class VPCSetup(ComponentSetup):
     def delete_vpc_sgs(region, vpc_id):
         """delete VPC's security group(s) from AWS region"""
         ec2_client = aws.ec2_client(region)
-        aws_sgs = aws.get_region_security_groups(region, vpc_id)
+        aws_sgs = aws.get_vpc_security_groups(region, vpc_id)
         for aws_sg in aws_sgs:
             ec2_client.delete_security_group(GroupId=aws_sg['GroupId'])
 

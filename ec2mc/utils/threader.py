@@ -14,7 +14,7 @@ class Threader(object):
         self.threads = []
 
 
-    def __worker(self, func, fargs):
+    def _worker(self, func, fargs):
         """insert threaded function into queue to make its return retrievable
 
         The index of the thread and the threaded function's first arg are
@@ -41,7 +41,7 @@ class Threader(object):
         if not isinstance(fargs, tuple) or not fargs:
             raise ValueError("fargs must be a non-empty tuple.")
 
-        self.threads.append(Thread(target=self.__worker, args=(func, fargs)))
+        self.threads.append(Thread(target=self._worker, args=(func, fargs)))
         self.threads[-1].start()
 
 

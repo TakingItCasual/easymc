@@ -55,22 +55,16 @@ class Configure(CommandBase):
         if 'backup_access_keys' not in config_dict:
             halt.err("No backup access keys stored in config.")
 
-        for index, access_key in enumerate(config_dict['backup_access_keys']):
+        for index, backup_key in enumerate(config_dict['backup_access_keys']):
             # TODO: Validate access key is active
-            key_owner = aws.access_key_owner(access_key['id'])
+            key_owner = aws.access_key_owner(backup_key['id'])
             if key_owner is None:
                 continue
             if key_owner.lower() == user_name.lower():
                 # Swap default access key with requested IAM user's in config
-                config_dict['backup_access_keys'].append({
-                    'id': config_dict['access_key']['id'],
-                    'secret': config_dict['access_key']['secret']
-                })
-                config_dict['access_key'] = {
-                    'id': access_key['id'],
-                    'secret': access_key['secret']
-                }
-                del config_dict['backup_access_keys'][index]
+                backup_key, config_dict['access_key'] = (
+                    config_dict['access_key'], backup_key)
+                config_dict['backup_access_keys'][index] = backup_key
 
                 print(f"{key_owner}'s access key set as default in config.")
                 break

@@ -30,7 +30,6 @@ packages:
 
 # Commands to run on instance's first boot
 runcmd:
-- crontab < /home/ec2-user/manage-scripts/mc_crontab.txt
 - [ curl, "https://launcher.mojang.com/v1/objects/\
   fe123682e9cb30031eae351764f653500b7396c9/server.jar",
   --create-dirs, -o, /home/ec2-user/minecraft/server.1.13.1.jar ]

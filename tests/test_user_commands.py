@@ -11,7 +11,7 @@ def test_user_commands():
         "configure", "swap_key", "TakingItCasual"
     ]) is not False
     assert __main__.main([
-        "user", "groups"
+        "user", "list"
     ]) is not False
     assert __main__.main([
         "user", "delete", "ec2mc_test_user"

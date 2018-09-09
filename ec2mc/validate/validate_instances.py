@@ -86,7 +86,7 @@ def probe_regions(regions, tag_filter=None):
 
 
 def probe_region(region, tag_filter=None):
-    """probe a single AWS region for instances
+    """probe single AWS region for non-terminated named instances
 
     Requires ec2:DescribeInstances permission.
 
@@ -114,16 +114,16 @@ def probe_region(region, tag_filter=None):
                 continue
             if not any(tag['Key'] == "Name" for tag in instance['Tags']):
                 continue
+
             region_instances.append({
                 'id': instance['InstanceId'],
                 'tags': {tag['Key']: tag['Value'] for tag in instance['Tags']}
             })
+            region_instances[-1].update({
+                'name': region_instances[-1]['tags'].pop('Name')
+            })
 
-    for instance in region_instances:
-        instance['name'] = instance['tags']['Name']
-        del instance['tags']['Name']
-
-    return region_instances
+    return sorted(region_instances, key=lambda k: k['name'])
 
 
 def parse_filters(kwargs):
@@ -159,7 +159,7 @@ def parse_filters(kwargs):
                     'Name': f"tag:{filter_elements[0]}",
                     'Values': filter_elements[1:]
                 })
-            # If filter tag values not given, filter by just the tag key.
+            # If no filter tag values given, filter by just the tag key.
             elif filter_elements:
                 tag_filter.append({
                     'Name': "tag-key",

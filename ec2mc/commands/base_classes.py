@@ -7,6 +7,7 @@ from ec2mc.validate import validate_perms
 
 class CommandBase(ABC):
     """base class for most ec2mc command classes to inherit from"""
+    _module_postfix = "_cmd"
 
     @abstractmethod
     def main(self, kwargs):
@@ -17,7 +18,7 @@ class CommandBase(ABC):
     def add_documentation(self, argparse_obj):
         """initialize child's argparse entry and help"""
         return argparse_obj.add_parser(
-            self.module_name(), help=self.docstring())
+            self.cmd_name(), help=self.main.__doc__.split("\n", 1)[0])
 
 
     def blocked_actions(self, kwargs):
@@ -25,23 +26,23 @@ class CommandBase(ABC):
         return []
 
 
-    def module_name(self):
-        """convert child class' __module__ to its module name"""
-        return self.__class__.__module__.rsplit('.', 1)[-1]
-
-
-    def docstring(self):
-        """return main's docstring's first line (for use in argparse)"""
-        return self.main.__doc__.splitlines()[0]
+    def cmd_name(self):
+        """convert child class' __module__ to name of argparse command"""
+        name_str = self.__class__.__module__.rsplit('.', 1)[-1]
+        if not name_str.endswith(self._module_postfix):
+            raise ImportError(f"{name_str} module name must end with "
+                f"\"{self._module_postfix}\".")
+        return name_str[:-len(self._module_postfix)]
 
 
 class ParentCommand(CommandBase):
     """base class for command which just acts as parent for other commands"""
+    _module_postfix = "_cmds"
 
     def main(self, kwargs):
         """Execute subcommand (action) based on argparse input (kwargs)"""
         chosen_cmd = next(cmd for cmd in self.sub_commands
-            if cmd.module_name() == kwargs['action'])
+            if cmd.cmd_name() == kwargs['action'])
         chosen_cmd.main(kwargs)
 
 
@@ -57,7 +58,7 @@ class ParentCommand(CommandBase):
     def blocked_actions(self, kwargs):
         """pass along selected subcommand's required permissions"""
         chosen_cmd = next(cmd for cmd in self.sub_commands
-            if cmd.module_name() == kwargs['action'])
+            if cmd.cmd_name() == kwargs['action'])
         return chosen_cmd.blocked_actions(kwargs)
 
 

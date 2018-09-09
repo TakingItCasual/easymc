@@ -4,7 +4,7 @@ from ec2mc.utils import aws
 from ec2mc.utils import halt
 from ec2mc.validate import validate_perms
 
-class UserGroups(CommandBase):
+class ListUsers(CommandBase):
 
     def main(self, kwargs):
         """list IAM groups and IAM users under them"""
@@ -22,11 +22,11 @@ class UserGroups(CommandBase):
         for group_name in iam_group_names:
             group_users = iam_client.get_group(GroupName=group_name)['Users']
             if group_users:
-                print(f"{group_name}: {len(group_users)} user(s) found:")
+                print(f"{group_name}: {len(group_users)} user(s) in group:")
                 for group_user in group_users:
                     print(f"  {group_user['UserName']}")
             else:
-                print(f"{group_name}: 0 users found.")
+                print(f"{group_name}: 0 users in group.")
 
 
     def blocked_actions(self, _):

@@ -1,17 +1,17 @@
 from ec2mc.commands.base_classes import ParentCommand
 
-from ec2mc.commands.server_sub import create
-from ec2mc.commands.server_sub import delete
-from ec2mc.commands.server_sub import ssh
+from ec2mc.commands.server_sub import create_cmd
+from ec2mc.commands.server_sub import delete_cmd
+from ec2mc.commands.server_sub import ssh_cmd
 
 class Server(ParentCommand):
 
     def __init__(self):
         super().__init__()
         self.sub_commands = [
-            create.CreateServer(),
-            delete.DeleteServer(),
-            ssh.SSHServer()
+            create_cmd.CreateServer(),
+            delete_cmd.DeleteServer(),
+            ssh_cmd.SSHServer()
         ]
 
 

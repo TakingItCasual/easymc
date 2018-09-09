@@ -6,7 +6,7 @@ from ec2mc import consts
 from ec2mc.utils import os2
 from ec2mc.utils import halt
 
-# TODO: Validate local AWS setup against AWS
+# TODO: Validate local AWS setup against AWS (e.g. template SG(s))
 def main():
     """validate contents of user's config's aws_setup directory"""
     # Directory path for distribution's packaged aws_setup
@@ -119,10 +119,9 @@ def validate_instance_templates(config_aws_setup):
         template_name = os.path.splitext(template_yaml_file)[0]
         template_dir = os.path.join(
             f"{consts.USER_DATA_DIR}{template_name}", "")
-        # If write_directories not empty, validate template directory exists
+        # If write_directories in template, validate template directory exists
         if not os.path.isdir(template_dir):
-            if ('write_directories' in template_info
-                    and template_info['write_directories']):
+            if 'write_directories' in template_info:
                 halt.err(f"{template_name} template's directory not found.")
         # Validate template's subdirectories exist
         else:
