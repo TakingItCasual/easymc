@@ -88,6 +88,7 @@ class CreateUser(CommandBase):
             pass
 
 
+    # TODO: Figure out why test relying on this still fails
     @staticmethod
     def access_key_usable_waiter(new_access_key):
         """aws doesn't provide a waiter for checking if access keys usable"""

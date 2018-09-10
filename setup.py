@@ -37,7 +37,7 @@ setup(
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.6'
     ],
-    keywords='mc minecraft ssh server aws ec2 iam',
+    keywords='mc minecraft ssh server aws ec2 iam cloud-config',
     packages=find_packages(exclude=['docs', 'tests']),
     python_requires='~=3.6',
     entry_points={'console_scripts': ['ec2mc=ec2mc.__main__:main']},

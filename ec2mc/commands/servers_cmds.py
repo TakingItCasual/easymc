@@ -16,5 +16,5 @@ class Servers(ParentCommand):
 
 
     def main(self, kwargs):
-        """commands to interact with a one or more existing instances"""
+        """commands to interact with one or more existing instances"""
         super().main(kwargs)

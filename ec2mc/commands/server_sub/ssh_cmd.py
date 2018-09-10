@@ -5,7 +5,6 @@ import shutil
 
 from ec2mc import consts
 from ec2mc.commands.base_classes import CommandBase
-from ec2mc.utils import aws
 from ec2mc.utils import halt
 from ec2mc.validate import validate_instances
 from ec2mc.validate import validate_perms
@@ -24,20 +23,16 @@ class SSHServer(CommandBase):
             kwargs (dict): See validate.validate_instances:argparse_args
         """
         instance = validate_instances.main(kwargs, single_instance=True)
+        instance_state, instance_ip = validate_instances.get_state_and_ip(
+            instance['region'], instance['id'])
 
         if 'DefaultUser' not in instance['tags']:
             halt.err("Instance missing DefaultUser tag key-value pair.")
 
-        response = aws.ec2_client(instance['region']).describe_instances(
-            InstanceIds=[instance['id']]
-        )['Reservations'][0]['Instances'][0]
-        instance_state = response['State']['Name']
-        instance_dns = response['PublicDnsName']
-
         if instance_state != "running":
             halt.err("Cannot SSH into an instance that isn't running.")
 
-        user_and_hostname = f"{instance['tags']['DefaultUser']}@{instance_dns}"
+        user_and_hostname = f"{instance['tags']['DefaultUser']}@{instance_ip}"
 
         print("")
         print("Instance's user and hostname (seperated by \"@\"):")

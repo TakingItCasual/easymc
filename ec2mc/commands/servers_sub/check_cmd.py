@@ -1,5 +1,4 @@
 from ec2mc.commands.base_classes import CommandBase
-from ec2mc.utils import aws
 from ec2mc.utils import handle_ip
 from ec2mc.validate import validate_instances
 from ec2mc.validate import validate_perms
@@ -18,18 +17,13 @@ class CheckServers(CommandBase):
             print("")
             print(f"Checking {instance['name']} ({instance['id']})...")
 
-            ec2_client = aws.ec2_client(instance['region'])
-
-            response = ec2_client.describe_instances(
-                InstanceIds=[instance['id']]
-            )['Reservations'][0]['Instances'][0]
-            instance_state = response['State']['Name']
-            instance_dns = response['PublicDnsName']
+            instance_state, instance_ip = validate_instances.get_state_and_ip(
+                instance['region'], instance['id'])
 
             print(f"  Instance is currently {instance_state}.")
             if instance_state == "running":
-                print(f"  Instance DNS: {instance_dns}")
-                handle_ip.main(instance, instance_dns)
+                print(f"  Instance IP: {instance_ip}")
+                handle_ip.main(instance, instance_ip)
 
 
     def add_documentation(self, argparse_obj):

@@ -23,9 +23,8 @@ class StartServers(CommandBase):
 
             ec2_client = aws.ec2_client(instance['region'])
 
-            instance_state = ec2_client.describe_instances(
-                InstanceIds=[instance['id']]
-            )['Reservations'][0]['Instances'][0]['State']['Name']
+            instance_state, _ = validate_instances.get_state_and_ip(
+                instance['region'], instance['id'])
 
             if instance_state not in ("running", "stopped"):
                 print(f"  Instance is currently {instance_state}.")
@@ -50,12 +49,11 @@ class StartServers(CommandBase):
             elif instance_state == "running":
                 print("  Instance is already running.")
 
-            instance_dns = ec2_client.describe_instances(
-                InstanceIds=[instance['id']]
-            )['Reservations'][0]['Instances'][0]['PublicDnsName']
+            _, instance_ip = validate_instances.get_state_and_ip(
+                instance['region'], instance['id'])
 
-            print(f"  Instance DNS: {instance_dns}")
-            handle_ip.main(instance, instance_dns)
+            print(f"  Instance IP: {instance_ip}")
+            handle_ip.main(instance, instance_ip)
 
 
     def add_documentation(self, argparse_obj):

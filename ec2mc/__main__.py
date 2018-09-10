@@ -8,6 +8,7 @@ IAM user is a part of.
 import sys
 import argparse
 
+from ec2mc import __version__
 from ec2mc.validate import validate_config
 from ec2mc.validate import validate_setup
 from ec2mc.utils import halt
@@ -76,15 +77,16 @@ def argv_to_kwargs(args, commands):
                 add_documentation method to see its args.
     """
     parser = argparse.ArgumentParser(description=__doc__)
-    cmd_args = parser.add_subparsers(metavar="{command}"+" "*2, dest="command")
-    cmd_args.required = True
+    parser.add_argument("--version", action="version", version=__version__)
+    cmd_parser = parser.add_subparsers(
+        metavar="{command}"+" "*2, dest="command")
+    cmd_parser.required = True
 
     for command in commands:
-        command.add_documentation(cmd_args)
+        command.add_documentation(cmd_parser)
 
     if not args:
-        parser.print_help()
-        halt.stop()
+        args = ["-h"]
 
     return vars(parser.parse_args(args))
 

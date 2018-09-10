@@ -25,12 +25,13 @@ Amazon Web Services Setup
 -------------------------
 
 To create the necessary AWS account, visit https://aws.amazon.com/.
+You'll need to attach a payment method, as the script uses services not covered by the free tier.
 
 This script requires an AWS IAM user access key to interact with your account.
 To set up your AWS account with the configuration provided by the script, a temporary IAM user is needed.
 To create the temporary IAM user, visit your `IAM Management Console`_ and create a new user.
 
-Please note that the AdministratorAccess policy given to the temporary IAM user is potentially dangerous (running costs of over $10,000 a day can be incurred), so the user should be deleted after creating another IAM user with the script.
+The IAM group permissions provided by the script will prevent accidentally creating large and expensive servers, so the temporary user should be deleted after creating an IAM user under the setup_users IAM group.
 
 In step 1, name the IAM user, and enable "Programmatic access" for "Access type".
 In step 2, switch to "Attach existing policies directly" and enable "AdministratorAccess".
@@ -58,7 +59,8 @@ Create an IAM user under the setup_users IAM group (e.g. with the name "Bob") wi
 
     ec2mc user create Bob setup_users --default
 
-(The --default argument sets the new user's access key as the script's default access key.)
+The --default argument sets the new user's access key as the script's default access key.
+For more on IAM user management, see `Managing Users`_.
 
 The temporary IAM user should then be deleted from your `IAM Management Console`_.
 
@@ -89,11 +91,11 @@ The script includes the template "mc_template" for creating a Minecraft 1.13.1 v
 You must specify an `AWS Region`_ to place the instance in (ideally, the one closest to you).
 Create the instance (e.g. in the London region)::
 
-    ec2mc server create mc_template eu-west-2 server_name_goes_here
+    ec2mc server create eu-west-2 mc_template server_name_goes_here
 
 Or if a persistent IP address is desired::
 
-    ec2mc server create mc_template eu-west-2 server_name_goes_here --elastic_ip
+    ec2mc server create eu-west-2 mc_template server_name_goes_here --elastic_ip
 
 (A template for a Forge server is also included: "cnb_template". See Customization_ for how to make your own template.)
 
@@ -101,6 +103,8 @@ Or if a persistent IP address is desired::
 .. _IAM Management Console: https://console.aws.amazon.com/iam/home#/users
 
 .. _Customization: https://github.com/TakingItCasual/ec2mc/blob/master/docs/customization.rst
+
+.. _Managing Users: https://github.com/TakingItCasual/ec2mc/blob/master/docs/managing_users.rst
 
 .. _Costs: https://github.com/TakingItCasual/ec2mc/blob/master/docs/costs.rst
 

@@ -365,9 +365,9 @@ class CreateServer(CommandBase):
     def add_documentation(self, argparse_obj):
         cmd_parser = super().add_documentation(argparse_obj)
         cmd_parser.add_argument(
-            "template", help="name of config instance setup template to use")
-        cmd_parser.add_argument(
             "region", help="AWS region to create the instance in")
+        cmd_parser.add_argument(
+            "template", help="instance setup template in config to use")
         cmd_parser.add_argument(
             "name", help="value for instance's tag key \"Name\"")
         cmd_parser.add_argument(

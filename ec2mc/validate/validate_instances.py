@@ -117,7 +117,8 @@ def probe_region(region, tag_filter=None):
 
             region_instances.append({
                 'id': instance['InstanceId'],
-                'tags': {tag['Key']: tag['Value'] for tag in instance['Tags']}
+                'tags': dict(sorted({tag['Key']: tag['Value']
+                    for tag in instance['Tags']}.items()))
             })
             region_instances[-1].update({
                 'name': region_instances[-1]['tags'].pop('Name')
@@ -177,6 +178,27 @@ def parse_filters(kwargs):
         })
 
     return (regions, tag_filter)
+
+
+def get_state_and_ip(region, instance_ip):
+    """return state and (elastic) IP of instance
+
+    Requires ec2:DescribeInstances permission.
+    """
+    response = aws.ec2_client(region).describe_instances(
+        InstanceIds=[instance_ip]
+    )['Reservations'][0]['Instances'][0]
+
+    instance_state = response['State']['Name']
+    instance_ip = None
+    for network_interface in response['NetworkInterfaces']:
+        # Expected to be True if instance is running
+        if 'Association' in network_interface:
+            # IP is elastic unless association's 'IpOwnerId' is "amazon"
+            instance_ip = network_interface['Association']['PublicIp']
+            break
+
+    return (instance_state, instance_ip)
 
 
 def argparse_args(cmd_parser):
