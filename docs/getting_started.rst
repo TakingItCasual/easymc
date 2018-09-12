@@ -9,7 +9,7 @@ Script Installation
 This script requires Python (version 3.6 or greater).
 Python can be downloaded from http://www.python.org/.
 If your OS is 64-bit, please find and download the latest 64-bit version of Python from the downloads page for your OS (32-bit Python can't use 64-bit exclusive executables).
-During installation, enable "Add Python3.x to PATH" so that Python can be used from a terminal.
+During Python's installation, enable the "Add Python3.x to PATH" option so that Python can be used from a terminal.
 The script can then be installed from a terminal with pip::
 
     pip install ec2mc
@@ -74,20 +74,21 @@ Server IP Persistence
 ~~~~~~~~~~~~~~~~~~~~~
 
 By default, the script creates an instance which changes its IP address after every reboot, as this is the cheaper option (see Costs_).
-To maintain a constant IP address for an instance over its existence, append the --elastic_ip argument to the instance creation command.
-
-The script contains functionality to automatically update the local Minecraft client's server list with the current IP(s) of AWS instance(s).
+To handle this, the script contains functionality to automatically update the local Minecraft client's server list with the current IP(s) of AWS instance(s).
 The server list will be updated whenever either of the two following script commands are run::
 
     ec2mc servers check
     ec2mc servers start
 
-You could create a Minecraft shortcut that automatically runs the check command, to eliminate the need to manually update an IP in the Minecraft client's server list each time an instance is rebooted.
+This functionality is still available for instances with persistent IP addresses.
+
+You could modify your Minecraft client shortcut to automatically run the `check` command, to eliminate the need to manually update an IP in the client's server list each time an instance is rebooted.
+Or you could modify it to run the `start` command, to also eliminate the need to manually start the server.
 
 Creating The Server
 ~~~~~~~~~~~~~~~~~~~
 
-The script includes the template "mc_template" for creating a Minecraft 1.13.1 vanilla server.
+The script provides the template "mc_template" for creating a Minecraft 1.13.1 vanilla server.
 You must specify an `AWS Region`_ to place the instance in (ideally, the one closest to you).
 Create the instance (e.g. in the London region)::
 
@@ -96,6 +97,8 @@ Create the instance (e.g. in the London region)::
 Or if a persistent IP address is desired::
 
     ec2mc server create eu-west-2 mc_template server_name_goes_here --elastic_ip
+
+All provided templates contain scripts (which will be uploaded to the instances themselves) which will shut down the instances after 10 consecutive minutes of no online players.
 
 (A template for a Forge server is also included: "cnb_template". See Customization_ for how to make your own template.)
 

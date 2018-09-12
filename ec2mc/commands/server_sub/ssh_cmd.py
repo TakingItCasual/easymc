@@ -4,7 +4,7 @@ import subprocess
 import shutil
 
 from ec2mc import consts
-from ec2mc.commands.base_classes import CommandBase
+from ec2mc.utils.base_classes import CommandBase
 from ec2mc.utils import halt
 from ec2mc.validate import validate_instances
 from ec2mc.validate import validate_perms

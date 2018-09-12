@@ -1,5 +1,5 @@
 from ec2mc import consts
-from ec2mc.commands.base_classes import CommandBase
+from ec2mc.utils.base_classes import CommandBase
 from ec2mc.utils import aws
 from ec2mc.utils import halt
 from ec2mc.utils import os2
@@ -86,7 +86,7 @@ class AWSSetup(CommandBase):
     def namespace_vpcs_empty(cls):
         """return False if any instances within Namespace VPCs found"""
         threader = Threader()
-        for region in aws.get_regions():
+        for region in consts.REGIONS:
             threader.add_thread(cls.region_vpc_empty, (region,))
         if not all(threader.get_results()):
             return False
@@ -110,7 +110,7 @@ class AWSSetup(CommandBase):
 
     def add_documentation(self, argparse_obj):
         cmd_parser = super().add_documentation(argparse_obj)
-        actions = cmd_parser.add_subparsers(metavar="{action}", dest="action")
+        actions = cmd_parser.add_subparsers(metavar="<action>", dest="action")
         actions.required = True
         actions.add_parser(
             "check", help="check differences between local and AWS setup")

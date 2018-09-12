@@ -138,14 +138,14 @@ def parse_filters(kwargs):
             list[str]: Region(s) to probe.
             list[dict]: Filter to pass to EC2 client's describe_instances.
     """
-    regions = aws.get_regions()
+    regions = consts.REGIONS
     if kwargs['region_filter'] is not None:
         region_filter = set(kwargs['region_filter'])
         # Validate region filter
         if not region_filter.issubset(set(regions)):
             halt.err("Following invalid region(s) specified:",
                 *(region_filter - set(regions)))
-        regions = list(region_filter)
+        regions = tuple(region_filter)
 
     tag_filter = [{
         'Name': "tag:Namespace",
@@ -192,11 +192,14 @@ def get_state_and_ip(region, instance_ip):
     instance_state = response['State']['Name']
     instance_ip = None
     for network_interface in response['NetworkInterfaces']:
-        # Expected to be True if instance is running
         if 'Association' in network_interface:
             # IP is elastic unless association's 'IpOwnerId' is "amazon"
             instance_ip = network_interface['Association']['PublicIp']
             break
+    else:
+        # Script expects running instances to always have a public IP
+        if instance_state == "running":
+            instance_state = "???"
 
     return (instance_state, instance_ip)
 
@@ -216,5 +219,5 @@ def argparse_args(cmd_parser):
         "-n", dest="name_filter", nargs="+", metavar="",
         help="Instance tag value filter for the tag key \"Name\".")
     cmd_parser.add_argument(
-        "--ids", dest="id_filter", nargs="+", metavar="",
+        "-i", dest="id_filter", nargs="+", metavar="",
         help="Instance ID filter.")

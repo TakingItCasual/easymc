@@ -1,6 +1,6 @@
 from botocore.exceptions import WaiterError
 
-from ec2mc.commands.base_classes import CommandBase
+from ec2mc.utils.base_classes import CommandBase
 from ec2mc.utils import aws
 from ec2mc.utils import handle_ip
 from ec2mc.validate import validate_instances

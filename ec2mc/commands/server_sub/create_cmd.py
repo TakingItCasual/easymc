@@ -5,7 +5,7 @@ from ruamel import yaml
 from botocore.exceptions import ClientError
 
 from ec2mc import consts
-from ec2mc.commands.base_classes import CommandBase
+from ec2mc.utils.base_classes import CommandBase
 from ec2mc.utils import aws
 from ec2mc.utils import halt
 from ec2mc.utils import os2
@@ -32,8 +32,6 @@ class CreateServer(CommandBase):
         if f"{kwargs['template']}.yaml" not in template_yaml_files:
             halt.err(f"Template {kwargs['template']} not found from config.")
 
-        if kwargs['region'] not in aws.get_regions():
-            halt.err(f"{kwargs['region']} is not a valid region.")
         self.ec2_client = aws.ec2_client(kwargs['region'])
 
         self.validate_name_is_unique(kwargs['name'])
@@ -43,8 +41,8 @@ class CreateServer(CommandBase):
 
         self.validate_type_and_size_allowed(
             inst_template['instance_type'], inst_template['volume_size'])
-        if kwargs['reuse_ip'] is not None:
-            self.validate_address_available(kwargs['reuse_ip'])
+        if kwargs['use_ip'] is not None:
+            self.validate_address_available(kwargs['use_ip'])
 
         creation_kwargs = self.parse_run_instance_args(kwargs, inst_template)
         user_data = self.process_user_data(kwargs['template'], inst_template)
@@ -68,11 +66,12 @@ class CreateServer(CommandBase):
                 print("  Utilize IP handler with \"ec2mc servers check\".")
 
             if kwargs['elastic_ip'] is True:
-                self.create_elastic_ip(instance['InstanceId'])
+                self.create_elastic_ip(
+                    kwargs['region'], instance['InstanceId'])
                 print("New elastic IP associated with created instance.")
-            elif kwargs['reuse_ip'] is not None:
+            elif kwargs['use_ip'] is not None:
                 self.reuse_elastic_ip(
-                    instance['InstanceId'], kwargs['reuse_ip'])
+                    instance['InstanceId'], kwargs['use_ip'])
                 print("Existing elastic IP associated with created instance.")
 
 
@@ -226,10 +225,11 @@ class CreateServer(CommandBase):
         )['Instances'][0]
 
 
-    def create_elastic_ip(self, instance_id):
+    def create_elastic_ip(self, region, instance_id):
         """allocate new elastic IP to AWS account, and associate to instance"""
         allocation_id = self.ec2_client.allocate_address(
             Domain="vpc")['AllocationId']
+        aws.attach_tags(region, allocation_id)
         self.associate_elastic_ip(instance_id, allocation_id)
 
 
@@ -290,7 +290,7 @@ class CreateServer(CommandBase):
     @staticmethod
     def validate_name_is_unique(instance_name):
         """validate desired instance name isn't in use by another instance"""
-        all_instances = validate_instances.probe_regions(aws.get_regions())
+        all_instances = validate_instances.probe_regions(consts.REGIONS)
         instance_names = [instance['name'] for instance in all_instances]
         if instance_name in instance_names:
             halt.err(f"Instance name {instance_name} already in use.")
@@ -381,13 +381,12 @@ class CreateServer(CommandBase):
             "-e", "--elastic_ip", action="store_true",
             help="create new elastic IP and associate to instance")
         elastic_ip_group.add_argument(
-            "--reuse_ip", metavar="",
-            help="elastic IP address to reuse")
+            "--use_ip", metavar="",
+            help="owned elastic IP address to associate to instance")
 
 
     def blocked_actions(self, kwargs):
-        denied_actions = []
-        denied_actions.extend(validate_perms.blocked(actions=[
+        denied_actions = validate_perms.blocked(actions=[
             "ec2:DescribeRegions",
             "ec2:DescribeInstances",
             "ec2:DescribeVpcs",
@@ -396,7 +395,7 @@ class CreateServer(CommandBase):
             "ec2:DescribeKeyPairs",
             "ec2:DescribeImages",
             "ec2:CreateTags"
-        ]))
+        ])
         denied_actions.extend(validate_perms.blocked(
             actions=["ec2:RunInstances"],
             resources=["arn:aws:ec2:*:*:instance/*"],
@@ -407,7 +406,7 @@ class CreateServer(CommandBase):
                 "ec2:AllocateAddress",
                 "ec2:AssociateAddress"
             ]))
-        elif kwargs['reuse_ip'] is not None:
+        elif kwargs['use_ip'] is not None:
             denied_actions.extend(validate_perms.blocked(actions=[
                 "ec2:DescribeAddresses",
                 "ec2:AssociateAddress"

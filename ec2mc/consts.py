@@ -1,6 +1,6 @@
 """ec2mc constants
 
-Variables initialized as None are set *once* elsewhere.
+Variables with "Set in..." comments are set once elsewhere.
 """
 
 import os.path
@@ -54,5 +54,8 @@ PK_PERMS = 0o400
 # Creating an EC2 client requires a region, even for listing all regions.
 DEFAULT_REGION = "us-east-1"
 # Restrict AWS region(s) the script interacts with (if not None).
-# (Optionally) set in ec2mc.validate.validate_config:main
+# (Optionally) set in ec2mc.validate.validate_config:set_consts_regions
 REGION_WHITELIST = None
+# Tuple of regions found with ec2:GetRegions (filtered through whitelist)
+# Set in ec2mc.validate.validate_config:set_consts_regions
+REGIONS = (DEFAULT_REGION,)

@@ -11,11 +11,13 @@ ec2mc_template_info:
   - minecraft_sg
   ip_handler: mc_handler.py
   write_directories:
+  - local_dir: crontabs
+    instance_dir: /etc/cron.d/
   - local_dir: manage_scripts
     instance_dir: /home/ec2-user/manage-scripts/
     chmod: "0775"
-  - local_dir: crontabs
-    instance_dir: /etc/cron.d/
+  - local_dir: mc_folder
+    instance_dir: /home/ec2-user/minecraft/
 
 # add security patches and bug fixes
 repo_update: true

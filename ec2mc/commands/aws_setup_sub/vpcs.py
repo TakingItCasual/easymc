@@ -2,7 +2,7 @@ import os.path
 from deepdiff import DeepDiff
 
 from ec2mc import consts
-from ec2mc.commands.base_classes import ComponentSetup
+from ec2mc.utils.base_classes import ComponentSetup
 from ec2mc.utils import aws
 from ec2mc.utils import halt
 from ec2mc.utils import os2
@@ -27,18 +27,18 @@ class VPCSetup(ComponentSetup):
                         'ToUpdate' (list): AWS region(s) to update SG in.
                         'UpToDate' (list): AWS region(s) SG is up to date in.
         """
-        regions = aws.get_regions()
+        regions = consts.REGIONS
 
         # Region(s) to create VPC in, and region(s) already containing VPC
         vpc_regions = {
-            'ToCreate': regions[:],
+            'ToCreate': list(regions),
             'Existing': []
         }
 
         self.security_group_setup = config_aws_setup['VPC']['SecurityGroups']
         # Status for each SG in each region
         sg_names = {sg_name: {
-            'ToCreate': regions[:],
+            'ToCreate': list(regions),
             'ToUpdate': [],
             'UpToDate': []
         } for sg_name in self.security_group_setup}
@@ -94,7 +94,7 @@ class VPCSetup(ComponentSetup):
     def notify_state(self, vpc_and_sg_info):
         vpc_regions, sg_names = vpc_and_sg_info
 
-        total_regions = len(aws.get_regions())
+        total_regions = len(consts.REGIONS)
         existing = len(vpc_regions['Existing'])
         print(f"VPC {consts.NAMESPACE} exists in {existing} of "
             f"{total_regions} AWS regions.")
@@ -130,7 +130,7 @@ class VPCSetup(ComponentSetup):
 
         vpc_ids = {}
         threader = Threader()
-        for region in aws.get_regions():
+        for region in consts.REGIONS:
             threader.add_thread(aws.get_region_vpc, (region,))
         for region, vpc in threader.get_results(return_dict=True).items():
             if vpc is None:
@@ -162,7 +162,7 @@ class VPCSetup(ComponentSetup):
     def delete_component(self):
         """delete VPC(s) and associated SG(s) from AWS"""
         threader = Threader()
-        for region in aws.get_regions():
+        for region in consts.REGIONS:
             threader.add_thread(self.delete_region_vpc, (region,))
         deleted_vpcs = threader.get_results()
 

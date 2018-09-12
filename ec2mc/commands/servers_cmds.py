@@ -1,4 +1,4 @@
-from ec2mc.commands.base_classes import ParentCommand
+from ec2mc.utils.base_classes import ParentCommand
 
 from ec2mc.commands.servers_sub import check_cmd
 from ec2mc.commands.servers_sub import start_cmd

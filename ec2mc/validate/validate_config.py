@@ -36,12 +36,8 @@ def main():
     # Validate config's IAM user access key.
     validate_user(config_dict)
 
-    # Validate config's region whitelist is valid.
-    if 'region_whitelist' in config_dict:
-        consts.REGION_WHITELIST = tuple(config_dict['region_whitelist'])
-        if len(aws.get_regions()) != len(consts.REGION_WHITELIST):
-            halt.err("Following invalid region(s) in config whitelist:",
-                *(set(consts.REGION_WHITELIST) - set(aws.get_regions())))
+    # Validate config's region whitelist and save region tuple to consts.
+    set_consts_regions(config_dict)
 
     print(f"Access key validated as IAM user \"{consts.IAM_NAME}\".")
 
@@ -95,6 +91,26 @@ def validate_user(config_dict):
         "iam:GetAccessKeyLastUsed",
         "ec2:DescribeRegions"
     ]))
+
+
+def set_consts_regions(config_dict):
+    """validate config's region whitelist and save region tuple to consts
+
+    Requires ec2:DescribeRegions permission.
+    """
+    response = aws.ec2_client(consts.DEFAULT_REGION).describe_regions()
+    region_names = [region['RegionName'] for region in response['Regions']]
+
+    if 'region_whitelist' in config_dict:
+        consts.REGION_WHITELIST = tuple(config_dict['region_whitelist'])
+        if not set(consts.REGION_WHITELIST).issubset(set(region_names)):
+            halt.err("Following invalid region(s) in config whitelist:",
+                *(set(consts.REGION_WHITELIST) - set(region_names)))
+
+    consts.REGIONS = tuple(region_names)
+    if consts.REGION_WHITELIST is not None:
+        consts.REGIONS = tuple(region for region in region_names
+            if region in consts.REGION_WHITELIST)
 
 
 def create_config_from_credentials_csv(file_path):

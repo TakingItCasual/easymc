@@ -6,9 +6,9 @@ IAM user is a part of.
 """
 
 import sys
-import argparse
 
 from ec2mc import __version__
+from ec2mc.utils.base_classes import ProperIndentParser
 from ec2mc.validate import validate_config
 from ec2mc.validate import validate_setup
 from ec2mc.utils import halt
@@ -17,6 +17,7 @@ from ec2mc.commands import configure_cmd
 from ec2mc.commands import aws_setup_cmd
 from ec2mc.commands import server_cmds
 from ec2mc.commands import servers_cmds
+from ec2mc.commands import address_cmds
 from ec2mc.commands import user_cmds
 
 #import pprint
@@ -41,6 +42,7 @@ def main(args=None):
             aws_setup_cmd.AWSSetup(),
             server_cmds.Server(),
             servers_cmds.Servers(),
+            address_cmds.Address(),
             user_cmds.User()
         ]
 
@@ -76,10 +78,9 @@ def argv_to_kwargs(args, commands):
             Other key-value pairs vary depending on the command. See command's
                 add_documentation method to see its args.
     """
-    parser = argparse.ArgumentParser(description=__doc__)
+    parser = ProperIndentParser(description=__doc__)
     parser.add_argument("--version", action="version", version=__version__)
-    cmd_parser = parser.add_subparsers(
-        metavar="{command}"+" "*2, dest="command")
+    cmd_parser = parser.add_subparsers(metavar="<command>", dest="command")
     cmd_parser.required = True
 
     for command in commands:

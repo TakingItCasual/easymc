@@ -1,7 +1,7 @@
 import os
 
 from ec2mc import consts
-from ec2mc.commands.base_classes import CommandBase
+from ec2mc.utils.base_classes import CommandBase
 from ec2mc.utils import aws
 from ec2mc.utils import halt
 from ec2mc.utils import os2
@@ -90,8 +90,7 @@ class Configure(CommandBase):
 
     def add_documentation(self, argparse_obj):
         cmd_parser = super().add_documentation(argparse_obj)
-        actions = cmd_parser.add_subparsers(
-            metavar="{action}"+" "*5, dest="action")
+        actions = cmd_parser.add_subparsers(metavar="<action>", dest="action")
         actions.required = True
 
         access_key_parser = actions.add_parser(

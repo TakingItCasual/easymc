@@ -1,7 +1,7 @@
 import os.path
 
 from ec2mc import consts
-from ec2mc.commands.base_classes import ComponentSetup
+from ec2mc.utils.base_classes import ComponentSetup
 from ec2mc.utils import aws
 from ec2mc.utils import halt
 from ec2mc.utils import pem
@@ -20,7 +20,7 @@ class SSHKeyPairSetup(ComponentSetup):
         self.key_pair_name = os.path.splitext(self.pem_file)[0]
 
         threader = Threader()
-        for region in aws.get_regions():
+        for region in consts.REGIONS:
             threader.add_thread(
                 self.region_namespace_key_fingerprint, (region,))
         return threader.get_results(return_dict=True)
@@ -30,7 +30,7 @@ class SSHKeyPairSetup(ComponentSetup):
         aws_fingerprints = [fp for fp in fingerprint_regions.values()
             if fp is not None]
 
-        total_regions = len(aws.get_regions())
+        total_regions = len(consts.REGIONS)
         existing = len(aws_fingerprints)
         print(f"EC2 key pair {self.key_pair_name} exists in {existing} of "
             f"{total_regions} AWS regions.")
@@ -90,7 +90,7 @@ class SSHKeyPairSetup(ComponentSetup):
     def delete_component(self):
         """remove Namespace RSA key pairs from all AWS regions"""
         threader = Threader()
-        for region in aws.get_regions():
+        for region in consts.REGIONS:
             threader.add_thread(self.delete_region_key_pair, (region,))
         deleted_key_pairs = threader.get_results()
 

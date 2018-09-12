@@ -2,6 +2,7 @@
 
 from abc import ABC
 from abc import abstractmethod
+import argparse
 
 from ec2mc.validate import validate_perms
 
@@ -15,10 +16,11 @@ class CommandBase(ABC):
         pass
 
 
-    def add_documentation(self, argparse_obj):
+    @classmethod
+    def add_documentation(cls, argparse_obj):
         """initialize child's argparse entry and help"""
         return argparse_obj.add_parser(
-            self.cmd_name(), help=self.main.__doc__.split("\n", 1)[0])
+            cls.cmd_name(), help=cls.main.__doc__.split("\n", 1)[0])
 
 
     def blocked_actions(self, kwargs):
@@ -26,13 +28,14 @@ class CommandBase(ABC):
         return []
 
 
-    def cmd_name(self):
+    @classmethod
+    def cmd_name(cls):
         """convert child class' __module__ to name of argparse command"""
-        name_str = self.__class__.__module__.rsplit('.', 1)[-1]
-        if not name_str.endswith(self._module_postfix):
+        name_str = cls.__module__.rsplit('.', 1)[-1]
+        if not name_str.endswith(cls._module_postfix):
             raise ImportError(f"{name_str} module name must end with "
-                f"\"{self._module_postfix}\".")
-        return name_str[:-len(self._module_postfix)]
+                f"\"{cls._module_postfix}\".")
+        return name_str[:-len(cls._module_postfix)]
 
 
 class ParentCommand(CommandBase):
@@ -49,7 +52,7 @@ class ParentCommand(CommandBase):
     def add_documentation(self, argparse_obj):
         """set up argparse for command and all of its subcommands"""
         cmd_parser = super().add_documentation(argparse_obj)
-        actions = cmd_parser.add_subparsers(metavar="{action}", dest="action")
+        actions = cmd_parser.add_subparsers(metavar="<action>", dest="action")
         actions.required = True
         for sub_command in self.sub_commands:
             sub_command.add_documentation(actions)
@@ -106,3 +109,40 @@ class ComponentSetup(ABC):
         elif sub_command == "delete":
             needed_actions.extend(self.delete_actions)
         return validate_perms.blocked(actions=needed_actions)
+
+
+class ProperIndentParser(argparse.ArgumentParser):
+    """Use formatter_class that properly indents help in subparsers"""
+
+    def __init__(self, *args, **kwargs):
+        formatter_class = lambda prog: ProperIndentFormatter(prog)
+        argparse.ArgumentParser.__init__(
+            self, *args, **kwargs, formatter_class=formatter_class)
+
+
+class ProperIndentFormatter(argparse.HelpFormatter):
+    """Corrected _max_action_length for the indenting of subactions
+
+    Source: https://stackoverflow.com/a/32891625/2868017
+    """
+
+    def add_argument(self, action):
+        if action.help is not argparse.SUPPRESS:
+            # find all invocations
+            get_invocation = self._format_action_invocation
+            invocations = [get_invocation(action)]
+            current_indent = self._current_indent
+            for subaction in self._iter_indented_subactions(action):
+                # compensate for the indent that will be added
+                indent_chg = self._current_indent - current_indent
+                added_indent = "x"*indent_chg
+                invocations.append(added_indent + get_invocation(subaction))
+
+            # update the maximum item length
+            invocation_length = max([len(s) for s in invocations])
+            action_length = invocation_length + self._current_indent
+            self._action_max_length = max(
+                self._action_max_length, action_length)
+
+            # add the item to the list
+            self._add_item(self._format_action, [action])

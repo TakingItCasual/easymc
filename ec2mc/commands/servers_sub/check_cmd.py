@@ -1,4 +1,4 @@
-from ec2mc.commands.base_classes import CommandBase
+from ec2mc.utils.base_classes import CommandBase
 from ec2mc.utils import handle_ip
 from ec2mc.validate import validate_instances
 from ec2mc.validate import validate_perms

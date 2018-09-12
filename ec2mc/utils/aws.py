@@ -8,25 +8,11 @@ from botocore.exceptions import ClientError
 from ec2mc import consts
 from ec2mc.utils import halt
 
-def get_regions():
-    """return list of AWS regions, or config's region whitelist if defined
-
-    Requires ec2:DescribeRegions permission.
-    """
-    region_whitelist = []
-    if consts.REGION_WHITELIST is not None:
-        region_whitelist.append({
-            'Name': "region-name",
-            'Values': consts.REGION_WHITELIST
-        })
-
-    response = ec2_client(consts.DEFAULT_REGION).describe_regions(
-        Filters=region_whitelist)
-    return [region['RegionName'] for region in response['Regions']]
-
-
 def ec2_client(region):
     """create and return EC2 client using IAM user access key and a region"""
+    if region not in consts.REGIONS:
+        halt.err(f"{region} is not a valid region.")
+
     return boto3.client("ec2",
         aws_access_key_id=consts.KEY_ID,
         aws_secret_access_key=consts.KEY_SECRET,

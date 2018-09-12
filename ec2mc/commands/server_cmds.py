@@ -1,4 +1,4 @@
-from ec2mc.commands.base_classes import ParentCommand
+from ec2mc.utils.base_classes import ParentCommand
 
 from ec2mc.commands.server_sub import create_cmd
 from ec2mc.commands.server_sub import delete_cmd

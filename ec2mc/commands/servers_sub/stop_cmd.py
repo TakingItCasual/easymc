@@ -1,6 +1,6 @@
 from botocore.exceptions import WaiterError
 
-from ec2mc.commands.base_classes import CommandBase
+from ec2mc.utils.base_classes import CommandBase
 from ec2mc.utils import aws
 from ec2mc.validate import validate_instances
 from ec2mc.validate import validate_perms
@@ -20,15 +20,14 @@ class StopServers(CommandBase):
             print(f"Attempting to stop {instance['name']} "
                 f"({instance['id']})...")
 
-            ec2_client = aws.ec2_client(instance['region'])
-
-            instance_state = ec2_client.describe_instances(
-                InstanceIds=[instance['id']]
-            )['Reservations'][0]['Instances'][0]['State']['Name']
+            instance_state, _ = validate_instances.get_state_and_ip(
+                instance['region'], instance['id'])
 
             if instance_state == "stopped":
                 print("  Instance is already stopped.")
                 continue
+
+            ec2_client = aws.ec2_client(instance['region'])
 
             print("  Stopping instance...")
             ec2_client.stop_instances(InstanceIds=[instance['id']])

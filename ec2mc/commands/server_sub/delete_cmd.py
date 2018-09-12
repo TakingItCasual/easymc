@@ -1,4 +1,4 @@
-from ec2mc.commands.base_classes import CommandBase
+from ec2mc.utils.base_classes import CommandBase
 from ec2mc.utils import aws
 from ec2mc.utils import halt
 from ec2mc.validate import validate_perms
@@ -14,8 +14,6 @@ class DeleteServer(CommandBase):
                 'id' (str): ID of instance to terminate.
                 'name' (str): Tag value for instance tag key "Name".
         """
-        if kwargs['region'] not in aws.get_regions():
-            halt.err(f"{kwargs['region']} is not a valid region.")
         self.ec2_client = aws.ec2_client(kwargs['region'])
 
         reservations = self.ec2_client.describe_instances(Filters=[
