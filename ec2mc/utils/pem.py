@@ -26,7 +26,7 @@ def generate_rsa_key_pair():
         encryption_algorithm=serialization.NoEncryption()
     ).decode("utf-8")
 
-    with open(consts.RSA_PRIV_KEY_PEM, "w", encoding="utf-8") as f:
+    with consts.RSA_KEY_PEM.open("w", encoding="utf-8") as f:
         f.write(private_key_str)
 
     # Get public key in OpenSSH format
@@ -40,7 +40,7 @@ def generate_rsa_key_pair():
 
 def pem_to_public_key(der_encoded=False):
     """convert pem RSA private key string to public key bytes"""
-    with open(consts.RSA_PRIV_KEY_PEM, encoding="utf-8") as f:
+    with consts.RSA_KEY_PEM.open(encoding="utf-8") as f:
         pem_str = f.read()
 
     try:
@@ -50,7 +50,7 @@ def pem_to_public_key(der_encoded=False):
             backend=default_backend()
         )
     except ValueError:
-        halt.err(f"{consts.RSA_PRIV_KEY_PEM} not a valid RSA private key.")
+        halt.err(f"{consts.RSA_KEY_PEM} not a valid RSA private key.")
 
     if der_encoded is True:
         return private_key.public_key().public_bytes(

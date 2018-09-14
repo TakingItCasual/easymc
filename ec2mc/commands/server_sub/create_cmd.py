@@ -1,4 +1,3 @@
-import os.path
 import base64
 from time import sleep
 from ruamel import yaml
@@ -36,7 +35,7 @@ class CreateServer(CommandBase):
 
         self.validate_name_is_unique(kwargs['name'])
 
-        inst_template = os2.parse_yaml(f"{consts.USER_DATA_DIR}"
+        inst_template = os2.parse_yaml(consts.USER_DATA_DIR/
             f"{kwargs['template']}.yaml")['ec2mc_template_info']
 
         self.validate_type_and_size_allowed(
@@ -56,8 +55,8 @@ class CreateServer(CommandBase):
 
         print("")
         if kwargs['confirm'] is False:
-            print("Instance template validated.")
-            print("Please append the -c argument to confirm.")
+            print("IAM permissions and instance template validated.")
+            print("Append the -c argument to confirm instance creation.")
         else:
             instance = self.create_instance(
                 creation_kwargs, user_data, dry_run=False)
@@ -153,20 +152,18 @@ class CreateServer(CommandBase):
             str: YAML file string to initialize instance on first boot.
         """
         user_data = os2.parse_yaml(
-            f"{consts.USER_DATA_DIR}{template_name}.yaml")
+            consts.USER_DATA_DIR/f"{template_name}.yaml")
 
         if 'write_directories' in template:
-            template_dir = os.path.join(
-                f"{consts.USER_DATA_DIR}{template_name}", "")
+            template_dir = consts.USER_DATA_DIR/template_name
 
             write_files = []
             for write_dir in template['write_directories']:
-                dir_files = os2.list_dir_files(os.path.join(
-                    f"{template_dir}{write_dir['local_dir']}", ""))
+                dir_files = os2.list_dir_files(
+                    template_dir/write_dir['local_dir'])
                 for dir_file in dir_files:
-                    file_path = os.path.join(
-                        f"{template_dir}{write_dir['local_dir']}", dir_file)
-                    with open(file_path) as f:
+                    file_path = template_dir/write_dir['local_dir']/dir_file
+                    with file_path.open(encoding="utf-8") as f:
                         file_b64 = base64.b64encode(bytes(f.read(), "utf-8"))
                     write_files.append({
                         'encoding': "b64",
@@ -354,9 +351,8 @@ class CreateServer(CommandBase):
         if not ec2_key_pairs:
             halt.err(f"EC2 key pair {consts.NAMESPACE} not found from AWS.",
                 "  Have you uploaded the AWS setup?")
-        if not os.path.isfile(consts.RSA_PRIV_KEY_PEM):
-            rsa_key_file = os.path.basename(consts.RSA_PRIV_KEY_PEM)
-            halt.err(f"{rsa_key_file} not found from config.")
+        if not consts.RSA_KEY_PEM.is_file():
+            halt.err(f"{consts.RSA_KEY_PEM.name} not found from config.")
         if pem.local_key_fingerprint() != ec2_key_pairs[0]['KeyFingerprint']:
             halt.err("Local RSA key fingerprint doesn't match EC2 key pair's.")
         return ec2_key_pairs[0]['KeyName']
@@ -376,11 +372,11 @@ class CreateServer(CommandBase):
         cmd_parser.add_argument(
             "-t", dest="tags", nargs=2, action="append", metavar="",
             help="instance tag key-value pair to attach to instance")
-        elastic_ip_group = cmd_parser.add_mutually_exclusive_group()
-        elastic_ip_group.add_argument(
+        cmd_group = cmd_parser.add_mutually_exclusive_group()
+        cmd_group.add_argument(
             "-e", "--elastic_ip", action="store_true",
             help="create new elastic IP and associate to instance")
-        elastic_ip_group.add_argument(
+        cmd_group.add_argument(
             "--use_ip", metavar="",
             help="owned elastic IP address to associate to instance")
 

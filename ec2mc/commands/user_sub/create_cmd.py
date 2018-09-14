@@ -1,7 +1,5 @@
-import os
 import shutil
 from time import sleep
-import zipfile
 import boto3
 from botocore.exceptions import ClientError
 
@@ -62,36 +60,48 @@ class CreateUser(CommandBase):
             config_dict['backup_access_keys'].append(config_dict['access_key'])
             config_dict['access_key'] = new_access_key
             os2.save_json(config_dict, consts.CONFIG_JSON)
-            print("  IAM user's access key set as default in config.")
+            print("  User's access key set as default in config.")
         else:
             # Back up new IAM user's access key in config file
             config_dict['backup_access_keys'].append(new_access_key)
             os2.save_json(config_dict, consts.CONFIG_JSON)
 
-            #self.create_configuration_zip(new_access_key, kwargs['ssh_key'])
-            #print("  User's zipped config folder created in config.")
+            self.create_configuration_zip(
+                new_access_key, kwargs['ssh_key'], kwargs['name'])
+            print("  User's zipped configuration created in config.")
 
 
     @staticmethod
-    def create_configuration_zip(new_access_key, give_ssh_key):
+    def create_configuration_zip(new_access_key, give_ssh_key, user_name):
         """create zipped config folder containing new IAM user access key"""
-        new_config = {'access_key': new_access_key}
+        new_config_dict = {'access_key': new_access_key}
         if consts.REGION_WHITELIST is not None:
-            new_config['region_whitelist'] = consts.REGION_WHITELIST
+            new_config_dict['region_whitelist'] = consts.REGION_WHITELIST
 
-        temp_dir = os.path.join(f"{consts.CONFIG_DIR}.ec2mc_tmp", "")
-        if os.path.isdir(temp_dir):
-            shutil.rmtree(temp_dir)
-        os.mkdir(temp_dir)
+        temp_dir = consts.CONFIG_DIR/".ec2mc"
+        if temp_dir.is_dir():
+            shutil.rmtree(temp_dir, onerror=os2.del_readonly)
+        temp_dir.mkdir()
+
+        shutil.copytree(consts.AWS_SETUP_DIR, temp_dir/"aws_setup")
+        os2.save_json(new_config_dict, temp_dir/"config.json")
 
         if give_ssh_key is True:
-            pass
+            if consts.RSA_KEY_PEM.is_file():
+                pem_base = consts.RSA_KEY_PEM.name
+                shutil.copy(consts.RSA_KEY_PEM, temp_dir/pem_base)
+            if consts.RSA_KEY_PPK.is_file():
+                ppk_base = consts.RSA_KEY_PPK.name
+                shutil.copy(consts.RSA_KEY_PPK, temp_dir/ppk_base)
+
+        out_zip = consts.CONFIG_DIR/f"{user_name}_config"
+        shutil.make_archive(out_zip, "zip", consts.CONFIG_DIR, ".ec2mc")
+        shutil.rmtree(temp_dir, onerror=os2.del_readonly)
 
 
-    # TODO: Figure out why test relying on this still fails
     @staticmethod
     def access_key_usable_waiter(new_access_key):
-        """aws doesn't provide a waiter for checking if access keys usable"""
+        """waiter for IAM user access key usability (not perfect)"""
         iam_client = boto3.client("iam",
             aws_access_key_id=new_access_key['id'],
             aws_secret_access_key=new_access_key['secret']
@@ -113,10 +123,11 @@ class CreateUser(CommandBase):
             "name", help="name to assign to the IAM user")
         cmd_parser.add_argument(
             "group", help="name of IAM group to assign IAM user to")
-        cmd_parser.add_argument(
+        cmd_group = cmd_parser.add_mutually_exclusive_group()
+        cmd_group.add_argument(
             "-d", "--default", action="store_true",
             help="set new IAM user's access key as default in config")
-        cmd_parser.add_argument(
+        cmd_group.add_argument(
             "-k", "--ssh_key", action="store_true",
             help="copy RSA private key to new user's zipped configuration")
 

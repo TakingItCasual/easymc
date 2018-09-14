@@ -1,4 +1,3 @@
-import os.path
 import importlib.util
 
 from ec2mc import consts
@@ -12,8 +11,8 @@ def main(instance, new_ip):
         return
 
     handler_base = instance['tags']['IpHandler']
-    handler_path = f"{consts.IP_HANDLER_DIR}{handler_base}"
-    if not os.path.isfile(handler_path):
+    handler_path = consts.IP_HANDLER_DIR/handler_base
+    if not handler_path.is_file():
         print(f"  {handler_base} not found from config's ip_handlers.")
         return
 
@@ -31,7 +30,7 @@ def load_script(script_path):
         spec.loader.exec_module(handler)
         return handler
     except ImportError as e:
-        handler_base = os.path.basename(script_path)
+        handler_base = script_path.name
         print(f"  {e.name} package required by {handler_base} not found.")
         print(f"    Install with \"pip install {e.name}\".")
     return None

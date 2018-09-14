@@ -1,4 +1,3 @@
-import os
 import platform
 import subprocess
 import shutil
@@ -38,11 +37,10 @@ class SSHServer(CommandBase):
         print("Instance's user and hostname (seperated by \"@\"):")
         print(user_and_hostname)
 
-        pem_key_path = consts.RSA_PRIV_KEY_PEM
         if shutil.which("ssh") is not None:
-            self.open_openssh_session(user_and_hostname, pem_key_path)
+            self.open_openssh_session(user_and_hostname, consts.RSA_KEY_PEM)
         elif shutil.which("putty") is not None:
-            self.open_putty_session(user_and_hostname, pem_key_path)
+            self.open_putty_session(user_and_hostname, consts.RSA_KEY_PPK)
         else:
             if platform.system() == "Windows":
                 halt.err("Neither OpenSSH for Windows nor PuTTY were found.",
@@ -56,11 +54,10 @@ class SSHServer(CommandBase):
     @staticmethod
     def open_openssh_session(user_and_hostname, pem_key_path):
         """open interactive SSH session using the OpenSSH client"""
-        if not os.path.isfile(pem_key_path):
-            key_file_base = os.path.basename(pem_key_path)
-            halt.err(f"{key_file_base} not found from config.",
-                f"  {key_file_base} file required to SSH with OpenSSH.")
-        os.chmod(pem_key_path, consts.PK_PERMS)
+        if not pem_key_path.is_file():
+            halt.err(f"{pem_key_path.name} not found from config.",
+                f"  {pem_key_path.name} file required to SSH with OpenSSH.")
+        pem_key_path.chmod(consts.PK_PERMS)
 
         print("")
         print("Attempting to SSH into instance with OpenSSH...")
@@ -69,27 +66,25 @@ class SSHServer(CommandBase):
             "-o", "LogLevel=ERROR",
             "-o", "StrictHostKeyChecking=no",
             "-o", "UserKnownHostsFile=/dev/null",
-            "-i", pem_key_path,
+            "-i", str(pem_key_path),
             user_and_hostname
         ])
 
 
     @staticmethod
-    def open_putty_session(user_and_hostname, pem_key_path):
+    def open_putty_session(user_and_hostname, ppk_key_path):
         """open interactive SSH session using the PuTTY client"""
-        ppk_key_path = f"{os.path.splitext(pem_key_path)[0]}.ppk"
-        if not os.path.isfile(ppk_key_path):
-            key_file_base = os.path.basename(ppk_key_path)
-            halt.err(f"{key_file_base} not found from config.",
-                f"  {key_file_base} file required to SSH with PuTTY.",
+        if not ppk_key_path.is_file():
+            halt.err(f"{ppk_key_path.name} not found from config.",
+                f"  {ppk_key_path.name} file required to SSH with PuTTY.",
                 "  You can convert a .pem file to .ppk using puttygen.")
-        os.chmod(ppk_key_path, consts.PK_PERMS)
+        ppk_key_path.chmod(consts.PK_PERMS)
 
         print("")
         print("Attempting to SSH into instance with PuTTY...")
         subprocess.run([
             "putty", "-ssh",
-            "-i", ppk_key_path,
+            "-i", str(ppk_key_path),
             user_and_hostname
         ])
         print("Connection closed.")

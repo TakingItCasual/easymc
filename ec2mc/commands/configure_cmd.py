@@ -1,5 +1,3 @@
-import os
-
 from ec2mc import consts
 from ec2mc.utils.base_classes import CommandBase
 from ec2mc.utils import aws
@@ -12,11 +10,10 @@ class Configure(CommandBase):
     def main(self, kwargs):
         """configure, for example, the default IAM user access key"""
         # validate_config:main normally does this, but it wasn't called.
-        if not os.path.isdir(consts.CONFIG_DIR):
-            os.mkdir(consts.CONFIG_DIR)
+        consts.CONFIG_DIR.mkdir(exist_ok=True)
 
         config_dict = {}
-        if os.path.isfile(consts.CONFIG_JSON):
+        if consts.CONFIG_JSON.is_file():
             schema = os2.get_json_schema("config")
             config_dict = os2.parse_json(consts.CONFIG_JSON)
             os2.validate_dict(config_dict, schema, "config.json")
@@ -35,7 +32,7 @@ class Configure(CommandBase):
 
         if config_dict:
             os2.save_json(config_dict, consts.CONFIG_JSON)
-            os.chmod(consts.CONFIG_JSON, consts.CONFIG_PERMS)
+            consts.CONFIG_JSON.chmod(consts.CONFIG_PERMS)
 
 
     @staticmethod
@@ -109,7 +106,7 @@ class Configure(CommandBase):
             "whitelist", help="set whitelist for AWS regions")
         whitelist_parser.add_argument(
             "regions", nargs="*",
-            help="list of regions (leave empty to disable whitelist)")
+            help="list of AWS regions (leave empty to disable whitelist)")
 
         use_handler_parser = actions.add_parser(
             "use_handler", help="use IP handlers described by instance tags")

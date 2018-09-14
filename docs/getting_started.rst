@@ -29,17 +29,17 @@ You'll need to attach a payment method, as the script uses services not covered 
 
 This script requires an AWS IAM user access key to interact with your account.
 To set up your AWS account with the configuration provided by the script, a temporary IAM user is needed.
-To create the temporary IAM user, visit your `IAM Management Console`_ and create a new user.
+The script provides IAM group permissions to prevent accidentally creating large and expensive servers, so the temporary user should be deleted after creating an IAM user under the setup_users IAM group.
 
-The IAM group permissions provided by the script will prevent accidentally creating large and expensive servers, so the temporary user should be deleted after creating an IAM user under the setup_users IAM group.
-
+To create the temporary IAM user, go to your `IAM Management Console`_ and create a new user.
 In step 1, name the IAM user, and enable "Programmatic access" for "Access type".
 In step 2, switch to "Attach existing policies directly" and enable "AdministratorAccess".
 Create the user.
 Keep the page that loads open for the next step.
 
-To set the access key for the script, you can download your IAM user's accessKeys.csv file (by clicking "Download .csv") and move the file to the script's configuration folder.
-Alternatively, you can copy the IAM user's access key ID and secret access key, and paste them into the corresponding inputs for the access key configuration command. For example::
+To have the script use the access key, you can download your IAM user's accessKeys.csv file (by clicking "Download .csv") and move the file to the script's configuration folder.
+Alternatively, you can copy the IAM user's access key ID and secret access key, and paste them into the corresponding inputs for the access key configuration command.
+For example::
 
     ec2mc configure access_key AKIAIOSFODNN7EXAMPLE wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
 
@@ -47,7 +47,7 @@ To verify the previous steps, attempt to use the following command again::
 
     ec2mc servers check
 
-If the previous steps were done correctly, the script will output a "access key validated" notification.
+If the previous steps were done correctly, the script will output a "Access key validated as ..." notification.
 
 Upload the default AWS setup included with the script with the following command::
 
@@ -101,6 +101,18 @@ Or if a persistent IP address is desired::
 All provided templates contain scripts (which will be uploaded to the instances themselves) which will shut down the instances after 10 consecutive minutes of no online players.
 
 (A template for a Forge server is also included: "cnb_template". See Customization_ for how to make your own template.)
+
+Conclusion
+----------
+
+You should now have an EC2 instance hosting a Minecraft server up and running.
+If you want to manage the server directly, you can SSH into it with the script using the following command::
+
+    ec2mc server ssh
+
+(This command requires you to have either OpenSSH or PuTTY installed.)
+
+See `Managing Users`_ for how to give your friends IAM user access keys so they can join and start the server themselves.
 
 
 .. _IAM Management Console: https://console.aws.amazon.com/iam/home#/users

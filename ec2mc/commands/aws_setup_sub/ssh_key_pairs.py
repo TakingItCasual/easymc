@@ -1,5 +1,3 @@
-import os.path
-
 from ec2mc import consts
 from ec2mc.utils.base_classes import ComponentSetup
 from ec2mc.utils import aws
@@ -16,8 +14,8 @@ class SSHKeyPairSetup(ComponentSetup):
             dict: Which regions Namespace EC2 key pair exists in.
                 Region name (str/None): Public key fingerprint, if pair exists.
         """
-        self.pem_file = os.path.basename(consts.RSA_PRIV_KEY_PEM)
-        self.key_pair_name = os.path.splitext(self.pem_file)[0]
+        self.pem_file = consts.RSA_KEY_PEM.name
+        self.key_pair_name = consts.RSA_KEY_PEM.stem
 
         threader = Threader()
         for region in consts.REGIONS:
@@ -38,7 +36,7 @@ class SSHKeyPairSetup(ComponentSetup):
         if len(set(aws_fingerprints)) > 1:
             print("Warning: Differing EC2 key pairs found.")
             print("  Please delete EC2 key pairs and reupload.")
-        if os.path.isfile(consts.RSA_PRIV_KEY_PEM) and aws_fingerprints:
+        if consts.RSA_KEY_PEM.is_file() and aws_fingerprints:
             if pem.local_key_fingerprint() not in aws_fingerprints:
                 print("Warning: Local RSA key does not match EC2 key pair(s).")
         elif aws_fingerprints:
@@ -54,7 +52,7 @@ class SSHKeyPairSetup(ComponentSetup):
         aws_fingerprints = [fp for fp in fingerprint_regions.values()
             if fp is not None]
 
-        if os.path.isfile(consts.RSA_PRIV_KEY_PEM):
+        if consts.RSA_KEY_PEM.is_file():
             pub_key_bytes = pem.pem_to_public_key()
             print("Using existing RSA private key file for EC2 key pair(s).")
         # If SSH key pair doesn't exist in any regions, create a new one

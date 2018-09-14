@@ -1,4 +1,3 @@
-import os.path
 from deepdiff import DeepDiff
 
 from ec2mc import consts
@@ -351,9 +350,8 @@ class VPCSetup(ComponentSetup):
     @staticmethod
     def get_json_sg_ingress(sg_name):
         """retrieve local security group ingress rule(s) dict"""
-        security_group_dir = os.path.join(
-            f"{consts.AWS_SETUP_DIR}vpc_security_groups", "")
-        return os2.parse_json(f"{security_group_dir}{sg_name}.json")['Ingress']
+        security_group_dir = consts.AWS_SETUP_DIR/"vpc_security_groups"
+        return os2.parse_json(security_group_dir/f"{sg_name}.json")['Ingress']
 
 
     def blocked_actions(self, sub_command):

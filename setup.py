@@ -1,14 +1,13 @@
-import os.path
-#from codecs import open # For Python2.x
-from setuptools import setup, find_packages
+from pathlib import Path
+from setuptools import setup
+from setuptools import find_packages
 
 from ec2mc import __version__
 
 REPO_URL = "https://github.com/TakingItCasual/ec2mc"
 
-README_PATH = os.path.join(
-    os.path.abspath(os.path.dirname(__file__)), "README.rst")
-with open(README_PATH, encoding="utf-8") as f:
+README_PATH = Path(__file__).parent/"README.rst"
+with README_PATH.open(encoding="utf-8") as f:
     LONG_DESC = f.read()
 
 # The OS restrictions are due to the cryptography package.
@@ -41,18 +40,9 @@ setup(
     packages=find_packages(exclude=["docs", "tests"]),
     python_requires="~=3.6",
     entry_points={'console_scripts': ["ec2mc=ec2mc.__main__:main"]},
-    package_data={
-        'ec2mc.validate.jsonschemas': ["*.json"],
-        'ec2mc.aws_setup_src': ["*.json"],
-        'ec2mc.aws_setup_src.ip_handlers': ["*.py"],
-        'ec2mc.aws_setup_src.iam_policies': ["*.json"],
-        'ec2mc.aws_setup_src.vpc_security_groups': ["*.json"],
-        'ec2mc.aws_setup_src.user_data': ["*.yaml"],
-        'ec2mc.aws_setup_src.user_data.mc_template.crontabs': ["*"],
-        'ec2mc.aws_setup_src.user_data.mc_template.manage_scripts': ["*"]
-    },
+    include_package_data=True,
     install_requires=[
-        "boto3 ~= 1.8",
+        "boto3 ~= 1.9",
         "nbtlib ~= 1.2",
         "deepdiff ~= 3.3",
         "cryptography ~= 2.3",

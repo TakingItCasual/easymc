@@ -1,4 +1,3 @@
-import os
 from botocore.exceptions import ClientError
 
 from ec2mc import consts
@@ -10,14 +9,13 @@ from ec2mc.validate import validate_perms
 def main():
     """validates existence of config file, as well as each key's value"""
     # If config directory doesn't already exist, create it.
-    if not os.path.isdir(consts.CONFIG_DIR):
-        os.mkdir(consts.CONFIG_DIR)
+    consts.CONFIG_DIR.mkdir(exist_ok=True)
 
     # Retrieve the configuration. Halt if it doesn't exist.
-    if not os.path.isfile(consts.CONFIG_JSON):
-        credentials_csv = f"{consts.CONFIG_DIR}accessKeys.csv"
-        if not os.path.isfile(credentials_csv):
-            config_base = os.path.basename(consts.CONFIG_JSON)
+    if not consts.CONFIG_JSON.is_file():
+        credentials_csv = consts.CONFIG_DIR/"accessKeys.csv"
+        if not credentials_csv.is_file():
+            config_base = consts.CONFIG_JSON.name
             halt.err(f"{config_base} not found from config directory.",
                 "  An IAM user access key is needed to interact with AWS.",
                 "  Set access key with \"ec2mc configure access_key\"."
@@ -115,7 +113,7 @@ def set_consts_regions(config_dict):
 
 def create_config_from_credentials_csv(file_path):
     """create JSON config file from IAM user's credentials.csv file"""
-    with open(file_path, encoding="utf-8") as csv_file:
+    with file_path.open(encoding="utf-8") as csv_file:
         iam_user_access_key = csv_file.readlines()[1].strip().split(",")
     config_dict = {
         'access_key': {
@@ -124,4 +122,4 @@ def create_config_from_credentials_csv(file_path):
         }
     }
     os2.save_json(config_dict, consts.CONFIG_JSON)
-    os.chmod(consts.CONFIG_JSON, consts.CONFIG_PERMS)
+    consts.CONFIG_JSON.chmod(consts.CONFIG_PERMS)

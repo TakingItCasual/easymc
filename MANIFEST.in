@@ -1,0 +1,2 @@
+graft ec2mc/validate/jsonschemas
+graft ec2mc/aws_setup_src

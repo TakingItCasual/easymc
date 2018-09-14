@@ -1,11 +1,12 @@
 import os
+from pathlib import Path
 import nbtlib
 
 from ec2mc import consts
 from ec2mc.utils import os2
 
 # JSON file containing instance title(s) for the MC client's server list.
-SERVER_TITLES_JSON = f"{consts.CONFIG_DIR}server_titles.json"
+SERVER_TITLES_JSON = consts.CONFIG_DIR/"server_titles.json"
 
 def main(aws_region, instance_name, instance_id, new_ip):
     """update MC client's server list with specified instance's IP
@@ -17,7 +18,7 @@ def main(aws_region, instance_name, instance_id, new_ip):
         new_ip (str): Instance's new IP to update client's server list with.
     """
     titles_dict = {'Instances': []}
-    if os.path.isfile(SERVER_TITLES_JSON):
+    if SERVER_TITLES_JSON.is_file():
         titles_dict = os2.parse_json(SERVER_TITLES_JSON)
 
     servers_dat_path = find_minecraft_servers_dat(titles_dict)
@@ -71,13 +72,13 @@ def update_servers_dat(servers_dat_path, server_name, new_ip):
 def find_minecraft_servers_dat(titles_dict):
     """retrieve servers.dat path from config, or search home directory"""
     if 'servers_dat' in titles_dict:
-        if os.path.isfile(titles_dict['servers_dat']):
+        if Path(titles_dict['servers_dat']).is_file():
             return titles_dict['servers_dat']
 
     titles_dict['servers_dat'] = None
-    for root, _, files in os.walk(os.path.expanduser("~")):
+    for root, _, files in os.walk(Path().home()):
         if "servers.dat" in files and root.endswith("minecraft"):
-            titles_dict['servers_dat'] = os.path.join(root, "servers.dat")
+            titles_dict['servers_dat'] = str(Path(root)/"servers.dat")
             os2.save_json(titles_dict, SERVER_TITLES_JSON)
             break
     return titles_dict['servers_dat']

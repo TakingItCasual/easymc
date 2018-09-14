@@ -33,6 +33,11 @@ class DeleteUser(CommandBase):
         print("")
         print(f"IAM user \"{user_name}\" deleted from AWS.")
 
+        user_config_zip = consts.CONFIG_DIR/f"{user_name}_config.zip"
+        if user_config_zip.is_file():
+            user_config_zip.unlink()
+            print("  User's zipped configuration deleted from config.")
+
 
     def delete_user_access_keys(self, user_name):
         """delete IAM user's access key(s)"""

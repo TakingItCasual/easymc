@@ -8,6 +8,7 @@ from botocore.exceptions import ClientError
 from ec2mc import consts
 from ec2mc.utils import halt
 
+# TODO: Do region checking in a way that doesn't break the tests
 def ec2_client(region):
     """create and return EC2 client using IAM user access key and a region"""
     if region not in consts.REGIONS:

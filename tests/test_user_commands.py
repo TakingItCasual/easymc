@@ -1,3 +1,4 @@
+from time import sleep
 import pytest
 
 from ec2mc import __main__
@@ -7,6 +8,7 @@ def test_user_commands():
     assert __main__.main([
         "user", "create", "ec2mc_test_user", "basic_users", "--default"
     ]) is not False
+    sleep(5)
     assert __main__.main([
         "configure", "swap_key", "TakingItCasual"
     ]) is not False

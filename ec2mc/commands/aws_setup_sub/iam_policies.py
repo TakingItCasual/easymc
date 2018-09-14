@@ -1,4 +1,3 @@
-import os.path
 import json
 from deepdiff import DeepDiff
 
@@ -23,8 +22,7 @@ class IAMPolicySetup(ComponentSetup):
                 'UpToDate': Policies on AWS up to date with local versions.
         """
         self.iam_client = aws.iam_client()
-        self.policy_dir = os.path.join(
-            f"{consts.AWS_SETUP_DIR}iam_policies", "")
+        self.policy_dir = consts.AWS_SETUP_DIR/"iam_policies"
         self.path_prefix = f"/{consts.NAMESPACE}/"
 
         # Local IAM policy(s) list
@@ -58,7 +56,7 @@ class IAMPolicySetup(ComponentSetup):
         # Check if policy(s) on AWS need to be updated
         for local_policy in policy_names['ToUpdate'][:]:
             local_policy_document = os2.parse_json(
-                f"{self.policy_dir}{local_policy}.json")
+                self.policy_dir/f"{local_policy}.json")
 
             aws_policy_desc = next(aws_policy for aws_policy in aws_policies
                 if aws_policy['PolicyName'] == local_policy)
@@ -122,7 +120,7 @@ class IAMPolicySetup(ComponentSetup):
     def create_policy(self, policy_name):
         """create new IAM policy on AWS"""
         local_policy_document = os2.parse_json(
-            f"{self.policy_dir}{policy_name}.json")
+            self.policy_dir/f"{policy_name}.json")
         policy_description = self.iam_policy_setup[policy_name]
 
         self.iam_client.create_policy(
@@ -136,7 +134,7 @@ class IAMPolicySetup(ComponentSetup):
     def update_policy(self, policy_name, aws_policies):
         """update IAM policy that already exists on AWS"""
         local_policy_document = os2.parse_json(
-            f"{self.policy_dir}{policy_name}.json")
+            self.policy_dir/f"{policy_name}.json")
 
         aws_policy_desc = next(aws_policy for aws_policy in aws_policies
             if aws_policy['PolicyName'] == policy_name)

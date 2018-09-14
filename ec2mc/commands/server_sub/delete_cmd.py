@@ -63,14 +63,14 @@ class DeleteServer(CommandBase):
     def add_documentation(self, argparse_obj):
         cmd_parser = super().add_documentation(argparse_obj)
         cmd_parser.add_argument(
-            "region", help="region of instance to be terminated")
+            "region", help="AWS region of instance to be terminated")
         cmd_parser.add_argument(
             "id", help="ID of instance to terminate")
         cmd_parser.add_argument(
             "name", help="value for instance's tag key \"Name\"")
         cmd_parser.add_argument(
            "-s", "--save_ip", action="store_true",
-            help="preserve any associated elastic IP")
+            help="preserve any associated elastic IPs")
 
 
     def blocked_actions(self, _):

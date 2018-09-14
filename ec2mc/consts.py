@@ -3,28 +3,29 @@
 Variables with "Set in..." comments are set once elsewhere.
 """
 
-import os.path
+from pathlib import Path
 
 # Path of the distribution's inner ec2mc directory
-DIST_DIR = os.path.join(os.path.dirname(__file__), "")
+DIST_DIR = Path(__file__).parent
 
 # Directory for ec2mc to find/create its configuration file(s).
-CONFIG_DIR = os.path.join(os.path.expanduser("~"), ".ec2mc", "")
+CONFIG_DIR = Path().home()/".ec2mc"
 # JSON file containing IAM access keys, servers.dat path, and region whitelist.
-CONFIG_JSON = f"{CONFIG_DIR}config.json"
-# PEM file containing RSA private key for SSHing into instances.
+CONFIG_JSON = CONFIG_DIR/"config.json"
+# PEM/PPK file(s) containing RSA private key for SSHing into instances.
 # Set in ec2mc.validate.validate_setup:main (Namespace used as file name)
-RSA_PRIV_KEY_PEM = None
+RSA_KEY_PEM = None
+RSA_KEY_PPK = None
 
 # Directory for ec2mc to find AWS setup files to upload to AWS.
-AWS_SETUP_DIR = os.path.join(f"{CONFIG_DIR}aws_setup", "")
+AWS_SETUP_DIR = CONFIG_DIR/"aws_setup"
 # JSON file containing AWS setup instructions.
-AWS_SETUP_JSON = f"{AWS_SETUP_DIR}aws_setup.json"
+AWS_SETUP_JSON = AWS_SETUP_DIR/"aws_setup.json"
 
 # Directory for ec2mc to find YAML instance templates
-USER_DATA_DIR = os.path.join(f"{AWS_SETUP_DIR}user_data", "")
+USER_DATA_DIR = AWS_SETUP_DIR/"user_data"
 # Directory for ec2mc to find IP handlers for checked/started instances
-IP_HANDLER_DIR = os.path.join(f"{AWS_SETUP_DIR}ip_handlers", "")
+IP_HANDLER_DIR = AWS_SETUP_DIR/"ip_handlers"
 
 # Use IP handler script described by an instance's IpHandler tag.
 # Set in ec2mc.validate.validate_config:main
@@ -39,9 +40,14 @@ IAM_NAME = None
 
 """This string is used for the following purposes:
 - Path prefix for IAM groups, policies, and users ("/" on both sides).
-- Name and Namespace tags of VPC created in each region.
-- Name of SSH key pair created in each region.
-- Namespace tag of created instances.
+- Name and Namespace tags of:
+  - VPC created in each region.
+    - VPC's route table.
+  - Internet gateway created in each region.
+  - SSH key pair created in each region.
+- Namespace tag of:
+  - Created instances
+  - Allocated elastic IP addresses
 """
 # Set in ec2mc.validate.validate_setup:main
 NAMESPACE = None
