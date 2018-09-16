@@ -11,14 +11,7 @@ def main(kwargs, *, single_instance=False):
     Halts if no instances found. This functionality is relied upon.
 
     Args:
-        kwargs (dict):
-            'region_filter' (list[str]): AWS region(s) to probe. If None,
-                probe all regions (in whitelist, if defined).
-            'tag_filters' (list[list[str]]): Instance tag key-value(s)
-                filter(s). For inner lists with one item, filter by key.
-            'name_filter' (list[str]): Instance tag value(s) filter for
-                tag key "Name".
-            'id_filter' (list[str]): Instance ID filter.
+        kwargs (dict): See argparse_args function.
         single_instance (bool): Halt if multiple instances are found.
 
     Returns: See what probe_regions returns.
@@ -58,11 +51,11 @@ def probe_regions(regions, tag_filter=None):
 
     Requires ec2:DescribeInstances permission.
 
-    Uses multithreading to probe all regions simultaneously.
+    Uses multithreading to probe all whitelisted regions simultaneously.
 
     Args:
         regions (list[str]): AWS region(s) to probe.
-        tag_filter (list[dict]): Passed to probe_region
+        tag_filter (list[dict]): Passed to probe_region function.
 
     Returns:
         list[dict]: Found instance(s).
@@ -143,7 +136,7 @@ def parse_filters(kwargs):
         region_filter = set(kwargs['region_filter'])
         # Validate region filter
         if not region_filter.issubset(set(regions)):
-            halt.err("Following invalid region(s) specified:",
+            halt.err("Following region(s) not in region whitelist:",
                 *(region_filter - set(regions)))
         regions = tuple(region_filter)
 
@@ -208,8 +201,8 @@ def argparse_args(cmd_parser):
     """initialize argparse arguments that validate_instances:main expects"""
     cmd_parser.add_argument(
         "-r", dest="region_filter", nargs="+", metavar="",
-        help=("AWS region(s) to probe for instances. If not set, all regions "
-            "will be probed."))
+        help=("AWS region(s) to probe for instances. If not set, all "
+            "whitelisted regions will be probed."))
     cmd_parser.add_argument(
         "-t", dest="tag_filters", nargs="+", action="append", metavar="",
         help=("Instance tag value filter. First value is the tag key, with "

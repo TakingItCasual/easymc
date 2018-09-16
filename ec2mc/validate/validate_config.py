@@ -1,3 +1,4 @@
+import boto3
 from botocore.exceptions import ClientError
 
 from ec2mc import consts
@@ -31,11 +32,10 @@ def main():
     schema = os2.get_json_schema("config")
     os2.validate_dict(config_dict, schema, "config.json")
 
-    # Validate config's IAM user access key.
+    # Validate config's IAM user access key and save to consts.
     validate_user(config_dict)
-
-    # Validate config's region whitelist and save region tuple to consts.
-    set_consts_regions(config_dict)
+    # Validate config's region whitelist and save to consts.
+    validate_region_whitelist(config_dict)
 
     print(f"Access key validated as IAM user \"{consts.IAM_NAME}\".")
 
@@ -91,24 +91,27 @@ def validate_user(config_dict):
     ]))
 
 
-def set_consts_regions(config_dict):
-    """validate config's region whitelist and save region tuple to consts
+def validate_region_whitelist(config_dict):
+    """validate config's region whitelist and save to consts.REGIONS tuple
 
     Requires ec2:DescribeRegions permission.
     """
-    response = aws.ec2_client(consts.DEFAULT_REGION).describe_regions()
+    response = boto3.client("ec2",
+        aws_access_key_id=consts.KEY_ID,
+        aws_secret_access_key=consts.KEY_SECRET,
+        region_name=consts.DEFAULT_REGION
+    ).describe_regions()
     region_names = [region['RegionName'] for region in response['Regions']]
 
-    if 'region_whitelist' in config_dict:
-        consts.REGION_WHITELIST = tuple(config_dict['region_whitelist'])
-        if not set(consts.REGION_WHITELIST).issubset(set(region_names)):
-            halt.err("Following invalid region(s) in config whitelist:",
-                *(set(consts.REGION_WHITELIST) - set(region_names)))
+    if 'region_whitelist' not in config_dict:
+        halt.err("AWS region whitelist not set.",
+            "  Set with \"ec2mc configure whitelist\".")
 
-    consts.REGIONS = tuple(region_names)
-    if consts.REGION_WHITELIST is not None:
-        consts.REGIONS = tuple(region for region in region_names
-            if region in consts.REGION_WHITELIST)
+    whitelist = tuple(config_dict['region_whitelist'])
+    if not set(whitelist).issubset(set(region_names)):
+        halt.err("Following invalid region(s) in config whitelist:",
+            *(set(whitelist) - set(region_names)))
+    consts.REGIONS = whitelist
 
 
 def create_config_from_credentials_csv(file_path):

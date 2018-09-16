@@ -1,4 +1,3 @@
-import base64
 from time import sleep
 from ruamel import yaml
 from botocore.exceptions import ClientError
@@ -19,13 +18,7 @@ class CreateServer(CommandBase):
         """create and initialize a new EC2 instance
 
         Args:
-            kwargs (dict):
-                'template' (str): Config instance setup template name.
-                'region' (str): AWS region to create instance in.
-                'name' (str): Tag value for instance tag key "Name".
-                'confirm' (bool): Whether to actually create the instance.
-                'elastic_ip' (bool): Whether to associate a new elastic IP.
-                'tags' (list): Additional instance tag key-value pair(s).
+            kwargs (dict): See add_documentation method.
         """
         template_yaml_files = os2.list_dir_files(consts.USER_DATA_DIR)
         if f"{kwargs['template']}.yaml" not in template_yaml_files:
@@ -138,8 +131,8 @@ class CreateServer(CommandBase):
         return creation_kwargs
 
 
-    @staticmethod
-    def process_user_data(template_name, template):
+    @classmethod
+    def process_user_data(cls, template_name, template):
         """add b64 template files to user_data's write_files
 
         Args:
@@ -155,34 +148,16 @@ class CreateServer(CommandBase):
             consts.USER_DATA_DIR/f"{template_name}.yaml")
 
         if 'write_directories' in template:
-            template_dir = consts.USER_DATA_DIR/template_name
-
-            write_files = []
-            for write_dir in template['write_directories']:
-                dir_files = os2.list_dir_files(
-                    template_dir/write_dir['local_dir'])
-                for dir_file in dir_files:
-                    file_path = template_dir/write_dir['local_dir']/dir_file
-                    with file_path.open(encoding="utf-8") as f:
-                        file_b64 = base64.b64encode(bytes(f.read(), "utf-8"))
-                    write_files.append({
-                        'encoding': "b64",
-                        'content': file_b64.decode("utf-8"),
-                        'path': f"{write_dir['instance_dir']}{dir_file}"
-                    })
-                    if 'owner' in write_dir:
-                        write_files[-1]['owner'] = write_dir['owner']
-                    if 'chmod' in write_dir:
-                        write_files[-1]['permissions'] = write_dir['chmod']
-
+            write_files = cls.generate_write_files(
+                template_name, template['write_directories'])
             if write_files:
                 if 'write_files' not in user_data:
                     user_data['write_files'] = []
                 user_data['write_files'].extend(write_files)
 
-        # Halt if write_files has duplicate paths
+        # Halt if write_files contains any duplicate paths
         if 'write_files' in user_data:
-            write_file_paths = [entry['path'] for entry
+            write_file_paths = [write_file['path'] for write_file
                 in user_data['write_files']]
             if len(write_file_paths) != len(set(write_file_paths)):
                 halt.err("Duplicate template write_files paths.")
@@ -192,6 +167,28 @@ class CreateServer(CommandBase):
         user_data_str = yaml.dump(user_data, Dumper=yaml.RoundTripDumper)
 
         return f"#cloud-config\n{user_data_str}"
+
+
+    # TODO: Make this recursively search local_dirs
+    @staticmethod
+    def generate_write_files(template_name, write_dirs):
+        """fill out write_files list from template directory"""
+        template_dir = consts.USER_DATA_DIR/template_name
+        write_files = []
+        for write_dir in write_dirs:
+            dir_files = os2.list_dir_files(template_dir/write_dir['local_dir'])
+            for dir_file in dir_files:
+                file_path = template_dir/write_dir['local_dir']/dir_file
+                file_bytes = file_path.read_bytes().replace(b"\r\n", b"\n")
+                write_files.append({
+                    'content': file_bytes,
+                    'path': f"{write_dir['instance_dir']}{dir_file}"
+                })
+                if 'owner' in write_dir:
+                    write_files[-1]['owner'] = write_dir['owner']
+                if 'chmod' in write_dir:
+                    write_files[-1]['permissions'] = write_dir['chmod']
+        return write_files
 
 
     def create_instance(self, creation_kwargs, user_data, *, dry_run):
@@ -290,7 +287,7 @@ class CreateServer(CommandBase):
         all_instances = validate_instances.probe_regions(consts.REGIONS)
         instance_names = [instance['name'] for instance in all_instances]
         if instance_name in instance_names:
-            halt.err(f"Instance name {instance_name} already in use.")
+            halt.err(f"Instance name \"{instance_name}\" already in use.")
 
 
     @staticmethod
@@ -361,8 +358,6 @@ class CreateServer(CommandBase):
     def add_documentation(self, argparse_obj):
         cmd_parser = super().add_documentation(argparse_obj)
         cmd_parser.add_argument(
-            "region", help="AWS region to create the instance in")
-        cmd_parser.add_argument(
             "template", help="instance setup template in config to use")
         cmd_parser.add_argument(
             "name", help="value for instance's tag key \"Name\"")
@@ -372,6 +367,9 @@ class CreateServer(CommandBase):
         cmd_parser.add_argument(
             "-t", dest="tags", nargs=2, action="append", metavar="",
             help="instance tag key-value pair to attach to instance")
+        cmd_parser.add_argument(
+            "-r", dest="region", metavar="",
+            help="AWS region to create the instance in")
         cmd_group = cmd_parser.add_mutually_exclusive_group()
         cmd_group.add_argument(
             "-e", "--elastic_ip", action="store_true",

@@ -8,11 +8,15 @@ from botocore.exceptions import ClientError
 from ec2mc import consts
 from ec2mc.utils import halt
 
-# TODO: Do region checking in a way that doesn't break the tests
 def ec2_client(region):
     """create and return EC2 client using IAM user access key and a region"""
-    if region not in consts.REGIONS:
-        halt.err(f"{region} is not a valid region.")
+    if region is None: # True for when command has unused region argument
+        if len(consts.REGIONS) > 1:
+            halt.err("AWS region whitelist has more than one entry.",
+                "  A region must be specified using the -r argument.")
+        region = consts.REGIONS[0]
+    elif region not in consts.REGIONS:
+        halt.err(f"\"{region}\" not in region whitelist.")
 
     return boto3.client("ec2",
         aws_access_key_id=consts.KEY_ID,

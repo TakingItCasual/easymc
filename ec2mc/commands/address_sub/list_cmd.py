@@ -33,7 +33,7 @@ class ListAddresses(CommandBase):
 
     @classmethod
     def find_addresses(cls, regions):
-        """return elastic IP addresses from all/whitelisted regions"""
+        """return elastic IP addresses from whitelisted regions"""
         threader = Threader()
         for region in regions:
             threader.add_thread(cls.region_addresses, (region,))
@@ -61,15 +61,15 @@ class ListAddresses(CommandBase):
 
         region_addresses = []
         for address in addresses:
-            to_append = {
+            address_info = {
                 'ip': address['PublicIp'],
                 'associated': True
             }
             if 'InstanceId' in address:
-                to_append['instance_id'] = address['InstanceId']
+                address_info['instance_id'] = address['InstanceId']
             elif 'AssociationId' not in address:
-                to_append['associated'] = False
-            region_addresses.append(to_append)
+                address_info['associated'] = False
+            region_addresses.append(address_info)
 
         return sorted(region_addresses, key=lambda k: k['ip'])
 

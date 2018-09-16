@@ -27,15 +27,11 @@ def main(args=None):
     """ec2mc script's entry point
 
     Args:
-        args (list): Args for argparse. If None, use CLI's args.
+        args (list): Args for argparse. If None, set to sys.argv[1:].
     """
+    if args is None:
+        args = sys.argv[1:]
     try:
-        if sys.version_info < (3, 6):
-            halt.err("Python version 3.6 or greater required.")
-
-        if args is None:
-            args = sys.argv[1:]
-
         # Available commands from the ec2mc.commands directory
         commands = [
             configure_cmd.Configure(),

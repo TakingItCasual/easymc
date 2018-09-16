@@ -25,7 +25,8 @@ class Configure(CommandBase):
             config_dict = self.switch_access_key(
                 config_dict, kwargs['user_name'])
         elif kwargs['action'] == "whitelist":
-            config_dict = self.set_whitelist(config_dict, kwargs['regions'])
+            config_dict['region_whitelist'] = list(set(kwargs['regions']))
+            print("Region whitelist set.")
         elif kwargs['action'] == "use_handler":
             config_dict['use_handler'] = kwargs['boolean']
             print(f"IP handler usage set to {str(kwargs['boolean']).lower()}.")
@@ -71,20 +72,6 @@ class Configure(CommandBase):
         return config_dict
 
 
-    @staticmethod
-    def set_whitelist(config_dict, regions):
-        """set whitelist for AWS regions the script interacts with"""
-        if regions:
-            config_dict['region_whitelist'] = list(set(regions))
-            print("Region whitelist set.")
-        elif 'region_whitelist' in config_dict:
-            del config_dict['region_whitelist']
-            print("Region whitelist disabled.")
-        else:
-            print("Region whitelist is already disabled.")
-        return config_dict
-
-
     def add_documentation(self, argparse_obj):
         cmd_parser = super().add_documentation(argparse_obj)
         actions = cmd_parser.add_subparsers(metavar="<action>", dest="action")
@@ -105,8 +92,7 @@ class Configure(CommandBase):
         whitelist_parser = actions.add_parser(
             "whitelist", help="set whitelist for AWS regions")
         whitelist_parser.add_argument(
-            "regions", nargs="*",
-            help="list of AWS regions (leave empty to disable whitelist)")
+            "regions", nargs="+", help="list of AWS regions")
 
         use_handler_parser = actions.add_parser(
             "use_handler", help="use IP handlers described by instance tags")

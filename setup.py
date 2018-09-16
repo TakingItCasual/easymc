@@ -7,8 +7,7 @@ from ec2mc import __version__
 REPO_URL = "https://github.com/TakingItCasual/ec2mc"
 
 README_PATH = Path(__file__).parent/"README.rst"
-with README_PATH.open(encoding="utf-8") as f:
-    LONG_DESC = f.read()
+LONG_DESC = README_PATH.read_text(encoding="utf-8")
 
 # The OS restrictions are due to the cryptography package.
 setup(

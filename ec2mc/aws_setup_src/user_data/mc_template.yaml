@@ -33,8 +33,8 @@ packages:
 # Commands to run on instance's first boot
 runcmd:
 - [ curl, "https://launcher.mojang.com/v1/objects/\
-  fe123682e9cb30031eae351764f653500b7396c9/server.jar",
-  --create-dirs, -o, /home/ec2-user/minecraft/server.1.13.1.jar ]
+  fe123682e9cb30031eae351764f653500b7396c9/server.jar", # 1.13.1 server
+  --create-dirs, -o, /home/ec2-user/minecraft/server.jar ]
 - /home/ec2-user/manage-scripts/start_server.sh &
 - wait $!
 - sed -i 's/eula=false/eula=true/g' /home/ec2-user/minecraft/eula.txt

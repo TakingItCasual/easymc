@@ -5,14 +5,14 @@ Variables with "Set in..." comments are set once elsewhere.
 
 from pathlib import Path
 
-# Path of the distribution's inner ec2mc directory
+# Path of script's distribution's inner ec2mc directory.
 DIST_DIR = Path(__file__).parent
 
 # Directory for ec2mc to find/create its configuration file(s).
 CONFIG_DIR = Path().home()/".ec2mc"
-# JSON file containing IAM access keys, servers.dat path, and region whitelist.
+# JSON file path for script user's configuration.
 CONFIG_JSON = CONFIG_DIR/"config.json"
-# PEM/PPK file(s) containing RSA private key for SSHing into instances.
+# PEM/PPK files containing RSA private key for SSHing into instances.
 # Set in ec2mc.validate.validate_setup:main (Namespace used as file name)
 RSA_KEY_PEM = None
 RSA_KEY_PPK = None
@@ -46,8 +46,8 @@ IAM_NAME = None
   - Internet gateway created in each region.
   - SSH key pair created in each region.
 - Namespace tag of:
-  - Created instances
-  - Allocated elastic IP addresses
+  - Created instances.
+  - Allocated elastic IP addresses.
 """
 # Set in ec2mc.validate.validate_setup:main
 NAMESPACE = None
@@ -59,9 +59,6 @@ PK_PERMS = 0o400
 
 # Creating an EC2 client requires a region, even for listing all regions.
 DEFAULT_REGION = "us-east-1"
-# Restrict AWS region(s) the script interacts with (if not None).
-# (Optionally) set in ec2mc.validate.validate_config:set_consts_regions
-REGION_WHITELIST = None
 # Tuple of regions found with ec2:GetRegions (filtered through whitelist)
-# Set in ec2mc.validate.validate_config:set_consts_regions
-REGIONS = (DEFAULT_REGION,)
+# Set in ec2mc.validate.validate_config:validate_region_whitelist
+REGIONS = None

@@ -1,5 +1,7 @@
 #!/bin/bash
 
+yum update -y
+
 runuser -l ec2-user -c \
 'screen -d -m -S minecraft /home/ec2-user/manage-scripts/start_server.sh'
 

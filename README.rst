@@ -17,6 +17,8 @@ For an explanation on what can be customized (and how), see Customization_.
 
 For a breakdown of the costs of running a server, see Costs_.
 
+For a guide on removing everything from AWS, see `Cleaning Up`_.
+
 
 .. _Getting Started: https://github.com/TakingItCasual/ec2mc/blob/master/docs/getting_started.rst
 
@@ -27,6 +29,8 @@ For a breakdown of the costs of running a server, see Costs_.
 .. _Commands: https://github.com/TakingItCasual/ec2mc/blob/master/docs/commands.rst
 
 .. _Costs: https://github.com/TakingItCasual/ec2mc/blob/master/docs/costs.rst
+
+.. _Cleaning Up: https://github.com/TakingItCasual/ec2mc/blob/master/docs/cleaning_up.rst
 
 .. |PyPI Version| image:: https://raw.githubusercontent.com/TakingItCasual/ec2mc/master/docs/images/pypi-v0.1.3-orange.svg?sanitize=true
    :target: https://pypi.org/project/ec2mc/

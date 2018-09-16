@@ -27,8 +27,7 @@ class AWSSetup(CommandBase):
         """manage AWS account setup with ~/.ec2mc/aws_setup/
 
         Args:
-            kwargs (dict):
-                'action': Whether to check, upload, or delete setup on AWS
+            kwargs (dict): See add_documentation method.
         """
         if kwargs['action'] == "delete":
             path_prefix = f"/{consts.NAMESPACE}/"

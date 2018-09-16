@@ -74,9 +74,10 @@ class CreateUser(CommandBase):
     @staticmethod
     def create_configuration_zip(new_access_key, give_ssh_key, user_name):
         """create zipped config folder containing new IAM user access key"""
-        new_config_dict = {'access_key': new_access_key}
-        if consts.REGION_WHITELIST is not None:
-            new_config_dict['region_whitelist'] = consts.REGION_WHITELIST
+        new_config_dict = {
+            'access_key': new_access_key,
+            'region_whitelist': consts.REGIONS
+        }
 
         temp_dir = consts.CONFIG_DIR/".ec2mc"
         if temp_dir.is_dir():

@@ -40,8 +40,7 @@ def parse_json(file_path):
     """validate JSON file exists and contains valid JSON"""
     if not file_path.is_file():
         halt.err(f"{file_path} not found.")
-    with file_path.open(encoding="utf-8") as f:
-        file_contents = f.read()
+    file_contents = file_path.read_text(encoding="utf-8")
     try:
         return json.loads(file_contents)
     except ValueError:
@@ -58,8 +57,7 @@ def parse_yaml(file_path):
     """validate YAML file exists and contains valid YAML"""
     if not file_path.is_file():
         halt.err(f"{file_path} not found.")
-    with file_path.open(encoding="utf-8") as f:
-        file_contents = f.read()
+    file_contents = file_path.read_text(encoding="utf-8")
     try:
         return yaml.safe_load(file_contents)
     except Exception: # Multiple exceptions possible. Idk what they all are.

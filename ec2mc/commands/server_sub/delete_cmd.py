@@ -9,10 +9,7 @@ class DeleteServer(CommandBase):
         """terminate an EC2 instance, given its region, ID, and name
 
         Args:
-            kwargs (dict):
-                'region' (str): AWS region to terminate instance from.
-                'id' (str): ID of instance to terminate.
-                'name' (str): Tag value for instance tag key "Name".
+            kwargs (dict): See add_documentation method.
         """
         self.ec2_client = aws.ec2_client(kwargs['region'])
 
@@ -63,14 +60,15 @@ class DeleteServer(CommandBase):
     def add_documentation(self, argparse_obj):
         cmd_parser = super().add_documentation(argparse_obj)
         cmd_parser.add_argument(
-            "region", help="AWS region of instance to be terminated")
-        cmd_parser.add_argument(
             "id", help="ID of instance to terminate")
         cmd_parser.add_argument(
             "name", help="value for instance's tag key \"Name\"")
         cmd_parser.add_argument(
            "-s", "--save_ip", action="store_true",
             help="preserve any associated elastic IPs")
+        cmd_parser.add_argument(
+            "-r", dest="region", metavar="",
+            help="AWS region the instance is located in")
 
 
     def blocked_actions(self, _):

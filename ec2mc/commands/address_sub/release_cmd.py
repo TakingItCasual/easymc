@@ -42,12 +42,13 @@ class ReleaseAddress(CommandBase):
     def add_documentation(self, argparse_obj):
         cmd_parser = super().add_documentation(argparse_obj)
         cmd_parser.add_argument(
-            "region", help="AWS region of elastic IP address to be released")
-        cmd_parser.add_argument(
             "ip", help="IP of elastic IP address to be released")
         cmd_parser.add_argument(
             "-f", "--force", action="store_true",
             help="disassociate address if it is in use")
+        cmd_parser.add_argument(
+            "-r", dest="region", metavar="",
+            help="AWS region the address is located in")
 
 
     def blocked_actions(self, kwargs):

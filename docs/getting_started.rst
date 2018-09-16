@@ -1,25 +1,25 @@
 Getting Started
 ===============
 
-|PyPI Version| |Python Version|
-
 Script Installation
 -------------------
 
 This script requires Python (version 3.6 or greater).
 Python can be downloaded from http://www.python.org/.
 If your OS is 64-bit, please find and download the latest 64-bit version of Python from the downloads page for your OS (32-bit Python can't use 64-bit exclusive executables).
-During Python's installation, enable the "Add Python3.x to PATH" option so that Python can be used from a terminal.
+In Python's installer, enable the "Add Python3.x to PATH" option so that Python can be used from a terminal.
 The script can then be installed from a terminal with pip::
 
-    pip install ec2mc
+    python -m pip install ec2mc
 
-To create the script's configuration folder (.ec2mc/) under your home folder, run any script command.
+(If the preceding command outputs a SyntaxError, you've installed an incorrect version of Python.)
+
+To create the script's configuration folder (.ec2mc) under your home folder, run any script command.
 For example::
 
     ec2mc servers check
 
-You will get a "Configuration is not set" error, but the folder will be created.
+You will get a "Configuration is not set" error, but the folder will be created (e.g. "C:\Users\Larry\.ec2mc\").
 
 Amazon Web Services Setup
 -------------------------
@@ -43,21 +43,26 @@ For example::
 
     ec2mc configure access_key AKIAIOSFODNN7EXAMPLE wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
 
+You must specify what `AWS Region`_(s) the script will interact with (ideally, the one(s) closest to you).
+For example, to restrict the script to interacting with just the London region::
+
+    ec2mc configure whitelist eu-west-2
+
 To verify the previous steps, attempt to use the following command again::
 
     ec2mc servers check
 
 If the previous steps were done correctly, the script will output a "Access key validated as ..." notification.
 
-Upload the default AWS setup included with the script with the following command::
+Upload the default AWS account configuration included with the script with the following command::
 
     ec2mc aws_setup upload
 
 (For an explanation of what is uploaded to AWS, and how it can be customized, see Customization_.)
 
-Create an IAM user under the setup_users IAM group (e.g. with the name "Bob") with the script::
+Create an IAM user (e.g. named "Larry") under the setup_users IAM group with the script::
 
-    ec2mc user create Bob setup_users --default
+    ec2mc user create Larry setup_users --default
 
 The --default argument sets the new user's access key as the script's default access key.
 For more on IAM user management, see `Managing Users`_.
@@ -68,13 +73,15 @@ Server Creation
 ---------------
 
 Please note that AWS refers to the servers they provide as "instances".
-AWS EC2 On-Demand instances (the cloud servers) can be turned on and off at will, and you will only be charged for the time they're turned on (see Costs_).
+AWS EC2 On-Demand instances (the cloud servers) can be started and stopped at will, and you will only be charged for the time they're running (see Costs_).
 
 Server IP Persistence
 ~~~~~~~~~~~~~~~~~~~~~
 
-By default, the script creates an instance which changes its IP address after every reboot, as this is the cheaper option (see Costs_).
-To handle this, the script contains functionality to automatically update the local Minecraft client's server list with the current IP(s) of AWS instance(s).
+By default, the script creates an instance which gets a different IP each time it's started, as this is the cheaper option (see Costs_).
+To have an instance maintain a persistent IP, append :bash:`--elastic_ip` to the instance creation command.
+
+To handle non-persistent IPs, the script contains functionality to automatically update the local Minecraft client's server list with the current IP(s) of EC2 instance(s).
 The server list will be updated whenever either of the two following script commands are run::
 
     ec2mc servers check
@@ -82,23 +89,21 @@ The server list will be updated whenever either of the two following script comm
 
 This functionality is still available for instances with persistent IP addresses.
 
-You could modify your Minecraft client shortcut to automatically run the `check` command, to eliminate the need to manually update an IP in the client's server list each time an instance is rebooted.
-Or you could modify it to run the `start` command, to also eliminate the need to manually start the server.
+You could modify your Minecraft client shortcut to automatically run the :bash:`start` command, to eliminate the need to manually start servers and update IPs in your server list.
 
 Creating The Server
 ~~~~~~~~~~~~~~~~~~~
 
 The script provides the template "mc_template" for creating a Minecraft 1.13.1 vanilla server.
-You must specify an `AWS Region`_ to place the instance in (ideally, the one closest to you).
-Create the instance (e.g. in the London region)::
+Create an instance (e.g. named "test_server") using the following command::
 
-    ec2mc server create eu-west-2 mc_template server_name_goes_here
+    ec2mc server create mc_template test_server
 
 Or if a persistent IP address is desired::
 
-    ec2mc server create eu-west-2 mc_template server_name_goes_here --elastic_ip
+    ec2mc server create mc_template test_server --elastic_ip
 
-All provided templates contain scripts (which will be uploaded to the instances themselves) which will shut down the instances after 10 consecutive minutes of no online players.
+All provided templates contain bash scripts (which are uploaded to the instances themselves) which will shut down the instances after 10 consecutive minutes of no online players (and no SSH connections).
 
 (A template for a Forge server is also included: "cnb_template". See Customization_ for how to make your own template.)
 
@@ -106,13 +111,13 @@ Conclusion
 ----------
 
 You should now have an EC2 instance hosting a Minecraft server up and running.
-If you want to manage the server directly, you can SSH into it with the script using the following command::
+If you want to manage the server directly (e.g. to make yourself a server operator), you can SSH into it with the script (provided you have OpenSSH or PuTTY installed) using the following command::
 
     ec2mc server ssh
 
-(This command requires you to have either OpenSSH or PuTTY installed.)
+You can then access the server's console by typing :bash:`screen -r` (use :bash:`Ctrl-a`, :bash:`Ctrl-d` to exit the console, then type :bash:`exit` to close the SSH connection).
 
-See `Managing Users`_ for how to give your friends IAM user access keys so they can join and start the server themselves.
+See `Managing Users`_ for how to give other people IAM user access keys so they can join and start the server themselves.
 
 
 .. _IAM Management Console: https://console.aws.amazon.com/iam/home#/users
@@ -125,8 +130,5 @@ See `Managing Users`_ for how to give your friends IAM user access keys so they 
 
 .. _AWS Region: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-regions-availability-zones.html#concepts-available-regions
 
-.. |PyPI Version| image:: https://raw.githubusercontent.com/TakingItCasual/ec2mc/master/docs/images/pypi-v0.1.3-orange.svg?sanitize=true
-   :target: https://pypi.org/project/ec2mc/
-
-.. |Python Version| image:: https://raw.githubusercontent.com/TakingItCasual/ec2mc/master/docs/images/python-3.6-blue.svg?sanitize=true
-   :target: https://pypi.org/project/ec2mc/
+.. role:: bash(code)
+   :language: bash
