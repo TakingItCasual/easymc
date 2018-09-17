@@ -1,13 +1,13 @@
 from ec2mc import consts
-from ec2mc.utils.base_classes import CommandBase
 from ec2mc.utils import aws
 from ec2mc.utils import halt
+from ec2mc.utils.base_classes import CommandBase
 from ec2mc.validate import validate_perms
 
 class ListUsers(CommandBase):
 
     def main(self, kwargs):
-        """list IAM groups and IAM users under them"""
+        """list IAM groups and their IAM users"""
         iam_client = aws.iam_client()
         path_prefix = f"/{consts.NAMESPACE}/"
 

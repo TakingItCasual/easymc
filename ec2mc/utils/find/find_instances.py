@@ -6,7 +6,7 @@ from ec2mc.utils.threader import Threader
 def main(kwargs, *, single_instance=False):
     """wrapper for probe_regions which prints found instances to the CLI
 
-    Requires ec2:DescribeRegions and ec2:DescribeInstances permissions.
+    Requires ec2:DescribeInstances permission.
 
     Halts if no instances found. This functionality is relied upon.
 
@@ -67,15 +67,9 @@ def probe_regions(regions, tag_filter=None):
         threader.add_thread(probe_region, (region, tag_filter))
     regions_instances = threader.get_results(return_dict=True)
 
-    all_instances = []
-    for region, instances in regions_instances.items():
-        for instance in instances:
-            all_instances.append({
-                'region': region,
-                **instance
-            })
-
-    return all_instances
+    return [{'region': region, **instance}
+        for region, instances in regions_instances.items()
+        for instance in instances]
 
 
 def probe_region(region, tag_filter=None):
@@ -198,7 +192,7 @@ def get_state_and_ip(region, instance_ip):
 
 
 def argparse_args(cmd_parser):
-    """initialize argparse arguments that validate_instances:main expects"""
+    """initialize argparse arguments that the main() function expects"""
     cmd_parser.add_argument(
         "-r", dest="region_filter", nargs="+", metavar="",
         help=("AWS region(s) to probe for instances. If not set, all "

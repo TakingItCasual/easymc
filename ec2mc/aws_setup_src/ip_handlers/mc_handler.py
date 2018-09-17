@@ -17,7 +17,7 @@ def main(aws_region, instance_name, instance_id, new_ip):
         instance_id (str): ID of instance.
         new_ip (str): Instance's new IP to update client's server list with.
     """
-    titles_dict = {'Instances': []}
+    titles_dict = {'Instances': {}}
     if SERVER_TITLES_JSON.is_file():
         titles_dict = os2.parse_json(SERVER_TITLES_JSON)
 
@@ -27,15 +27,14 @@ def main(aws_region, instance_name, instance_id, new_ip):
         return
 
     try:
-        server_name = next(x['title'] for x in titles_dict['Instances']
-            if x['region'] == aws_region and x['id'] == instance_id)
+        server_name = next(k for k, v in titles_dict['Instances'].items()
+            if v['region'] == aws_region and v['id'] == instance_id)
     except StopIteration:
         server_name = instance_name
-        titles_dict['Instances'].append({
+        titles_dict['Instances'][server_name] = {
             'region': aws_region,
-            'id': instance_id,
-            'title': server_name
-        })
+            'id': instance_id
+        }
         os2.save_json(titles_dict, SERVER_TITLES_JSON)
 
     update_servers_dat(servers_dat_path, server_name, new_ip)

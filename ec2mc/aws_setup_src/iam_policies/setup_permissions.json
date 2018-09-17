@@ -9,7 +9,6 @@
                 "iam:GetGroup",
                 "iam:ListPolicies",
                 "iam:ListEntitiesForPolicy",
-                "ec2:DescribeRegions",
                 "ec2:DescribeVpcs",
                 "ec2:DescribeInstances"
             ],
@@ -51,7 +50,6 @@
             "Sid": "VPCSetupPermissions",
             "Effect": "Allow",
             "Action": [
-                "ec2:DescribeRegions",
                 "ec2:DescribeVpcs",
                 "ec2:DescribeSubnets",
                 "ec2:DescribeSecurityGroups",

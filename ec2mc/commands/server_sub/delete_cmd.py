@@ -1,6 +1,6 @@
-from ec2mc.utils.base_classes import CommandBase
 from ec2mc.utils import aws
 from ec2mc.utils import halt
+from ec2mc.utils.base_classes import CommandBase
 from ec2mc.validate import validate_perms
 
 class DeleteServer(CommandBase):
@@ -57,7 +57,8 @@ class DeleteServer(CommandBase):
                     "disassociated but preserved.")
 
 
-    def add_documentation(self, argparse_obj):
+    @classmethod
+    def add_documentation(cls, argparse_obj):
         cmd_parser = super().add_documentation(argparse_obj)
         cmd_parser.add_argument(
             "id", help="ID of instance to terminate")
@@ -73,7 +74,6 @@ class DeleteServer(CommandBase):
 
     def blocked_actions(self, _):
         return validate_perms.blocked(actions=[
-            "ec2:DescribeRegions",
             "ec2:DescribeInstances",
             "ec2:DescribeAddresses",
             "ec2:TerminateInstances"

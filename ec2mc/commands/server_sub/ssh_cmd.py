@@ -3,9 +3,9 @@ import subprocess
 import shutil
 
 from ec2mc import consts
-from ec2mc.utils.base_classes import CommandBase
 from ec2mc.utils import halt
-from ec2mc.validate import validate_instances
+from ec2mc.utils.base_classes import CommandBase
+from ec2mc.utils.find import find_instances
 from ec2mc.validate import validate_perms
 
 class SSHServer(CommandBase):
@@ -19,10 +19,10 @@ class SSHServer(CommandBase):
         is printed, for if an alternative SSH method is desired.
 
         Args:
-            kwargs (dict): See validate.validate_instances:argparse_args
+            kwargs (dict): See utils.find.find_instances:argparse_args
         """
-        instance = validate_instances.main(kwargs, single_instance=True)
-        instance_state, instance_ip = validate_instances.get_state_and_ip(
+        instance = find_instances.main(kwargs, single_instance=True)
+        instance_state, instance_ip = find_instances.get_state_and_ip(
             instance['region'], instance['id'])
 
         if 'DefaultUser' not in instance['tags']:
@@ -90,13 +90,11 @@ class SSHServer(CommandBase):
         print("Connection closed.")
 
 
-    def add_documentation(self, argparse_obj):
+    @classmethod
+    def add_documentation(cls, argparse_obj):
         cmd_parser = super().add_documentation(argparse_obj)
-        validate_instances.argparse_args(cmd_parser)
+        find_instances.argparse_args(cmd_parser)
 
 
     def blocked_actions(self, _):
-        return validate_perms.blocked(actions=[
-            "ec2:DescribeRegions",
-            "ec2:DescribeInstances"
-        ])
+        return validate_perms.blocked(actions=["ec2:DescribeInstances"])

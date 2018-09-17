@@ -1,7 +1,7 @@
-from ec2mc import consts
-from ec2mc.utils.base_classes import CommandBase
 from ec2mc.utils import aws
 from ec2mc.utils import halt
+from ec2mc.utils.base_classes import CommandBase
+from ec2mc.utils.find import find_addresses
 from ec2mc.validate import validate_perms
 
 class ReleaseAddress(CommandBase):
@@ -12,48 +12,42 @@ class ReleaseAddress(CommandBase):
         Args:
             kwargs (dict): See add_documentation method.
         """
-        ec2_client = aws.ec2_client(kwargs['region'])
+        addresses = find_addresses.probe_regions()
+        try:
+            address = next(address for address in addresses
+                if address['ip'] == kwargs['ip'])
+        except StopIteration:
+            halt.err("You do not possess the specified elastic IP address.")
 
-        addresses = ec2_client.describe_addresses(Filters=[
-            {'Name': "domain", 'Values': ["vpc"]},
-            {'Name': "tag:Namespace", 'Values': [consts.NAMESPACE]},
-            {'Name': "public-ip", 'Values': [kwargs['ip']]}
-        ])['Addresses']
+        ec2_client = aws.ec2_client(address['region'])
 
-        if not addresses:
-            halt.err("You do not own the specified elastic IP address.")
-        address = addresses[0]
-
-        if 'AssociationId' in address and kwargs['force'] is False:
+        if 'association_id' in address and kwargs['force'] is False:
             halt.err("Elastic IP address is currently in use.",
                 "Append the -f argument to force disassociation.")
 
         print("")
-        if 'AssociationId' in address:
+        if 'association_id' in address:
             ec2_client.disassociate_address(
-                AssociationId=address['AssociationId'])
-            print(f"Elastic IP address disassociated.")
+                AssociationId=address['association_id'])
+            print(f"Elastic IP address {address['ip']} disassociated.")
 
         ec2_client.release_address(
-            AllocationId=address['AllocationId'])
-        print(f"Elastic IP address {kwargs['ip']} released.")
+            AllocationId=address['allocation_id'])
+        print(f"Elastic IP address {address['ip']} released.")
 
 
-    def add_documentation(self, argparse_obj):
+    @classmethod
+    def add_documentation(cls, argparse_obj):
         cmd_parser = super().add_documentation(argparse_obj)
         cmd_parser.add_argument(
             "ip", help="IP of elastic IP address to be released")
         cmd_parser.add_argument(
             "-f", "--force", action="store_true",
             help="disassociate address if it is in use")
-        cmd_parser.add_argument(
-            "-r", dest="region", metavar="",
-            help="AWS region the address is located in")
 
 
     def blocked_actions(self, kwargs):
         needed_actions = [
-            "ec2:DescribeRegions",
             "ec2:DescribeAddresses",
             "ec2:ReleaseAddress"
         ]

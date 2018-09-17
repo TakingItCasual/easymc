@@ -6,6 +6,7 @@ from ec2mc.commands.address_sub import associate_cmd
 from ec2mc.commands.address_sub import disassociate_cmd
 from ec2mc.commands.address_sub import release_cmd
 
+# TODO: Command to move address from one region to another
 class Address(ParentCommand):
 
     def __init__(self):

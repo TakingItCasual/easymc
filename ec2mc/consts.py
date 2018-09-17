@@ -57,8 +57,6 @@ CONFIG_PERMS = 0o600
 # Private key files must be read-only, and only readable by user.
 PK_PERMS = 0o400
 
-# Creating an EC2 client requires a region, even for listing all regions.
-DEFAULT_REGION = "us-east-1"
 # Tuple of regions found with ec2:GetRegions (filtered through whitelist)
 # Set in ec2mc.validate.validate_config:validate_region_whitelist
 REGIONS = None

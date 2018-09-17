@@ -24,6 +24,7 @@ def ec2_client(region):
         region_name=region
     )
 
+
 def iam_client():
     """create and return IAM client using IAM user access key"""
     return boto3.client("iam",

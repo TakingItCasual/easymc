@@ -99,7 +99,7 @@ def validate_region_whitelist(config_dict):
     response = boto3.client("ec2",
         aws_access_key_id=consts.KEY_ID,
         aws_secret_access_key=consts.KEY_SECRET,
-        region_name=consts.DEFAULT_REGION
+        region_name="us-east-1"
     ).describe_regions()
     region_names = [region['RegionName'] for region in response['Regions']]
 
@@ -115,7 +115,7 @@ def validate_region_whitelist(config_dict):
 
 
 def create_config_from_credentials_csv(file_path):
-    """create JSON config file from IAM user's credentials.csv file"""
+    """create JSON config file from IAM user's accessKeys.csv file"""
     with file_path.open(encoding="utf-8") as csv_file:
         iam_user_access_key = csv_file.readlines()[1].strip().split(",")
     config_dict = {

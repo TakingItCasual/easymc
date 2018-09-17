@@ -1,5 +1,7 @@
-from ec2mc.utils.base_classes import CommandBase
 from ec2mc.utils import aws
+from ec2mc.utils import halt
+from ec2mc.utils.base_classes import CommandBase
+from ec2mc.utils.find import find_addresses
 from ec2mc.validate import validate_perms
 
 class DisassociateAddress(CommandBase):
@@ -10,20 +12,22 @@ class DisassociateAddress(CommandBase):
         Args:
             kwargs (dict): See add_documentation method.
         """
-        ec2_client = aws.ec2_client(kwargs['region'])
+        addresses = find_addresses.probe_regions()
+        try:
+            address = next(address for address in addresses
+                if address['ip'] == kwargs['ip'])
+        except StopIteration:
+            halt.err("You do not possess the specified elastic IP address.")
+
+        ec2_client = aws.ec2_client(address['region'])
 
 
-    def add_documentation(self, argparse_obj):
+    @classmethod
+    def add_documentation(cls, argparse_obj):
         cmd_parser = super().add_documentation(argparse_obj)
         cmd_parser.add_argument(
             "ip", help="IP of elastic IP address to disassociate")
-        cmd_parser.add_argument(
-            "-r", dest="region", metavar="",
-            help="AWS region the address is located in")
 
 
     def blocked_actions(self, kwargs):
-        return validate_perms.blocked(actions=[
-            "ec2:DescribeRegions",
-            "ec2:DescribeAddresses"
-        ])
+        return validate_perms.blocked(actions=["ec2:DescribeAddresses"])

@@ -1,8 +1,8 @@
 from ec2mc import consts
-from ec2mc.utils.base_classes import CommandBase
 from ec2mc.utils import aws
 from ec2mc.utils import halt
 from ec2mc.utils import os2
+from ec2mc.utils.base_classes import CommandBase
 from ec2mc.validate import validate_perms
 
 class Configure(CommandBase):
@@ -72,7 +72,8 @@ class Configure(CommandBase):
         return config_dict
 
 
-    def add_documentation(self, argparse_obj):
+    @classmethod
+    def add_documentation(cls, argparse_obj):
         cmd_parser = super().add_documentation(argparse_obj)
         actions = cmd_parser.add_subparsers(metavar="<action>", dest="action")
         actions.required = True

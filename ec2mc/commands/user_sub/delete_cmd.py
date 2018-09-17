@@ -1,14 +1,14 @@
 from ec2mc import consts
-from ec2mc.utils.base_classes import CommandBase
 from ec2mc.utils import aws
 from ec2mc.utils import halt
 from ec2mc.utils import os2
+from ec2mc.utils.base_classes import CommandBase
 from ec2mc.validate import validate_perms
 
 class DeleteUser(CommandBase):
 
     def main(self, kwargs):
-        """delete an existing Namespace IAM user from AWS"""
+        """delete an existing IAM user from AWS"""
         self.iam_client = aws.iam_client()
         path_prefix = f"/{consts.NAMESPACE}/"
         user_name = kwargs['name']
@@ -83,7 +83,8 @@ class DeleteUser(CommandBase):
             )
 
 
-    def add_documentation(self, argparse_obj):
+    @classmethod
+    def add_documentation(cls, argparse_obj):
         cmd_parser = super().add_documentation(argparse_obj)
         cmd_parser.add_argument(
             "name", help="name of IAM user to be deleted")

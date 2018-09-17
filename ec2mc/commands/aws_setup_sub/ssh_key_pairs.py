@@ -1,8 +1,8 @@
 from ec2mc import consts
-from ec2mc.utils.base_classes import ComponentSetup
 from ec2mc.utils import aws
 from ec2mc.utils import halt
 from ec2mc.utils import pem
+from ec2mc.utils.base_classes import ComponentSetup
 from ec2mc.utils.threader import Threader
 
 class SSHKeyPairSetup(ComponentSetup):

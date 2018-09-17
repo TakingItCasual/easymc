@@ -1,6 +1,9 @@
 Getting Started
 ===============
 
+.. role:: bash(code)
+   :language: bash
+
 Script Installation
 -------------------
 
@@ -19,7 +22,7 @@ For example::
 
     ec2mc servers check
 
-You will get a "Configuration is not set" error, but the folder will be created (e.g. "C:\Users\Larry\.ec2mc\").
+You will get a "Configuration is not set" error, but the folder will be created (e.g. "C:\\Users\\Larry\\.ec2mc\\").
 
 Amazon Web Services Setup
 -------------------------
@@ -43,7 +46,7 @@ For example::
 
     ec2mc configure access_key AKIAIOSFODNN7EXAMPLE wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
 
-You must specify what `AWS Region`_(s) the script will interact with (ideally, the one(s) closest to you).
+You must specify what `AWS Region`_\(s) the script will interact with (ideally, the one(s) closest to you).
 For example, to restrict the script to interacting with just the London region::
 
     ec2mc configure whitelist eu-west-2
@@ -64,7 +67,7 @@ Create an IAM user (e.g. named "Larry") under the setup_users IAM group with the
 
     ec2mc user create Larry setup_users --default
 
-The --default argument sets the new user's access key as the script's default access key.
+The :bash:`--default` argument sets the new user's access key as the script's default access key.
 For more on IAM user management, see `Managing Users`_.
 
 The temporary IAM user should then be deleted from your `IAM Management Console`_.
@@ -79,9 +82,9 @@ Server IP Persistence
 ~~~~~~~~~~~~~~~~~~~~~
 
 By default, the script creates an instance which gets a different IP each time it's started, as this is the cheaper option (see Costs_).
-To have an instance maintain a persistent IP, append :bash:`--elastic_ip` to the instance creation command.
+To create an instance with an elastic IP address (a persistent IP), append :bash:`--elastic_ip` to the instance creation command.
 
-To handle non-persistent IPs, the script contains functionality to automatically update the local Minecraft client's server list with the current IP(s) of EC2 instance(s).
+To handle non-persistent IPs, the script contains functionality to automatically update instance IPs in the the local Minecraft client's server list.
 The server list will be updated whenever either of the two following script commands are run::
 
     ec2mc servers check
@@ -102,6 +105,8 @@ Create an instance (e.g. named "test_server") using the following command::
 Or if a persistent IP address is desired::
 
     ec2mc server create mc_template test_server --elastic_ip
+
+The server will take a few minutes to initialize before it is ready for use/management.
 
 All provided templates contain bash scripts (which are uploaded to the instances themselves) which will shut down the instances after 10 consecutive minutes of no online players (and no SSH connections).
 
@@ -129,6 +134,3 @@ See `Managing Users`_ for how to give other people IAM user access keys so they 
 .. _Costs: https://github.com/TakingItCasual/ec2mc/blob/master/docs/costs.rst
 
 .. _AWS Region: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-regions-availability-zones.html#concepts-available-regions
-
-.. role:: bash(code)
-   :language: bash

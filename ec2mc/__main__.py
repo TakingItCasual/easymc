@@ -8,10 +8,10 @@ IAM user is a part of.
 import sys
 
 from ec2mc import __version__
+from ec2mc.utils import halt
 from ec2mc.utils.base_classes import ProperIndentParser
 from ec2mc.validate import validate_config
 from ec2mc.validate import validate_setup
-from ec2mc.utils import halt
 
 from ec2mc.commands import configure_cmd
 from ec2mc.commands import aws_setup_cmd

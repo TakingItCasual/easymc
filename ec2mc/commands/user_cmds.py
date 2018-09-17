@@ -15,6 +15,7 @@ class User(ParentCommand):
             list_cmd.ListUsers()
         ]
 
+
     def main(self, kwargs):
         """commands to manage IAM users"""
         super().main(kwargs)

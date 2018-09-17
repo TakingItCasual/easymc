@@ -2,9 +2,9 @@ import json
 from deepdiff import DeepDiff
 
 from ec2mc import consts
-from ec2mc.utils.base_classes import ComponentSetup
 from ec2mc.utils import aws
 from ec2mc.utils import os2
+from ec2mc.utils.base_classes import ComponentSetup
 
 class IAMPolicySetup(ComponentSetup):
 

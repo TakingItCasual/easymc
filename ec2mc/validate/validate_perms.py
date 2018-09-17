@@ -22,15 +22,12 @@ def blocked(actions, resources=None, context=None):
         resources = ["*"]
 
     if context is not None:
-        # Convert context dict to what ContextEntries expects.
-        context_temp = []
-        for context_key in context:
-            context_temp.append({
-                'ContextKeyName': context_key,
-                'ContextKeyValues': [str(val) for val in context[context_key]],
-                'ContextKeyType': "string"
-            })
-        context = context_temp
+        # Convert context dict to list[dict] expected by ContextEntries.
+        context = [{
+            'ContextKeyName': context_key,
+            'ContextKeyValues': [str(val) for val in context_values],
+            'ContextKeyType': "string"
+        } for context_key, context_values in context.items()]
     else:
         context = [{}]
 

@@ -4,16 +4,16 @@ import boto3
 from botocore.exceptions import ClientError
 
 from ec2mc import consts
-from ec2mc.utils.base_classes import CommandBase
 from ec2mc.utils import aws
 from ec2mc.utils import halt
 from ec2mc.utils import os2
+from ec2mc.utils.base_classes import CommandBase
 from ec2mc.validate import validate_perms
 
 class CreateUser(CommandBase):
 
     def main(self, kwargs):
-        """create a new Namespace IAM user under an IAM group on AWS"""
+        """create a new IAM user under an IAM group on AWS"""
         iam_client = aws.iam_client()
         path_prefix = f"/{consts.NAMESPACE}/"
 
@@ -118,7 +118,8 @@ class CreateUser(CommandBase):
             halt.err("Access key not usable even after waiting 1 minute.")
 
 
-    def add_documentation(self, argparse_obj):
+    @classmethod
+    def add_documentation(cls, argparse_obj):
         cmd_parser = super().add_documentation(argparse_obj)
         cmd_parser.add_argument(
             "name", help="name to assign to the IAM user")

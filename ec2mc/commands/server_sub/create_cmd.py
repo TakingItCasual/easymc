@@ -3,12 +3,12 @@ from ruamel import yaml
 from botocore.exceptions import ClientError
 
 from ec2mc import consts
-from ec2mc.utils.base_classes import CommandBase
 from ec2mc.utils import aws
 from ec2mc.utils import halt
 from ec2mc.utils import os2
 from ec2mc.utils import pem
-from ec2mc.validate import validate_instances
+from ec2mc.utils.base_classes import CommandBase
+from ec2mc.utils.find import find_instances
 from ec2mc.validate import validate_perms
 
 # TODO: Consider allowing elastic IP address reassociation
@@ -133,7 +133,7 @@ class CreateServer(CommandBase):
 
     @classmethod
     def process_user_data(cls, template_name, template):
-        """add b64 template files to user_data's write_files
+        """add template files to user_data's write_files
 
         Args:
             template_name (str): Name of the YAML instance template.
@@ -179,6 +179,7 @@ class CreateServer(CommandBase):
             dir_files = os2.list_dir_files(template_dir/write_dir['local_dir'])
             for dir_file in dir_files:
                 file_path = template_dir/write_dir['local_dir']/dir_file
+                # Convert Windows line endings to Unix line endings
                 file_bytes = file_path.read_bytes().replace(b"\r\n", b"\n")
                 write_files.append({
                     'content': file_bytes,
@@ -284,7 +285,7 @@ class CreateServer(CommandBase):
     @staticmethod
     def validate_name_is_unique(instance_name):
         """validate desired instance name isn't in use by another instance"""
-        all_instances = validate_instances.probe_regions(consts.REGIONS)
+        all_instances = find_instances.probe_regions(consts.REGIONS)
         instance_names = [instance['name'] for instance in all_instances]
         if instance_name in instance_names:
             halt.err(f"Instance name \"{instance_name}\" already in use.")
@@ -355,7 +356,8 @@ class CreateServer(CommandBase):
         return ec2_key_pairs[0]['KeyName']
 
 
-    def add_documentation(self, argparse_obj):
+    @classmethod
+    def add_documentation(cls, argparse_obj):
         cmd_parser = super().add_documentation(argparse_obj)
         cmd_parser.add_argument(
             "template", help="instance setup template in config to use")
@@ -381,7 +383,6 @@ class CreateServer(CommandBase):
 
     def blocked_actions(self, kwargs):
         denied_actions = validate_perms.blocked(actions=[
-            "ec2:DescribeRegions",
             "ec2:DescribeInstances",
             "ec2:DescribeVpcs",
             "ec2:DescribeSubnets",
