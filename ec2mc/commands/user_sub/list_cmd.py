@@ -6,7 +6,7 @@ from ec2mc.validate import validate_perms
 
 class ListUsers(CommandBase):
 
-    def main(self, kwargs):
+    def main(self, cmd_args):
         """list IAM groups and their IAM users"""
         iam_client = aws.iam_client()
         path_prefix = f"/{consts.NAMESPACE}/"
@@ -14,7 +14,7 @@ class ListUsers(CommandBase):
         iam_group_names = [iam_group['GroupName'] for iam_group
             in iam_client.list_groups(PathPrefix=path_prefix)['Groups']]
         if not iam_group_names:
-            halt.err("No Namespace IAM groups found from AWS.",
+            halt.err("No namespace IAM groups found from AWS.",
                 "  Have you uploaded the AWS setup?")
 
         print("")

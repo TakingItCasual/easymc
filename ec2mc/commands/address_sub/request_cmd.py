@@ -8,21 +8,21 @@ from ec2mc.validate import validate_perms
 
 class RequestAddress(CommandBase):
 
-    def main(self, kwargs):
+    def main(self, cmd_args):
         """attempt to allocate an elastic IP address from AWS
 
         Args:
-            kwargs (dict): See add_documentation method.
+            cmd_args (dict): See add_documentation method.
         """
-        self.ec2_client = aws.ec2_client(kwargs['region'])
+        self.ec2_client = aws.ec2_client(cmd_args['region'])
 
-        if kwargs['ip'] is not None:
+        if cmd_args['ip'] is not None:
             response = self.request_specific_address(
-                kwargs['region'], kwargs['ip'])
+                cmd_args['region'], cmd_args['ip'])
         else:
             response = self.request_random_address()
 
-        aws.attach_tags(kwargs['region'], response['AllocationId'])
+        aws.attach_tags(cmd_args['region'], response['AllocationId'])
         public_ip = response['PublicIp']
 
         print("")
@@ -69,8 +69,10 @@ class RequestAddress(CommandBase):
             help="AWS region to place address in")
 
 
-    def blocked_actions(self, kwargs):
+    def blocked_actions(self, _):
         return validate_perms.blocked(actions=[
+            "ec2:DescribeInstances",
             "ec2:DescribeAddresses",
-            "ec2:AllocateAddress"
+            "ec2:AllocateAddress",
+            "ec2:CreateTags"
         ])

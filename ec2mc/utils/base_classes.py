@@ -10,8 +10,12 @@ class CommandBase(ABC):
     """base class for most ec2mc command classes to inherit from"""
     _module_postfix = "_cmd"
 
+    def __init__(self, cmd_args):
+        pass
+
+
     @abstractmethod
-    def main(self, kwargs):
+    def main(self, cmd_args):
         """overridden by child class to implement command's functionality"""
         pass
 
@@ -23,7 +27,7 @@ class CommandBase(ABC):
             cls.cmd_name(), help=cls.main.__doc__.split("\n", 1)[0])
 
 
-    def blocked_actions(self, kwargs):
+    def blocked_actions(self, cmd_args):
         """return list of denied IAM actions needed for child's main"""
         return []
 
@@ -41,28 +45,31 @@ class CommandBase(ABC):
 class ParentCommand(CommandBase):
     """base class for command which just acts as parent for other commands"""
     _module_postfix = "_cmds"
+    sub_commands = []
 
-    def main(self, kwargs):
-        """Execute subcommand (action) based on argparse input (kwargs)"""
-        chosen_cmd = next(cmd for cmd in self.sub_commands
-            if cmd.cmd_name() == kwargs['action'])
-        chosen_cmd.main(kwargs)
+    def __init__(self, cmd_args):
+        self.chosen_cmd = next(cmd(cmd_args) for cmd in self.sub_commands
+            if cmd.cmd_name() == cmd_args['action'])
 
 
-    def add_documentation(self, argparse_obj):
+    def main(self, cmd_args):
+        """Execute chosen subcommand"""
+        return self.chosen_cmd.main(cmd_args)
+
+
+    @classmethod
+    def add_documentation(cls, argparse_obj):
         """set up argparse for command and all of its subcommands"""
         cmd_parser = super().add_documentation(argparse_obj)
         actions = cmd_parser.add_subparsers(metavar="<action>", dest="action")
         actions.required = True
-        for sub_command in self.sub_commands:
+        for sub_command in cls.sub_commands:
             sub_command.add_documentation(actions)
 
 
-    def blocked_actions(self, kwargs):
-        """pass along selected subcommand's required permissions"""
-        chosen_cmd = next(cmd for cmd in self.sub_commands
-            if cmd.cmd_name() == kwargs['action'])
-        return chosen_cmd.blocked_actions(kwargs)
+    def blocked_actions(self, cmd_args):
+        """pass along selected subcommand's denied IAM actions"""
+        return self.chosen_cmd.blocked_actions(cmd_args)
 
 
 class ComponentSetup(ABC):

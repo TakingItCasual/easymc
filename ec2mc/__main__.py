@@ -34,38 +34,37 @@ def main(args=None):
     try:
         # Available commands from the ec2mc.commands directory
         commands = [
-            configure_cmd.Configure(),
-            aws_setup_cmd.AWSSetup(),
-            server_cmds.Server(),
-            servers_cmds.Servers(),
-            address_cmds.Address(),
-            user_cmds.User()
+            configure_cmd.Configure,
+            aws_setup_cmd.AWSSetup,
+            server_cmds.Server,
+            servers_cmds.Servers,
+            address_cmds.Address,
+            user_cmds.User
         ]
 
         # Use argparse to turn args into dict of arguments
-        kwargs = argv_to_kwargs(args, commands)
+        cmd_args = argv_to_cmd_args(args, commands)
         # Get the command class object from the commands list
-        chosen_cmd = next(cmd for cmd in commands
-            if cmd.cmd_name() == kwargs['command'])
+        chosen_cmd = next(cmd(cmd_args) for cmd in commands
+            if cmd.cmd_name() == cmd_args['command'])
 
         # If basic configuration being done, skip config validation
         if not (chosen_cmd.cmd_name() == "configure" and
-                kwargs['action'] != "swap_key"):
+                cmd_args['action'] != "swap_key"):
             # Validate config's config.json
             validate_config.main()
             # Validate config's aws_setup.json and YAML instance templates
             validate_setup.main()
 
         # Validate IAM user has needed permissions to use the command
-        halt.assert_empty(chosen_cmd.blocked_actions(kwargs))
+        halt.assert_empty(chosen_cmd.blocked_actions(cmd_args))
         # Use the command
-        chosen_cmd.main(kwargs)
+        return chosen_cmd.main(cmd_args)
     except SystemExit:
         return False
-    return True
 
 
-def argv_to_kwargs(args, commands):
+def argv_to_cmd_args(args, commands):
     """ínitialize ec2mc's argparse and its help
 
     Returns:

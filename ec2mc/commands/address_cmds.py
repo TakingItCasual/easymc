@@ -6,20 +6,17 @@ from ec2mc.commands.address_sub import associate_cmd
 from ec2mc.commands.address_sub import disassociate_cmd
 from ec2mc.commands.address_sub import release_cmd
 
-# TODO: Command to move address from one region to another
+# TODO: Add command to move address from one region to another
 class Address(ParentCommand):
 
-    def __init__(self):
-        super().__init__()
-        self.sub_commands = [
-            list_cmd.ListAddresses(),
-            request_cmd.RequestAddress(),
-            #associate_cmd.AssociateAddress(),
-            #disassociate_cmd.DisassociateAddress(),
-            release_cmd.ReleaseAddress()
-        ]
+    sub_commands = [
+        list_cmd.ListAddresses,
+        request_cmd.RequestAddress,
+        associate_cmd.AssociateAddress,
+        disassociate_cmd.DisassociateAddress,
+        release_cmd.ReleaseAddress
+    ]
 
-
-    def main(self, kwargs):
+    def main(self, cmd_args):
         """commands to manage elastic IP addresses for instances"""
-        super().main(kwargs)
+        super().main(cmd_args)

@@ -12,7 +12,7 @@ from ec2mc.validate import validate_perms
 
 class CreateUser(CommandBase):
 
-    def main(self, kwargs):
+    def main(self, cmd_args):
         """create a new IAM user under an IAM group on AWS"""
         iam_client = aws.iam_client()
         path_prefix = f"/{consts.NAMESPACE}/"
@@ -21,30 +21,30 @@ class CreateUser(CommandBase):
         iam_groups = iam_client.list_groups(PathPrefix=path_prefix)['Groups']
         for iam_group in iam_groups:
             if (iam_group['Path'] == path_prefix and
-                    iam_group['GroupName'] == kwargs['group']):
+                    iam_group['GroupName'] == cmd_args['group']):
                 break
         else:
-            halt.err(f"IAM group {kwargs['group']} not found from AWS.")
+            halt.err(f"IAM group {cmd_args['group']} not found from AWS.")
 
         # IAM user created and added to group (given the name is unique)
         try:
             iam_client.create_user(
-                Path=path_prefix, UserName=kwargs['name'])
+                Path=path_prefix, UserName=cmd_args['name'])
         except ClientError as e:
             if e.response['Error']['Code'] == "EntityAlreadyExists":
-                halt.err(f"IAM user \"{kwargs['name']}\" already exists.")
+                halt.err(f"IAM user \"{cmd_args['name']}\" already exists.")
             halt.err(str(e))
         iam_client.add_user_to_group(
-            GroupName=kwargs['group'],
-            UserName=kwargs['name']
+            GroupName=cmd_args['group'],
+            UserName=cmd_args['name']
         )
 
         print("")
-        print(f"IAM user \"{kwargs['name']}\" created on AWS.")
+        print(f"IAM user \"{cmd_args['name']}\" created on AWS.")
 
         # IAM user access key generated and saved to dictionary
         new_access_key = iam_client.create_access_key(
-            UserName=kwargs['name'])['AccessKey']
+            UserName=cmd_args['name'])['AccessKey']
         new_access_key = {
             'id': new_access_key['AccessKeyId'],
             'secret': new_access_key['SecretAccessKey']
@@ -55,7 +55,7 @@ class CreateUser(CommandBase):
         if 'backup_access_keys' not in config_dict:
             config_dict['backup_access_keys'] = []
 
-        if kwargs['default']:
+        if cmd_args['default']:
             # Modify existing config instead of creating new one
             config_dict['backup_access_keys'].append(config_dict['access_key'])
             config_dict['access_key'] = new_access_key
@@ -67,7 +67,7 @@ class CreateUser(CommandBase):
             os2.save_json(config_dict, consts.CONFIG_JSON)
 
             self.create_configuration_zip(
-                new_access_key, kwargs['ssh_key'], kwargs['name'])
+                new_access_key, cmd_args['ssh_key'], cmd_args['name'])
             print("  User's zipped configuration created in config.")
 
 

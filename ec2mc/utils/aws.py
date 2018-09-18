@@ -34,7 +34,7 @@ def iam_client():
 
 
 def get_region_vpc(region):
-    """get VPC from region with name of aws_setup's Namespace
+    """get VPC from region with name of aws_setup's namespace
 
     Requires ec2:DescribeVpcs permission.
     """

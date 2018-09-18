@@ -13,30 +13,27 @@ from ec2mc.commands.aws_setup_sub import ssh_key_pairs
 
 class AWSSetup(CommandBase):
 
-    def __init__(self):
-        super().__init__()
-        self.aws_components = [
-            iam_policies.IAMPolicySetup(),
-            iam_groups.IAMGroupSetup(),
-            vpcs.VPCSetup(),
-            ssh_key_pairs.SSHKeyPairSetup()
-        ]
+    aws_components = [
+        iam_policies.IAMPolicySetup(),
+        iam_groups.IAMGroupSetup(),
+        vpcs.VPCSetup(),
+        ssh_key_pairs.SSHKeyPairSetup()
+    ]
 
-
-    def main(self, kwargs):
+    def main(self, cmd_args):
         """manage AWS account setup with ~/.ec2mc/aws_setup/
 
         Args:
-            kwargs (dict): See add_documentation method.
+            cmd_args (dict): See add_documentation method.
         """
-        if kwargs['action'] == "delete":
+        if cmd_args['action'] == "delete":
             path_prefix = f"/{consts.NAMESPACE}/"
             if not self.namespace_groups_empty(path_prefix):
-                halt.err("IAM User(s) attached to Namespace IAM group(s).")
+                halt.err("IAM User(s) attached to namespace IAM group(s).")
             if not self.namespace_policies_empty(path_prefix):
-                halt.err("IAM User(s) attached to Namespace IAM policy(s).")
+                halt.err("IAM User(s) attached to namespace IAM policy(s).")
             if not self.namespace_vpcs_empty():
-                halt.err("EC2 instance(s) found under Namespace VPC(s).")
+                halt.err("EC2 instance(s) found under namespace VPC(s).")
 
         # AWS setup JSON config dictionary
         config_aws_setup = os2.parse_json(consts.AWS_SETUP_JSON)
@@ -44,17 +41,17 @@ class AWSSetup(CommandBase):
         for component in self.aws_components:
             component_info = component.check_component(config_aws_setup)
             print("")
-            if kwargs['action'] == "check":
+            if cmd_args['action'] == "check":
                 component.notify_state(component_info)
-            elif kwargs['action'] == "upload":
+            elif cmd_args['action'] == "upload":
                 component.upload_component(component_info)
-            elif kwargs['action'] == "delete":
+            elif cmd_args['action'] == "delete":
                 component.delete_component()
 
 
     @staticmethod
     def namespace_groups_empty(path_prefix):
-        """return False if any users attached to Namespace groups"""
+        """return False if any users attached to namespace groups"""
         iam_client = aws.iam_client()
         aws_groups = iam_client.list_groups(PathPrefix=path_prefix)['Groups']
         for aws_group in aws_groups:
@@ -65,7 +62,7 @@ class AWSSetup(CommandBase):
 
     @staticmethod
     def namespace_policies_empty(path_prefix):
-        """return False if any users attached to Namespace policies"""
+        """return False if any users attached to namespace policies"""
         iam_client = aws.iam_client()
         aws_policies = iam_client.list_policies(
             Scope="Local",
@@ -83,7 +80,7 @@ class AWSSetup(CommandBase):
 
     @classmethod
     def namespace_vpcs_empty(cls):
-        """return False if any instances within Namespace VPCs found"""
+        """return False if any instances within namespace VPCs found"""
         threader = Threader()
         for region in consts.REGIONS:
             threader.add_thread(cls.region_vpc_empty, (region,))
@@ -94,7 +91,7 @@ class AWSSetup(CommandBase):
 
     @staticmethod
     def region_vpc_empty(region):
-        """return False if any instances found in region's Namespace VPC"""
+        """return False if any instances found in region's namespace VPC"""
         ec2_client = aws.ec2_client(region)
         namespace_vpc = aws.get_region_vpc(region)
         if namespace_vpc is not None:
@@ -117,12 +114,12 @@ class AWSSetup(CommandBase):
         actions.add_parser(
             "upload", help="configure AWS with ~/.ec2mc/aws_setup/")
         actions.add_parser(
-            "delete", help="delete Namespace configuration from AWS")
+            "delete", help="delete namespace configuration from AWS")
 
 
-    def blocked_actions(self, kwargs):
+    def blocked_actions(self, cmd_args):
         denied_actions = []
-        if kwargs['action'] == "delete":
+        if cmd_args['action'] == "delete":
             denied_actions.extend(validate_perms.blocked(actions=[
                 "iam:ListGroups",
                 "iam:GetGroup",
@@ -132,5 +129,6 @@ class AWSSetup(CommandBase):
                 "ec2:DescribeInstances"
             ]))
         for component in self.aws_components:
-            denied_actions.extend(component.blocked_actions(kwargs['action']))
+            denied_actions.extend(
+                component.blocked_actions(cmd_args['action']))
         return denied_actions

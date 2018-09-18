@@ -3,7 +3,7 @@ from ec2mc.utils import aws
 from ec2mc.utils import halt
 from ec2mc.utils.threader import Threader
 
-def main(kwargs, *, single_instance=False):
+def main(cmd_args, *, single_instance=False):
     """wrapper for probe_regions which prints found instances to the CLI
 
     Requires ec2:DescribeInstances permission.
@@ -11,12 +11,12 @@ def main(kwargs, *, single_instance=False):
     Halts if no instances found. This functionality is relied upon.
 
     Args:
-        kwargs (dict): See argparse_args function.
+        cmd_args (dict): See argparse_args function.
         single_instance (bool): Halt if multiple instances are found.
 
     Returns: See what probe_regions returns.
     """
-    regions, tag_filter = parse_filters(kwargs)
+    regions, tag_filter = parse_filters(cmd_args)
 
     print("")
     print(f"Probing {len(regions)} AWS region(s) for instances...")
@@ -24,7 +24,7 @@ def main(kwargs, *, single_instance=False):
     all_instances = probe_regions(regions, tag_filter)
 
     if not all_instances:
-        halt.err("No Namespace instances found.")
+        halt.err("No namespace instances found.")
 
     for region in regions:
         instances = [instance for instance in all_instances
@@ -46,7 +46,7 @@ def main(kwargs, *, single_instance=False):
     return all_instances
 
 
-def probe_regions(regions, tag_filter=None):
+def probe_regions(regions=None, tag_filter=None):
     """probe AWS region(s) for instances, and return dict(s) of instance(s)
 
     Requires ec2:DescribeInstances permission.
@@ -55,13 +55,22 @@ def probe_regions(regions, tag_filter=None):
 
     Args:
         regions (list[str]): AWS region(s) to probe.
-        tag_filter (list[dict]): Passed to probe_region function.
+        tag_filter (list[dict]): Tag filter to filter instances with.
 
     Returns:
         list[dict]: Found instance(s).
             'region' (str): AWS region that an instance is in.
             For other key-value pairs, see what probe_region returns.
     """
+    if regions is None:
+        regions = consts.REGIONS
+    if tag_filter is None:
+        tag_filter = []
+    tag_filter.append({
+        'Name': "tag:Namespace",
+        'Values': [consts.NAMESPACE]
+    })
+
     threader = Threader()
     for region in regions:
         threader.add_thread(probe_region, (region, tag_filter))
@@ -72,7 +81,7 @@ def probe_regions(regions, tag_filter=None):
         for instance in instances]
 
 
-def probe_region(region, tag_filter=None):
+def probe_region(region, tag_filter):
     """probe single AWS region for non-terminated named instances
 
     Requires ec2:DescribeInstances permission.
@@ -88,9 +97,6 @@ def probe_region(region, tag_filter=None):
             'name' (str): Tag value for instance tag key "Name".
             'tags' (dict): Instance tag key-value pair(s).
     """
-    if tag_filter is None:
-        tag_filter = []
-
     reservations = aws.ec2_client(region).describe_instances(
         Filters=tag_filter)['Reservations']
 
@@ -114,11 +120,11 @@ def probe_region(region, tag_filter=None):
     return sorted(region_instances, key=lambda k: k['name'])
 
 
-def parse_filters(kwargs):
+def parse_filters(cmd_args):
     """parses region and tag filters
 
     Args:
-        kwargs (dict): See main's arguments.
+        cmd_args (dict): See main's arguments.
 
     Returns:
         tuple:
@@ -126,21 +132,18 @@ def parse_filters(kwargs):
             list[dict]: Filter to pass to EC2 client's describe_instances.
     """
     regions = consts.REGIONS
-    if kwargs['region_filter'] is not None:
-        region_filter = set(kwargs['region_filter'])
+    if cmd_args['region_filter'] is not None:
+        region_filter = set(cmd_args['region_filter'])
         # Validate region filter
         if not region_filter.issubset(set(regions)):
             halt.err("Following region(s) not in region whitelist:",
                 *(region_filter - set(regions)))
         regions = tuple(region_filter)
 
-    tag_filter = [{
-        'Name': "tag:Namespace",
-        'Values': [consts.NAMESPACE]
-    }]
-    if kwargs['tag_filters']:
+    tag_filter = []
+    if cmd_args['tag_filters']:
         # Convert dict(s) list to what describe_instances' Filters expects.
-        for filter_elements in kwargs['tag_filters']:
+        for filter_elements in cmd_args['tag_filters']:
             # Filter instances based on tag key-value(s).
             if len(filter_elements) > 1:
                 tag_filter.append({
@@ -153,15 +156,15 @@ def parse_filters(kwargs):
                     'Name': "tag-key",
                     'Values': [filter_elements[0]]
                 })
-    if kwargs['name_filter']:
+    if cmd_args['name_filter']:
         tag_filter.append({
             'Name': "tag:Name",
-            'Values': kwargs['name_filter']
+            'Values': cmd_args['name_filter']
         })
-    if kwargs['id_filter']:
+    if cmd_args['id_filter']:
         tag_filter.append({
             'Name': "instance-id",
-            'Values': kwargs['id_filter']
+            'Values': cmd_args['id_filter']
         })
 
     return (regions, tag_filter)

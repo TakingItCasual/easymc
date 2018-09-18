@@ -12,7 +12,7 @@ def main():
     # If config directory doesn't already exist, create it.
     consts.CONFIG_DIR.mkdir(exist_ok=True)
 
-    # Retrieve the configuration. Halt if it doesn't exist.
+    # Retrieve config/credentials file. Halt if neither exist.
     if not consts.CONFIG_JSON.is_file():
         credentials_csv = consts.CONFIG_DIR/"accessKeys.csv"
         if not credentials_csv.is_file():
@@ -118,11 +118,9 @@ def create_config_from_credentials_csv(file_path):
     """create JSON config file from IAM user's accessKeys.csv file"""
     with file_path.open(encoding="utf-8") as csv_file:
         iam_user_access_key = csv_file.readlines()[1].strip().split(",")
-    config_dict = {
-        'access_key': {
-            'id': iam_user_access_key[0],
-            'secret': iam_user_access_key[1]
-        }
-    }
+    config_dict = {'access_key': {
+        'id': iam_user_access_key[0],
+        'secret': iam_user_access_key[1]
+    }}
     os2.save_json(config_dict, consts.CONFIG_JSON)
     consts.CONFIG_JSON.chmod(consts.CONFIG_PERMS)

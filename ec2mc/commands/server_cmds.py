@@ -6,15 +6,12 @@ from ec2mc.commands.server_sub import ssh_cmd
 
 class Server(ParentCommand):
 
-    def __init__(self):
-        super().__init__()
-        self.sub_commands = [
-            create_cmd.CreateServer(),
-            delete_cmd.DeleteServer(),
-            ssh_cmd.SSHServer()
-        ]
+    sub_commands = [
+        create_cmd.CreateServer,
+        delete_cmd.DeleteServer,
+        ssh_cmd.SSHServer
+    ]
 
-
-    def main(self, kwargs):
+    def main(self, cmd_args):
         """commands to interact with a single instance"""
-        super().main(kwargs)
+        super().main(cmd_args)

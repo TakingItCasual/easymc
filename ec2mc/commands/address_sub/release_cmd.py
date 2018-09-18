@@ -6,34 +6,31 @@ from ec2mc.validate import validate_perms
 
 class ReleaseAddress(CommandBase):
 
-    def main(self, kwargs):
-        """release elastic IP address (give up ownership)
+    def main(self, cmd_args):
+        """release elastic IP address (give up possession)
 
         Args:
-            kwargs (dict): See add_documentation method.
+            cmd_args (dict): See add_documentation method.
         """
-        addresses = find_addresses.probe_regions()
-        try:
-            address = next(address for address in addresses
-                if address['ip'] == kwargs['ip'])
-        except StopIteration:
-            halt.err("You do not possess the specified elastic IP address.")
-
+        address = find_addresses.main(cmd_args['ip'])
         ec2_client = aws.ec2_client(address['region'])
 
-        if 'association_id' in address and kwargs['force'] is False:
-            halt.err("Elastic IP address is currently in use.",
-                "Append the -f argument to force disassociation.")
+        if 'association_id' in address and cmd_args['force'] is False:
+            halt.err(f"Elastic IP address {address['ip']} currently in use.",
+                "  Append the -f argument to force disassociation.")
 
         print("")
         if 'association_id' in address:
             ec2_client.disassociate_address(
                 AssociationId=address['association_id'])
-            print(f"Elastic IP address {address['ip']} disassociated.")
-
         ec2_client.release_address(
             AllocationId=address['allocation_id'])
-        print(f"Elastic IP address {address['ip']} released.")
+
+        if 'association_id' in address:
+            print(f"Elastic IP address {address['ip']} "
+                "disassociated and released.")
+        else:
+            print(f"Elastic IP address {address['ip']} released.")
 
 
     @classmethod
@@ -46,11 +43,12 @@ class ReleaseAddress(CommandBase):
             help="disassociate address if it is in use")
 
 
-    def blocked_actions(self, kwargs):
+    def blocked_actions(self, cmd_args):
         needed_actions = [
+            "ec2:DescribeInstances",
             "ec2:DescribeAddresses",
             "ec2:ReleaseAddress"
         ]
-        if kwargs['force'] is True:
+        if cmd_args['force'] is True:
             needed_actions.append("ec2:DisassociateAddress")
         return validate_perms.blocked(actions=needed_actions)

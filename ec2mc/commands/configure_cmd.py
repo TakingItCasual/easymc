@@ -7,7 +7,7 @@ from ec2mc.validate import validate_perms
 
 class Configure(CommandBase):
 
-    def main(self, kwargs):
+    def main(self, cmd_args):
         """configure, for example, the default IAM user access key"""
         # validate_config:main normally does this, but it wasn't called.
         consts.CONFIG_DIR.mkdir(exist_ok=True)
@@ -18,18 +18,18 @@ class Configure(CommandBase):
             config_dict = os2.parse_json(consts.CONFIG_JSON)
             os2.validate_dict(config_dict, schema, "config.json")
 
-        if kwargs['action'] == "access_key":
+        if cmd_args['action'] == "access_key":
             config_dict = self.set_access_key(
-                config_dict, kwargs['key_id'], kwargs['key_secret'])
-        elif kwargs['action'] == "swap_key":
+                config_dict, cmd_args['key_id'], cmd_args['key_secret'])
+        elif cmd_args['action'] == "swap_key":
             config_dict = self.switch_access_key(
-                config_dict, kwargs['user_name'])
-        elif kwargs['action'] == "whitelist":
-            config_dict['region_whitelist'] = list(set(kwargs['regions']))
+                config_dict, cmd_args['user_name'])
+        elif cmd_args['action'] == "whitelist":
+            config_dict['region_whitelist'] = list(set(cmd_args['regions']))
             print("Region whitelist set.")
-        elif kwargs['action'] == "use_handler":
-            config_dict['use_handler'] = kwargs['boolean']
-            print(f"IP handler usage set to {str(kwargs['boolean']).lower()}.")
+        elif cmd_args['action'] == "use_handler":
+            config_dict['use_handler'] = cmd_args['boolean']
+            print(f"IP handler usage set to {str(cmd_args['boolean'])}.")
 
         if config_dict:
             os2.save_json(config_dict, consts.CONFIG_JSON)
@@ -102,7 +102,7 @@ class Configure(CommandBase):
             help="do not use the handler")
 
 
-    def blocked_actions(self, kwargs):
-        if kwargs['action'] == "swap_key":
+    def blocked_actions(self, cmd_args):
+        if cmd_args['action'] == "swap_key":
             return validate_perms.blocked(actions=["iam:GetAccessKeyLastUsed"])
         return []

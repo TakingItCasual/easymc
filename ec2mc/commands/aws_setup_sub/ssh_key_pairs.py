@@ -8,10 +8,10 @@ from ec2mc.utils.threader import Threader
 class SSHKeyPairSetup(ComponentSetup):
 
     def check_component(self, _):
-        """determine which regions need Namespace RSA key pairs created
+        """determine which regions need namespace RSA key pairs created
 
         Returns:
-            dict: Which regions Namespace EC2 key pair exists in.
+            dict: Which regions namespace EC2 key pair exists in.
                 Region name (str/None): Public key fingerprint, if pair exists.
         """
         self.pem_file = consts.RSA_KEY_PEM.name
@@ -44,7 +44,7 @@ class SSHKeyPairSetup(ComponentSetup):
 
 
     def upload_component(self, fingerprint_regions):
-        """create Namespace RSA key pairs in all AWS regions
+        """create namespace RSA key pairs in all AWS regions
 
         Args:
             fingerprint_regions (dict): See what check_component returns.
@@ -86,7 +86,7 @@ class SSHKeyPairSetup(ComponentSetup):
 
 
     def delete_component(self):
-        """remove Namespace RSA key pairs from all AWS regions"""
+        """remove namespace RSA key pairs from all AWS regions"""
         threader = Threader()
         for region in consts.REGIONS:
             threader.add_thread(self.delete_region_key_pair, (region,))
@@ -100,7 +100,7 @@ class SSHKeyPairSetup(ComponentSetup):
 
 
     def region_namespace_key_fingerprint(self, region):
-        """return key fingerprint if region has Namespace RSA key pair"""
+        """return key fingerprint if region has namespace RSA key pair"""
         key_pairs = aws.ec2_client(region).describe_key_pairs(Filters=[{
             'Name': "key-name",
             'Values': [self.key_pair_name]

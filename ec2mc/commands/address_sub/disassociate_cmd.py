@@ -1,3 +1,5 @@
+from botocore.exceptions import ClientError
+
 from ec2mc.utils import aws
 from ec2mc.utils import halt
 from ec2mc.utils.base_classes import CommandBase
@@ -6,20 +8,26 @@ from ec2mc.validate import validate_perms
 
 class DisassociateAddress(CommandBase):
 
-    def main(self, kwargs):
-        """disassociate elastic IP address from any association
+    def main(self, cmd_args):
+        """disassociate elastic IP address from its instance
 
         Args:
-            kwargs (dict): See add_documentation method.
+            cmd_args (dict): See add_documentation method.
         """
-        addresses = find_addresses.probe_regions()
-        try:
-            address = next(address for address in addresses
-                if address['ip'] == kwargs['ip'])
-        except StopIteration:
-            halt.err("You do not possess the specified elastic IP address.")
-
+        address = find_addresses.main(cmd_args['ip'])
         ec2_client = aws.ec2_client(address['region'])
+
+        if 'association_id' not in address:
+            halt.err("Elastic IP address not associated to anything.")
+
+        try:
+            ec2_client.disassociate_address(
+                AssociationId=address['association_id'])
+        except ClientError as e:
+            halt.err(str(e))
+
+        print("")
+        print("Elastic IP address disassociated.")
 
 
     @classmethod
@@ -29,5 +37,9 @@ class DisassociateAddress(CommandBase):
             "ip", help="IP of elastic IP address to disassociate")
 
 
-    def blocked_actions(self, kwargs):
-        return validate_perms.blocked(actions=["ec2:DescribeAddresses"])
+    def blocked_actions(self, _):
+        return validate_perms.blocked(actions=[
+            "ec2:DescribeInstances",
+            "ec2:DescribeAddresses",
+            "ec2:DisassociateAddress"
+        ])

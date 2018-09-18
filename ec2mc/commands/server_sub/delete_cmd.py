@@ -5,17 +5,17 @@ from ec2mc.validate import validate_perms
 
 class DeleteServer(CommandBase):
 
-    def main(self, kwargs):
+    def main(self, cmd_args):
         """terminate an EC2 instance, given its region, ID, and name
 
         Args:
-            kwargs (dict): See add_documentation method.
+            cmd_args (dict): See add_documentation method.
         """
-        self.ec2_client = aws.ec2_client(kwargs['region'])
+        self.ec2_client = aws.ec2_client(cmd_args['region'])
 
         reservations = self.ec2_client.describe_instances(Filters=[
-            {'Name': "instance-id", 'Values': [kwargs['id']]},
-            {'Name': "tag:Name", 'Values': [kwargs['name']]}
+            {'Name': "instance-id", 'Values': [cmd_args['id']]},
+            {'Name': "tag:Name", 'Values': [cmd_args['name']]}
         ])['Reservations']
         if not reservations:
             halt.err("No instances matching given parameters found.")
@@ -23,37 +23,37 @@ class DeleteServer(CommandBase):
         if instance_state in ("shutting-down", "terminated"):
             halt.err("Instance has already been terminated.")
 
-        elastic_ips = self.ec2_client.describe_addresses(Filters=[{
+        addresses = self.ec2_client.describe_addresses(Filters=[{
             'Name': "instance-id",
-            'Values': [kwargs['id']]
+            'Values': [cmd_args['id']]
         }])['Addresses']
         print("")
-        if elastic_ips:
-            self.disassociate_addresses(elastic_ips, kwargs['save_ip'])
-        elif kwargs['save_ip'] is True:
+        if addresses:
+            self.disassociate_addresses(addresses, cmd_args['save_ip'])
+        elif cmd_args['save_ip'] is True:
             print("No elastic IPs associated with instance.")
 
-        self.ec2_client.terminate_instances(InstanceIds=[kwargs['id']])
+        self.ec2_client.terminate_instances(InstanceIds=[cmd_args['id']])
         print("Instance termination process started.")
 
 
-    def disassociate_addresses(self, elastic_ips, preserve_ips):
+    def disassociate_addresses(self, addresses, preserve_ips):
         """disassociate (and release) elastic IP(s) associated with instance"""
         needed_actions = ["ec2:DisassociateAddress"]
         if preserve_ips is False:
             needed_actions.append("ec2:ReleaseAddress")
         halt.assert_empty(validate_perms.blocked(actions=needed_actions))
 
-        for elastic_ip in elastic_ips:
+        for address in addresses:
             self.ec2_client.disassociate_address(
-                AssociationId=elastic_ip['AssociationId'])
+                AssociationId=address['AssociationId'])
             if preserve_ips is False:
                 self.ec2_client.release_address(
-                    AllocationId=elastic_ip['AllocationId'])
-                print(f"Elastic IP {elastic_ip['PublicIp']} "
+                    AllocationId=address['AllocationId'])
+                print(f"Elastic IP {address['PublicIp']} "
                     "disassociated and released.")
             else:
-                print(f"Elastic IP {elastic_ip['PublicIp']} "
+                print(f"Elastic IP {address['PublicIp']} "
                     "disassociated but preserved.")
 
 

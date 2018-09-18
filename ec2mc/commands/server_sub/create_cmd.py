@@ -8,36 +8,38 @@ from ec2mc.utils import halt
 from ec2mc.utils import os2
 from ec2mc.utils import pem
 from ec2mc.utils.base_classes import CommandBase
+from ec2mc.utils.find import find_addresses
 from ec2mc.utils.find import find_instances
 from ec2mc.validate import validate_perms
 
 # TODO: Consider allowing elastic IP address reassociation
 class CreateServer(CommandBase):
 
-    def main(self, kwargs):
+    def main(self, cmd_args):
         """create and initialize a new EC2 instance
 
         Args:
-            kwargs (dict): See add_documentation method.
+            cmd_args (dict): See add_documentation method.
         """
         template_yaml_files = os2.list_dir_files(consts.USER_DATA_DIR)
-        if f"{kwargs['template']}.yaml" not in template_yaml_files:
-            halt.err(f"Template {kwargs['template']} not found from config.")
+        if f"{cmd_args['template']}.yaml" not in template_yaml_files:
+            halt.err(f"Template {cmd_args['template']} not found from config.")
 
-        self.ec2_client = aws.ec2_client(kwargs['region'])
+        self.ec2_client = aws.ec2_client(cmd_args['region'])
 
-        self.validate_name_is_unique(kwargs['name'])
+        self.validate_name_is_unique(cmd_args['name'])
 
         inst_template = os2.parse_yaml(consts.USER_DATA_DIR/
-            f"{kwargs['template']}.yaml")['ec2mc_template_info']
+            f"{cmd_args['template']}.yaml")['ec2mc_template_info']
 
         self.validate_type_and_size_allowed(
             inst_template['instance_type'], inst_template['volume_size'])
-        if kwargs['use_ip'] is not None:
-            self.validate_address_available(kwargs['use_ip'])
+        if cmd_args['use_ip'] is not None:
+            address = self.validate_address(
+                cmd_args['use_ip'], cmd_args['region'], cmd_args['force'])
 
-        creation_kwargs = self.parse_run_instance_args(kwargs, inst_template)
-        user_data = self.process_user_data(kwargs['template'], inst_template)
+        creation_kwargs = self.parse_run_instance_args(cmd_args, inst_template)
+        user_data = self.process_user_data(cmd_args['template'], inst_template)
 
         # Instance creation dry run to validate template and IAM permissions
         try:
@@ -47,7 +49,7 @@ class CreateServer(CommandBase):
                 halt.err(str(e))
 
         print("")
-        if kwargs['confirm'] is False:
+        if cmd_args['confirm'] is False:
             print("IAM permissions and instance template validated.")
             print("Append the -c argument to confirm instance creation.")
         else:
@@ -57,21 +59,20 @@ class CreateServer(CommandBase):
             if consts.USE_HANDLER is True:
                 print("  Utilize IP handler with \"ec2mc servers check\".")
 
-            if kwargs['elastic_ip'] is True:
+            if cmd_args['elastic_ip'] is True:
                 self.create_elastic_ip(
-                    kwargs['region'], instance['InstanceId'])
+                    cmd_args['region'], instance['InstanceId'])
                 print("New elastic IP associated with created instance.")
-            elif kwargs['use_ip'] is not None:
-                self.reuse_elastic_ip(
-                    instance['InstanceId'], kwargs['use_ip'])
+            elif cmd_args['use_ip'] is not None:
+                self.reuse_elastic_ip(address, instance['InstanceId'])
                 print("Existing elastic IP associated with created instance.")
 
 
-    def parse_run_instance_args(self, kwargs, instance_template):
-        """parse arguments for run_instances from argparse kwargs and template
+    def parse_run_instance_args(self, cmd_args, instance_template):
+        """parse arguments for run_instances from argparse args and template
 
         Args:
-            kwargs (dict):
+            cmd_args (dict):
                 'region' (str): AWS region to create instance in.
                 'name' (str): Tag value for instance tag key "Name".
                 'tags' (list): Additional instance tag key-value pair(s).
@@ -95,7 +96,7 @@ class CreateServer(CommandBase):
                 'subnet_id' (str): ID of VPC subnet to assign to instance.
                 'key_name' (str): Name of EC2 key pair to assign (for SSH).
         """
-        region = kwargs['region']
+        region = cmd_args['region']
         creation_kwargs = {}
 
         creation_kwargs.update({
@@ -121,7 +122,7 @@ class CreateServer(CommandBase):
         vpc_id = vpc_info['VpcId']
 
         creation_kwargs.update({
-            'tags': self.parse_tags(kwargs, instance_template),
+            'tags': self.parse_tags(cmd_args, instance_template),
             'key_name': self.validate_ec2_key_pair(),
             'sg_ids': self.template_security_groups(
                 region, vpc_id, instance_template['security_groups']),
@@ -228,13 +229,12 @@ class CreateServer(CommandBase):
         self.associate_elastic_ip(instance_id, allocation_id)
 
 
-    def reuse_elastic_ip(self, instance_id, elastic_ip):
+    def reuse_elastic_ip(self, address, instance_id):
         """associate already owned unassociated elastic IP to instance"""
-        allocation_id = self.ec2_client.describe_addresses(
-            Filters=[{'Name': "domain", 'Values': ["vpc"]}],
-            PublicIps=[elastic_ip]
-        )['Addresses'][0]['AllocationId']
-        self.associate_elastic_ip(instance_id, allocation_id)
+        if 'association_id' in address:
+            self.ec2_client.disassociate_address(
+                AssociationId=address['association_id'])
+        self.associate_elastic_ip(instance_id, address['allocation_id'])
 
 
     def associate_elastic_ip(self, instance_id, allocation_id):
@@ -268,36 +268,34 @@ class CreateServer(CommandBase):
             halt.err(f"Volume size {volume_size}GiB is too large.")
 
 
-    def validate_address_available(self, elastic_ip):
-        """validate elastic IP address is owned and not attached to anything"""
-        addresses = self.ec2_client.describe_addresses(Filters=[
-            {'Name': "domain", 'Values': ["vpc"]}
-        ])['Addresses']
-        for address in addresses:
-            if address['PublicIp'] == elastic_ip:
-                if 'AssociationId' in address:
-                    halt.err(f"Elastic IP {elastic_ip} currently in use.")
-                break
-        else:
-            halt.err(f"Elastic IP {elastic_ip} not owned by AWS account.")
+    @staticmethod
+    def validate_address(elastic_ip, region, force_disassociation):
+        """validate elastic IP address exists and is available"""
+        address = find_addresses.main(elastic_ip)
+        if 'association_id' in address and force_disassociation is False:
+            halt.err(f"Elastic IP address {elastic_ip} currently in use.",
+                "  Append the -f argument to force disassociation.")
+        if region is not None and region != address['region']:
+            halt.err(f"Elastic IP address is not in the {region} region.")
+        return address
 
 
     @staticmethod
     def validate_name_is_unique(instance_name):
         """validate desired instance name isn't in use by another instance"""
-        all_instances = find_instances.probe_regions(consts.REGIONS)
+        all_instances = find_instances.probe_regions()
         instance_names = [instance['name'] for instance in all_instances]
         if instance_name in instance_names:
             halt.err(f"Instance name \"{instance_name}\" already in use.")
 
 
     @staticmethod
-    def parse_tags(kwargs, instance_template):
+    def parse_tags(cmd_args, instance_template):
         """handle tag parsing for parse_run_instance_args method"""
         instance_tags = [
             {
                 'Key': "Name",
-                'Value': kwargs['name']
+                'Value': cmd_args['name']
             },
             {
                 'Key': "Namespace",
@@ -308,8 +306,8 @@ class CreateServer(CommandBase):
                 'Value': instance_template['AMI_info']['default_user']
             }
         ]
-        if kwargs['tags']:
-            for tag_key, tag_value in kwargs['tags']:
+        if cmd_args['tags']:
+            for tag_key, tag_value in cmd_args['tags']:
                 instance_tags.append({
                     'Key': tag_key,
                     'Value': tag_value
@@ -378,11 +376,14 @@ class CreateServer(CommandBase):
             help="create new elastic IP and associate to instance")
         cmd_group.add_argument(
             "--use_ip", metavar="",
-            help="owned elastic IP address to associate to instance")
+            help="possessed elastic IP address to associate to instance")
+        cmd_parser.add_argument(
+            "-f", "--force", action="store_true",
+            help="disassociate possessed elastic IP address if it is in use")
 
 
-    def blocked_actions(self, kwargs):
-        denied_actions = validate_perms.blocked(actions=[
+    def blocked_actions(self, cmd_args):
+        needed_actions = [
             "ec2:DescribeInstances",
             "ec2:DescribeVpcs",
             "ec2:DescribeSubnets",
@@ -390,20 +391,24 @@ class CreateServer(CommandBase):
             "ec2:DescribeKeyPairs",
             "ec2:DescribeImages",
             "ec2:CreateTags"
-        ])
+        ]
+        if cmd_args['elastic_ip'] is True:
+            needed_actions.extend([
+                "ec2:AllocateAddress",
+                "ec2:AssociateAddress"
+            ])
+        elif cmd_args['use_ip'] is not None:
+            needed_actions.extend([
+                "ec2:DescribeAddresses",
+                "ec2:AssociateAddress"
+            ])
+            if cmd_args['force'] is True:
+                needed_actions.append("ec2:DisassociateAddress")
+
+        denied_actions = validate_perms.blocked(actions=needed_actions)
         denied_actions.extend(validate_perms.blocked(
             actions=["ec2:RunInstances"],
             resources=["arn:aws:ec2:*:*:instance/*"],
             context={'ec2:InstanceType': ["t2.nano"]}
         ))
-        if kwargs['elastic_ip'] is True:
-            denied_actions.extend(validate_perms.blocked(actions=[
-                "ec2:AllocateAddress",
-                "ec2:AssociateAddress"
-            ]))
-        elif kwargs['use_ip'] is not None:
-            denied_actions.extend(validate_perms.blocked(actions=[
-                "ec2:DescribeAddresses",
-                "ec2:AssociateAddress"
-            ]))
         return denied_actions

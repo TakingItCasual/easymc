@@ -13,7 +13,7 @@ CONFIG_DIR = Path().home()/".ec2mc"
 # JSON file path for script user's configuration.
 CONFIG_JSON = CONFIG_DIR/"config.json"
 # PEM/PPK files containing RSA private key for SSHing into instances.
-# Set in ec2mc.validate.validate_setup:main (Namespace used as file name)
+# Set in ec2mc.validate.validate_setup:main (namespace used as file name)
 RSA_KEY_PEM = None
 RSA_KEY_PPK = None
 

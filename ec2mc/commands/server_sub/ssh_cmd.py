@@ -10,7 +10,7 @@ from ec2mc.validate import validate_perms
 
 class SSHServer(CommandBase):
 
-    def main(self, kwargs):
+    def main(self, cmd_args):
         """SSH into an EC2 instance using its .pem/.ppk private key
 
         Attempts to open an interactive SSH session using either OpenSSH
@@ -19,9 +19,9 @@ class SSHServer(CommandBase):
         is printed, for if an alternative SSH method is desired.
 
         Args:
-            kwargs (dict): See utils.find.find_instances:argparse_args
+            cmd_args (dict): See utils.find.find_instances:argparse_args
         """
-        instance = find_instances.main(kwargs, single_instance=True)
+        instance = find_instances.main(cmd_args, single_instance=True)
         instance_state, instance_ip = find_instances.get_state_and_ip(
             instance['region'], instance['id'])
 

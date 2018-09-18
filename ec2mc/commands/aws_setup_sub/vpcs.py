@@ -17,7 +17,7 @@ class VPCSetup(ComponentSetup):
 
         Returns:
             tuple:
-                dict: Which regions Namespace VPC exists in.
+                dict: Which regions namespace VPC exists in.
                     'ToCreate' (list): AWS region(s) to create VPC in.
                     'Existing' (list): AWS region(s) already containing VPC.
                 dict: VPC security group status(es) for each region.
@@ -195,7 +195,7 @@ class VPCSetup(ComponentSetup):
 
     @classmethod
     def delete_region_vpc(cls, region):
-        """delete VPC from AWS region with correct Namespace tag"""
+        """delete VPC from AWS region with correct namespace tag"""
         region_vpc = aws.get_region_vpc(region)
         if region_vpc is not None:
             cls.delete_vpc_sgs(region, region_vpc['VpcId'])
@@ -247,7 +247,7 @@ class VPCSetup(ComponentSetup):
                 InternetGatewayId=gateway['InternetGatewayId'],
                 VpcId=vpc_id
             )
-            # Only delete gateway if attached solely to Namespace VPC
+            # Only delete gateway if attached solely to namespace VPC
             if len(gateway['Attachments']) == 1:
                 ec2_client.delete_internet_gateway(
                     InternetGatewayId=gateway['InternetGatewayId'])
@@ -376,7 +376,8 @@ class VPCSetup(ComponentSetup):
             "ec2:AssociateRouteTable",
             "ec2:CreateSecurityGroup",
             "ec2:RevokeSecurityGroupIngress",
-            "ec2:AuthorizeSecurityGroupIngress"
+            "ec2:AuthorizeSecurityGroupIngress",
+            "ec2:CreateTags"
         ]
         self.delete_actions = [
             "ec2:DeleteSecurityGroup",

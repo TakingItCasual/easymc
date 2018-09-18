@@ -62,7 +62,7 @@ def pem_to_public_key(der_encoded=False):
 
 
 def local_key_fingerprint():
-    """get Namespace private key's public key's fingerprint in AWS's format"""
+    """get namespace private key's public key's fingerprint in AWS's format"""
     public_key_der_bytes = pem_to_public_key(der_encoded=True)
     md5_digest = hashlib.md5(public_key_der_bytes).hexdigest()
     return ":".join(a + b for a, b in zip(md5_digest[::2], md5_digest[1::2]))

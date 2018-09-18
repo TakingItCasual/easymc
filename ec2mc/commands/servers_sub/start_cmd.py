@@ -8,13 +8,13 @@ from ec2mc.validate import validate_perms
 
 class StartServers(CommandBase):
 
-    def main(self, kwargs):
+    def main(self, cmd_args):
         """start stopped instance(s)
 
         Args:
-            kwargs (dict): See utils.find.find_instances:argparse_args
+            cmd_args (dict): See utils.find.find_instances:argparse_args
         """
-        instances = find_instances.main(kwargs)
+        instances = find_instances.main(cmd_args)
 
         for instance in instances:
             print("")
