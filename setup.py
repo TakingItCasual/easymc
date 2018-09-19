@@ -1,13 +1,28 @@
-from pathlib import Path
+import os.path
+import sys
 from setuptools import setup
 from setuptools import find_packages
 
 from ec2mc import __version__
 
+CURRENT_PYTHON = sys.version_info[:2]
+REQUIRED_PYTHON = (3, 6)
+if CURRENT_PYTHON < REQUIRED_PYTHON:
+    sys.stderr.write("""
+==========================
+Unsupported Python version
+==========================
+
+This version of ec2mc requires Python {}.{}. You're using Python {}.{}.
+Install the required Python version and ensure it is in your PATH.
+""".format(*(REQUIRED_PYTHON + CURRENT_PYTHON)))
+    sys.exit(1)
+
 REPO_URL = "https://github.com/TakingItCasual/ec2mc"
 
-README_PATH = Path(__file__).parent/"README.rst"
-LONG_DESC = README_PATH.read_text(encoding="utf-8")
+README_PATH = os.path.join(os.path.dirname(__file__), "README.rst")
+with open(README_PATH, encoding="utf-8") as f:
+    LONG_DESC = f.read()
 
 # The OS restrictions are due to the cryptography package.
 setup(
@@ -18,7 +33,7 @@ setup(
     author="TakingItCasual",
     author_email="takingitcasual+gh@gmail.com",
     url=REPO_URL,
-    download_url=f"{REPO_URL}/archive/v{__version__}.tar.gz",
+    download_url="{0}/archive/v{1}.tar.gz".format(REPO_URL, __version__),
     license="MIT",
     classifiers=[
         "Development Status :: 3 - Alpha",

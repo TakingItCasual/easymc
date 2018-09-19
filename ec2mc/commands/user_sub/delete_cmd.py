@@ -43,21 +43,18 @@ class DeleteUser(CommandBase):
         """delete IAM user's access key(s)"""
         aws_access_keys = self.iam_client.list_access_keys(
             UserName=user_name)['AccessKeyMetadata']
-        for aws_access_key in aws_access_keys:
+        for access_key in aws_access_keys:
             self.iam_client.delete_access_key(
                 UserName=user_name,
-                AccessKeyId=aws_access_key['AccessKeyId']
+                AccessKeyId=access_key['AccessKeyId']
             )
 
             # Remove IAM user's backed up access key from config
             config_dict = os2.parse_json(consts.CONFIG_JSON)
-            if 'backup_access_keys' in config_dict:
-                config_dict['backup_access_keys'][:] = [
-                    access_key for access_key
-                    in config_dict['backup_access_keys']
-                    if access_key['id'] != aws_access_key['AccessKeyId']]
-                if not config_dict['backup_access_keys']:
-                    del config_dict['backup_access_keys']
+            if 'backup_keys' in config_dict:
+                config_dict['backup_keys'].pop(access_key['AccessKeyId'], None)
+                if not config_dict['backup_keys']:
+                    del config_dict['backup_keys']
                 os2.save_json(config_dict, consts.CONFIG_JSON)
 
 

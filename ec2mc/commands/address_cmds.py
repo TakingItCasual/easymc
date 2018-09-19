@@ -18,5 +18,5 @@ class Address(ParentCommand):
     ]
 
     def main(self, cmd_args):
-        """commands to manage elastic IP addresses for instances"""
+        """manage elastic IP addresses for instances"""
         super().main(cmd_args)

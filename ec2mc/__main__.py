@@ -75,7 +75,8 @@ def argv_to_cmd_args(args, commands):
     """
     parser = ProperIndentParser(description=__doc__)
     parser.add_argument("--version", action="version", version=__version__)
-    cmd_parser = parser.add_subparsers(metavar="<command>", dest="command")
+    cmd_parser = parser.add_subparsers(
+        title="commands", metavar="<command>", dest="command")
     cmd_parser.required = True
 
     for command in commands:

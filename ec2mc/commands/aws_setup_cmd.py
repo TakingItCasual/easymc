@@ -107,7 +107,8 @@ class AWSSetup(CommandBase):
     @classmethod
     def add_documentation(cls, argparse_obj):
         cmd_parser = super().add_documentation(argparse_obj)
-        actions = cmd_parser.add_subparsers(metavar="<action>", dest="action")
+        actions = cmd_parser.add_subparsers(
+            title="commands", metavar="<action>", dest="action")
         actions.required = True
         actions.add_parser(
             "check", help="check differences between local and AWS setup")

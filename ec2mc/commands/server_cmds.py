@@ -13,5 +13,5 @@ class Server(ParentCommand):
     ]
 
     def main(self, cmd_args):
-        """commands to interact with a single instance"""
+        """interact with a single instance"""
         super().main(cmd_args)

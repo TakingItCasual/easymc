@@ -49,15 +49,14 @@ def validate_user(config_dict):
     Args:
         config_dict (dict): Should contain config's IAM user access key.
             'access_key' (dict): IAM user's access key.
-                'id' (str): ID of access key ID.
-                'secret' (str): Secret access key.
+                Access key ID (str): Secret access key.
     """
     if 'access_key' not in config_dict:
         halt.err("IAM user access key not set.",
             "  Set with \"ec2mc configure access_key\".")
 
-    consts.KEY_ID = config_dict['access_key']['id']
-    consts.KEY_SECRET = config_dict['access_key']['secret']
+    consts.KEY_ID = next(iter(config_dict['access_key']))
+    consts.KEY_SECRET = config_dict['access_key'][consts.KEY_ID]
 
     # IAM User access key must be validated before validate_perms can be used.
     try:
@@ -117,10 +116,8 @@ def validate_region_whitelist(config_dict):
 def create_config_from_credentials_csv(file_path):
     """create JSON config file from IAM user's accessKeys.csv file"""
     with file_path.open(encoding="utf-8") as csv_file:
-        iam_user_access_key = csv_file.readlines()[1].strip().split(",")
-    config_dict = {'access_key': {
-        'id': iam_user_access_key[0],
-        'secret': iam_user_access_key[1]
-    }}
+        key_id_and_secret = csv_file.readlines()[1].strip().split(",")
+    config_dict = {'access_key': {key_id_and_secret[0]: key_id_and_secret[1]}}
+
     os2.save_json(config_dict, consts.CONFIG_JSON)
     consts.CONFIG_JSON.chmod(consts.CONFIG_PERMS)

@@ -43,26 +43,26 @@ class Configure(CommandBase):
             print("Existing access key overwritten.")
         else:
             print("Access key set.")
-        config_dict['access_key'] = {'id': key_id, 'secret': key_secret}
+        config_dict['access_key'] = {key_id: key_secret}
         return config_dict
 
 
     @staticmethod
     def switch_access_key(config_dict, user_name):
-        """set access key stored under backup_access_keys list as default"""
-        if 'backup_access_keys' not in config_dict:
+        """set access key stored in backup access keys list as default"""
+        if 'backup_keys' not in config_dict:
             halt.err("No backup access keys stored in config.")
 
-        for index, backup_key in enumerate(config_dict['backup_access_keys']):
+        for key_id, key_secret in config_dict['backup_keys'].items():
             # TODO: Validate access key is active
-            key_owner = aws.access_key_owner(backup_key['id'])
+            key_owner = aws.access_key_owner(key_id)
             if key_owner is None:
                 continue
             if key_owner.lower() == user_name.lower():
                 # Swap default access key with requested IAM user's in config
-                backup_key, config_dict['access_key'] = (
-                    config_dict['access_key'], backup_key)
-                config_dict['backup_access_keys'][index] = backup_key
+                config_dict['backup_keys'].update(config_dict['access_key'])
+                config_dict['access_key'] = {key_id: key_secret}
+                del config_dict['backup_keys'][key_id]
 
                 print(f"{key_owner}'s access key set as default in config.")
                 break
@@ -75,7 +75,8 @@ class Configure(CommandBase):
     @classmethod
     def add_documentation(cls, argparse_obj):
         cmd_parser = super().add_documentation(argparse_obj)
-        actions = cmd_parser.add_subparsers(metavar="<action>", dest="action")
+        actions = cmd_parser.add_subparsers(
+            title="commands", metavar="<action>", dest="action")
         actions.required = True
 
         access_key_parser = actions.add_parser(

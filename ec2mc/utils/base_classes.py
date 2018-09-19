@@ -48,6 +48,7 @@ class ParentCommand(CommandBase):
     sub_commands = []
 
     def __init__(self, cmd_args):
+        super().__init__(cmd_args)
         self.chosen_cmd = next(cmd(cmd_args) for cmd in self.sub_commands
             if cmd.cmd_name() == cmd_args['action'])
 
@@ -61,7 +62,8 @@ class ParentCommand(CommandBase):
     def add_documentation(cls, argparse_obj):
         """set up argparse for command and all of its subcommands"""
         cmd_parser = super().add_documentation(argparse_obj)
-        actions = cmd_parser.add_subparsers(metavar="<action>", dest="action")
+        actions = cmd_parser.add_subparsers(
+            title="commands", metavar="<action>", dest="action")
         actions.required = True
         for sub_command in cls.sub_commands:
             sub_command.add_documentation(actions)
@@ -74,6 +76,9 @@ class ParentCommand(CommandBase):
 
 class ComponentSetup(ABC):
     """base class for aws_setup component checking/uploading/deleting"""
+    describe_actions = []
+    upload_actions = []
+    delete_actions = []
 
     @abstractmethod
     def check_component(self, config_aws_setup):
@@ -103,7 +108,7 @@ class ComponentSetup(ABC):
     def blocked_actions(self, sub_command):
         """check whether IAM user is allowed to perform actions on component
 
-        Must be overridden by child classes in the following fashion:
+        Should be overridden by child classes in the following fashion:
             def blocked_actions(self, sub_command):
                 self.describe_actions = []
                 self.upload_actions = []

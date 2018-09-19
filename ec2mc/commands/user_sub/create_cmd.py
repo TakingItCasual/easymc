@@ -13,7 +13,7 @@ from ec2mc.validate import validate_perms
 class CreateUser(CommandBase):
 
     def main(self, cmd_args):
-        """create a new IAM user under an IAM group on AWS"""
+        """create a new IAM user under an IAM group"""
         iam_client = aws.iam_client()
         path_prefix = f"/{consts.NAMESPACE}/"
 
@@ -43,39 +43,36 @@ class CreateUser(CommandBase):
         print(f"IAM user \"{cmd_args['name']}\" created on AWS.")
 
         # IAM user access key generated and saved to dictionary
-        new_access_key = iam_client.create_access_key(
+        new_key = iam_client.create_access_key(
             UserName=cmd_args['name'])['AccessKey']
-        new_access_key = {
-            'id': new_access_key['AccessKeyId'],
-            'secret': new_access_key['SecretAccessKey']
-        }
-        self.access_key_usable_waiter(new_access_key)
+        new_key = {new_key['AccessKeyId']: new_key['SecretAccessKey']}
+        self.access_key_usable_waiter(new_key)
 
         config_dict = os2.parse_json(consts.CONFIG_JSON)
-        if 'backup_access_keys' not in config_dict:
-            config_dict['backup_access_keys'] = []
+        if 'backup_keys' not in config_dict:
+            config_dict['backup_keys'] = {}
 
         if cmd_args['default']:
             # Modify existing config instead of creating new one
-            config_dict['backup_access_keys'].append(config_dict['access_key'])
-            config_dict['access_key'] = new_access_key
+            config_dict['backup_keys'].update(config_dict['access_key'])
+            config_dict['access_key'] = new_key
             os2.save_json(config_dict, consts.CONFIG_JSON)
             print("  User's access key set as default in config.")
         else:
             # Back up new IAM user's access key in config file
-            config_dict['backup_access_keys'].append(new_access_key)
+            config_dict['backup_keys'].update(new_key)
             os2.save_json(config_dict, consts.CONFIG_JSON)
 
             self.create_configuration_zip(
-                new_access_key, cmd_args['ssh_key'], cmd_args['name'])
+                new_key, cmd_args['ssh_key'], cmd_args['name'])
             print("  User's zipped configuration created in config.")
 
 
     @staticmethod
-    def create_configuration_zip(new_access_key, give_ssh_key, user_name):
+    def create_configuration_zip(new_key, give_ssh_key, user_name):
         """create zipped config folder containing new IAM user access key"""
         new_config_dict = {
-            'access_key': new_access_key,
+            'access_key': new_key,
             'region_whitelist': consts.REGIONS
         }
 
@@ -101,11 +98,11 @@ class CreateUser(CommandBase):
 
 
     @staticmethod
-    def access_key_usable_waiter(new_access_key):
+    def access_key_usable_waiter(new_key):
         """waiter for IAM user access key usability (not perfect)"""
         iam_client = boto3.client("iam",
-            aws_access_key_id=new_access_key['id'],
-            aws_secret_access_key=new_access_key['secret']
+            aws_access_key_id=next(iter(new_key)),
+            aws_secret_access_key=next(iter(new_key.values()))
         )
         for _ in range(60):
             try:

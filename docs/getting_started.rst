@@ -15,8 +15,6 @@ The script can then be installed from a terminal with pip::
 
     python -m pip install ec2mc
 
-(If the preceding command outputs a SyntaxError, you've installed an incorrect version of Python.)
-
 To create the script's configuration folder (.ec2mc) under your home folder, run any script command.
 For example::
 

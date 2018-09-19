@@ -3,24 +3,20 @@
     "properties": {
         "access_key": {
             "type": "object",
-            "properties": {
-                "id": {"type": "string"},
-                "secret": {"type": "string"}
+            "patternProperties": {
+                "^[a-zA-Z0-9]+$": {"type": "string"}
             },
-            "required": ["id", "secret"]
+            "minProperties": 1,
+            "maxProperties": 1,
+            "additionalProperties": false
         },
-        "backup_access_keys": {
-            "type": "array",
-            "items": {
-                "type": "object",
-                "properties": {
-                    "id": {"type": "string"},
-                    "secret": {"type": "string"}
-                },
-                "required": ["id", "secret"]
+        "backup_keys": {
+            "type": "object",
+            "patternProperties": {
+                "^[a-zA-Z0-9]+$": {"type": "string"}
             },
-            "minItems": 1,
-            "uniqueItems": true
+            "minProperties": 1,
+            "additionalProperties": false
         },
         "use_handler": {"type": "boolean"},
         "region_whitelist": {

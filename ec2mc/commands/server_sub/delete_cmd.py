@@ -6,7 +6,7 @@ from ec2mc.validate import validate_perms
 class DeleteServer(CommandBase):
 
     def main(self, cmd_args):
-        """terminate an EC2 instance, given its region, ID, and name
+        """terminate an EC2 instance given its ID and name
 
         Args:
             cmd_args (dict): See add_documentation method.
