@@ -267,7 +267,7 @@ class VPCSetup(ComponentSetup):
         for index, az in enumerate(azs):
             if az['State'] != "available":
                 continue
-            if index*16 >= 256:
+            if index * 16 >= 256:
                 break
             subnet_id = ec2_client.create_subnet(
                 AvailabilityZone=az['ZoneName'],
@@ -350,8 +350,8 @@ class VPCSetup(ComponentSetup):
     @staticmethod
     def get_json_sg_ingress(sg_name):
         """retrieve local security group ingress rule(s) dict"""
-        security_group_dir = consts.AWS_SETUP_DIR/"vpc_security_groups"
-        return os2.parse_json(security_group_dir/f"{sg_name}.json")['Ingress']
+        sg_dir = consts.AWS_SETUP_DIR / "vpc_security_groups"
+        return os2.parse_json(sg_dir / f"{sg_name}.json")['Ingress']
 
 
     def blocked_actions(self, sub_command):

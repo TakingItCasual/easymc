@@ -9,7 +9,7 @@ from ec2mc.utils import halt
 def main():
     """validate contents of user's config's aws_setup directory"""
     # Directory path for distribution's packaged aws_setup
-    src_aws_setup_dir = consts.DIST_DIR/"aws_setup_src"
+    src_aws_setup_dir = consts.DIST_DIR / "aws_setup_src"
 
     # If consts.AWS_SETUP_DIR nonexistant, copy from ec2mc.aws_setup_src
     if not consts.AWS_SETUP_DIR.is_dir():
@@ -33,8 +33,8 @@ def main():
     validate_aws_setup(config_aws_setup)
 
     consts.NAMESPACE = config_aws_setup['Namespace']
-    consts.RSA_KEY_PEM = consts.CONFIG_DIR/f"{consts.NAMESPACE}.pem"
-    consts.RSA_KEY_PPK = consts.CONFIG_DIR/f"{consts.NAMESPACE}.ppk"
+    consts.RSA_KEY_PEM = consts.CONFIG_DIR / f"{consts.NAMESPACE}.pem"
+    consts.RSA_KEY_PPK = consts.CONFIG_DIR / f"{consts.NAMESPACE}.ppk"
 
     validate_iam_policies(config_aws_setup)
     validate_iam_groups(config_aws_setup)
@@ -64,17 +64,17 @@ def validate_aws_setup(config_aws_setup):
 
 def validate_iam_policies(config_aws_setup):
     """validate aws_setup.json reflects contents of iam_policies dir"""
-    policy_dir = consts.AWS_SETUP_DIR/"iam_policies"
+    policy_dir = consts.AWS_SETUP_DIR / "iam_policies"
 
     # Policies described in aws_setup/aws_setup.json
     setup_policy_list = [f"{policy}.json" for policy
         in config_aws_setup['IAM']['Policies']]
     # Actual policy JSON files located in aws_setup/iam_policies/
-    iam_policy_files = os2.list_dir_files(policy_dir, ext=".json")
+    iam_policy_files = os2.dir_files(policy_dir, ext=".json")
 
     # Halt if any IAM policy file contains invalid JSON
     for iam_policy_file in iam_policy_files:
-        os2.parse_json(policy_dir/iam_policy_file)
+        os2.parse_json(policy_dir / iam_policy_file)
 
     # Halt if aws_setup.json describes policies not found in iam_policies
     if not set(setup_policy_list).issubset(set(iam_policy_files)):
@@ -98,12 +98,12 @@ def validate_iam_groups(config_aws_setup):
 
 def validate_instance_templates(config_aws_setup):
     """validate config aws_setup user_data YAML instance templates"""
-    template_yaml_files = os2.list_dir_files(consts.USER_DATA_DIR, ext=".yaml")
+    template_yaml_files = os2.dir_files(consts.USER_DATA_DIR, ext=".yaml")
 
     schema = os2.get_json_schema("instance_templates")
     sg_names = [sg for sg in config_aws_setup['VPC']['SecurityGroups']]
     for template_yaml_file in template_yaml_files:
-        user_data = os2.parse_yaml(consts.USER_DATA_DIR/template_yaml_file)
+        user_data = os2.parse_yaml(consts.USER_DATA_DIR / template_yaml_file)
         os2.validate_dict(user_data, schema, template_yaml_file)
 
         template_info = user_data['ec2mc_template_info']
@@ -114,14 +114,14 @@ def validate_instance_templates(config_aws_setup):
                     f"SG {security_group} not found in aws_setup.json.")
 
         template_name = Path(template_yaml_file).stem
-        template_dir = consts.USER_DATA_DIR/template_name
+        template_dir = consts.USER_DATA_DIR / template_name
         # If write_directories in template, validate template directory exists
         if not template_dir.is_dir():
             if 'write_directories' in template_info:
                 halt.err(f"{template_name} template's directory not found.")
         # Validate template's subdirectories exist
         else:
-            template_subdirs = os2.list_dir_dirs(template_dir)
+            template_subdirs = os2.dir_dirs(template_dir)
             if 'write_directories' in template_info:
                 for write_dir in template_info['write_directories']:
                     if write_dir['local_dir'] not in template_subdirs:
@@ -132,13 +132,13 @@ def validate_instance_templates(config_aws_setup):
 
 def validate_vpc_security_groups(config_aws_setup):
     """validate aws_setup.json reflects contents of vpc_security_groups dir"""
-    sg_dir = consts.AWS_SETUP_DIR/"vpc_security_groups"
+    sg_dir = consts.AWS_SETUP_DIR / "vpc_security_groups"
 
     # SGs described in aws_setup/aws_setup.json
     setup_sg_list = [f"{sg_name}.json" for sg_name
         in config_aws_setup['VPC']['SecurityGroups']]
     # Actual SG json files located in aws_setup/vpc_security_groups/
-    vpc_sg_json_files = os2.list_dir_files(sg_dir, ext=".json")
+    vpc_sg_json_files = os2.dir_files(sg_dir, ext=".json")
 
     # Halt if aws_setup.json describes SGs not found in vpc_security_groups
     if not set(setup_sg_list).issubset(set(vpc_sg_json_files)):
@@ -150,5 +150,5 @@ def validate_vpc_security_groups(config_aws_setup):
     # Halt if any security group missing Ingress key
     schema = os2.get_json_schema("vpc_security_groups")
     for sg_file in vpc_sg_json_files:
-        sg_dict = os2.parse_json(sg_dir/sg_file)
+        sg_dict = os2.parse_json(sg_dir / sg_file)
         os2.validate_dict(sg_dict, schema, f"SG {sg_file}")

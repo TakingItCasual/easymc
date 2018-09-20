@@ -49,8 +49,7 @@ def main(args=None):
             if cmd.cmd_name() == cmd_args['command'])
 
         # If basic configuration being done, skip config validation
-        if not (chosen_cmd.cmd_name() == "configure" and
-                cmd_args['action'] != "swap_key"):
+        if chosen_cmd.cmd_name() != "configure":
             # Validate config's config.json
             validate_config.main()
             # Validate config's aws_setup.json and YAML instance templates
@@ -65,7 +64,7 @@ def main(args=None):
 
 
 def argv_to_cmd_args(args, commands):
-    """ínitialize ec2mc's argparse and its help
+    """recursively initialize ec2mc's argparse and its help
 
     Returns:
         dict: Parsed argparse arguments.

@@ -10,14 +10,14 @@ def test_user_commands():
     ]) is not False
     sleep(5)
     assert __main__.main([
-        "configure", "swap_key", "TakingItCasual"
+        "user", "be", "takingitcasual"
     ]) is not False
     assert __main__.main([
         "user", "list"
     ]) is not False
     assert __main__.main([
-        "user", "rotate_key", "ec2mc_test_user"
+        "user", "rotate_key", "Ec2Mc_TeSt_UsEr"
     ]) is not False
     assert __main__.main([
-        "user", "delete", "ec2mc_test_user"
+        "user", "delete", "eC2mC_tEsT_uSeR"
     ]) is not False

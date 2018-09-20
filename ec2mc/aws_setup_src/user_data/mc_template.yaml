@@ -2,9 +2,6 @@
 
 # Other setup info for template (removed once processed)
 ec2mc_template_info:
-  AMI_info:
-    AMI_name: amzn2-ami-hvm-2.0.20180810-x86_64-gp2
-    default_user: ec2-user
   instance_type: t2.small
   volume_size: 8
   security_groups:

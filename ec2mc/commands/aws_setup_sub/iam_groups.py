@@ -20,7 +20,7 @@ class IAMGroupSetup(ComponentSetup):
         self.iam_client = aws.iam_client()
         self.path_prefix = f"/{consts.NAMESPACE}/"
 
-        # Local IAM group(s) list
+        # Local IAM group setup information (names and attached policies)
         self.iam_group_setup = config_aws_setup['IAM']['Groups']
 
         # IAM Groups already present on AWS
@@ -43,18 +43,19 @@ class IAMGroupSetup(ComponentSetup):
                     group_names['ToUpdate'].append(group_name)
                     break
 
-        # Check if group(s) on AWS need attachment(s) updated
+        # Check if group(s) on AWS need policy attachment(s) updated
         for group_name in group_names['ToUpdate'][:]:
-            aws_attachments = [policy['PolicyName'] for policy in
-                self.iam_client.list_attached_group_policies(
-                    GroupName=group_name,
-                    PathPrefix=self.path_prefix
-                )['AttachedPolicies']]
+            aws_group_policies = self.iam_client.list_attached_group_policies(
+                GroupName=group_name,
+                PathPrefix=self.path_prefix
+            )['AttachedPolicies']
+            aws_attachments = [policy['PolicyName']
+                for policy in aws_group_policies]
 
             local_attachments = self.iam_group_setup[group_name]['Policies']
 
             if set(aws_attachments) == set(local_attachments):
-                # Local group and AWS group match, so no need to update
+                # AWS group has policies described in local setup
                 group_names['ToUpdate'].remove(group_name)
                 group_names['UpToDate'].append(group_name)
 
@@ -142,15 +143,15 @@ class IAMGroupSetup(ComponentSetup):
 
     def detach_group_policies(self, group_name):
         """detach IAM policy(s) from IAM group"""
-        attached_policy_arns = [policy['PolicyArn'] for policy in
-            self.iam_client.list_attached_group_policies(
-                GroupName=group_name,
-                PathPrefix=self.path_prefix
-            )['AttachedPolicies']]
-        for attached_policy_arn in attached_policy_arns:
+        attached_policies = self.iam_client.list_attached_group_policies(
+            GroupName=group_name,
+            PathPrefix=self.path_prefix
+        )['AttachedPolicies']
+        policy_arns = [policy['PolicyArn'] for policy in attached_policies]
+        for policy_arn in policy_arns:
             self.iam_client.detach_group_policy(
                 GroupName=group_name,
-                PolicyArn=attached_policy_arn
+                PolicyArn=policy_arn
             )
 
 

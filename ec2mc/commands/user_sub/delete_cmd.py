@@ -17,14 +17,7 @@ class DeleteUser(CommandBase):
         if user_name.lower() == consts.IAM_NAME.lower():
             halt.err("You cannot delete yourself.")
 
-        iam_users = self.iam_client.list_users(PathPrefix=path_prefix)['Users']
-        for iam_user in iam_users:
-            if iam_user['UserName'].lower() == user_name.lower():
-                user_name = iam_user['UserName']
-                break
-        else:
-            halt.err(f"IAM user \"{user_name}\" not found from AWS.")
-
+        user_name = aws.validate_user_exists(path_prefix, user_name)
         self.delete_user_access_keys(user_name)
         self.remove_user_from_groups(user_name)
         self.detach_user_from_policies(user_name)
@@ -33,7 +26,7 @@ class DeleteUser(CommandBase):
         print("")
         print(f"IAM user \"{user_name}\" deleted from AWS.")
 
-        user_config_zip = consts.CONFIG_DIR/f"{user_name}_config.zip"
+        user_config_zip = consts.CONFIG_DIR / f"{user_name}_config.zip"
         if user_config_zip.is_file():
             user_config_zip.unlink()
             print("  User's zipped configuration deleted from config.")

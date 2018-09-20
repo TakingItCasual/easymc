@@ -14,7 +14,7 @@ def main():
 
     # Retrieve config/credentials file. Halt if neither exist.
     if not consts.CONFIG_JSON.is_file():
-        credentials_csv = consts.CONFIG_DIR/"accessKeys.csv"
+        credentials_csv = consts.CONFIG_DIR / "accessKeys.csv"
         if not credentials_csv.is_file():
             config_base = consts.CONFIG_JSON.name
             halt.err(f"{config_base} not found from config directory.",

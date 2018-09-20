@@ -11,20 +11,20 @@ from ruamel import yaml
 from ec2mc import consts
 from ec2mc.utils import halt
 
-def list_dir_files(target_dir, *, ext=""):
-    """return list[str] of files in directory"""
+def dir_files(target_dir, *, ext=""):
+    """return list[str] of names of files in directory"""
     return [f.name for f in target_dir.iterdir()
-        if (target_dir/f).is_file() and str(f).endswith(ext)]
+        if (target_dir / f).is_file() and str(f).endswith(ext)]
 
 
-def list_dir_dirs(target_dir):
-    """return list[str] of directories in directory"""
-    return [d.name for d in target_dir.iterdir() if (target_dir/d).is_dir()]
+def dir_dirs(target_dir):
+    """return list[str] of names of directories in directory"""
+    return [d.name for d in target_dir.iterdir() if (target_dir / d).is_dir()]
 
 
 def get_json_schema(schema_name):
     """return schema from ec2mc.validate.jsonschemas as dictionary"""
-    return parse_json(consts.DIST_DIR/"validate"/"jsonschemas"/
+    return parse_json(consts.DIST_DIR / "validate" / "jsonschemas" /
         f"{schema_name}_schema.json")
 
 
@@ -77,5 +77,5 @@ def recursive_cmpfiles(src_dir, dest_dir):
     cmp_files = []
     for path, _, files in os.walk(src_dir):
         for f in files:
-            cmp_files.append(Path(*(Path(path)/f).parts[prefix_len:]))
+            cmp_files.append(Path(*(Path(path) / f).parts[prefix_len:]))
     return filecmp.cmpfiles(src_dir, dest_dir, cmp_files, shallow=False)

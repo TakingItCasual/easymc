@@ -6,7 +6,7 @@ from ec2mc import consts
 from ec2mc.utils import os2
 
 # JSON file containing instance title(s) for the MC client's server list.
-SERVER_TITLES_JSON = consts.CONFIG_DIR/"server_titles.json"
+SERVER_TITLES_JSON = consts.CONFIG_DIR / "server_titles.json"
 
 def main(aws_region, instance_name, instance_id, new_ip):
     """update MC client's server list with specified instance's IP
@@ -77,7 +77,7 @@ def find_minecraft_servers_dat(titles_dict):
     titles_dict['servers_dat'] = None
     for root, _, files in os.walk(Path().home()):
         if "servers.dat" in files and root.endswith("minecraft"):
-            titles_dict['servers_dat'] = str(Path(root)/"servers.dat")
+            titles_dict['servers_dat'] = str(Path(root) / "servers.dat")
             os2.save_json(titles_dict, SERVER_TITLES_JSON)
             break
     return titles_dict['servers_dat']

@@ -21,7 +21,7 @@ class CreateServer(CommandBase):
         Args:
             cmd_args (dict): See add_documentation method.
         """
-        template_yaml_files = os2.list_dir_files(consts.USER_DATA_DIR)
+        template_yaml_files = os2.dir_files(consts.USER_DATA_DIR)
         if f"{cmd_args['template']}.yaml" not in template_yaml_files:
             halt.err(f"Template {cmd_args['template']} not found from config.")
 
@@ -29,7 +29,7 @@ class CreateServer(CommandBase):
 
         self.validate_name_is_unique(cmd_args['name'])
 
-        inst_template = os2.parse_yaml(consts.USER_DATA_DIR/
+        inst_template = os2.parse_yaml(consts.USER_DATA_DIR /
             f"{cmd_args['template']}.yaml")['ec2mc_template_info']
 
         self.validate_type_and_size_allowed(
@@ -77,9 +77,6 @@ class CreateServer(CommandBase):
                 'name' (str): Tag value for instance tag key "Name".
                 'tags' (list): Additional instance tag key-value pair(s).
             instance_template (dict):
-                'AMI_info' (dict):
-                    'AMI_name' (str): EC2 image name (determines instance OS).
-                    'default_user' (str): AMI's default user (for SSH).
                 'instance_type' (str): EC2 instance type to create.
                 'volume_size' (int): EC2 instance volume size (GiB).
                 'security_groups' (list[str]): VPC SG(s) to assign to instance.
@@ -104,10 +101,9 @@ class CreateServer(CommandBase):
             'volume_size': instance_template['volume_size']
         })
 
-        aws_images = self.ec2_client.describe_images(Filters=[{
-            'Name': "name",
-            'Values': [instance_template['AMI_info']['AMI_name']]
-        }])['Images']
+        aws_images = self.ec2_client.describe_images(Filters=[
+            {'Name': "name", 'Values': [consts.AMI_NAME]}
+        ])['Images']
         if not aws_images:
             halt.err("Template's AWS image name not found from AWS.")
         creation_kwargs.update({
@@ -146,7 +142,7 @@ class CreateServer(CommandBase):
             str: YAML file string to initialize instance on first boot.
         """
         user_data = os2.parse_yaml(
-            consts.USER_DATA_DIR/f"{template_name}.yaml")
+            consts.USER_DATA_DIR / f"{template_name}.yaml")
 
         if 'write_directories' in template:
             write_files = cls.generate_write_files(
@@ -174,12 +170,12 @@ class CreateServer(CommandBase):
     @staticmethod
     def generate_write_files(template_name, write_dirs):
         """fill out write_files list from template directory"""
-        template_dir = consts.USER_DATA_DIR/template_name
+        template_dir = consts.USER_DATA_DIR / template_name
         write_files = []
         for write_dir in write_dirs:
-            dir_files = os2.list_dir_files(template_dir/write_dir['local_dir'])
+            dir_files = os2.dir_files(template_dir / write_dir['local_dir'])
             for dir_file in dir_files:
-                file_path = template_dir/write_dir['local_dir']/dir_file
+                file_path = template_dir / write_dir['local_dir'] / dir_file
                 # Convert Windows line endings to Unix line endings
                 file_bytes = file_path.read_bytes().replace(b"\r\n", b"\n")
                 write_files.append({
@@ -293,25 +289,13 @@ class CreateServer(CommandBase):
     def parse_tags(cmd_args, instance_template):
         """handle tag parsing for parse_run_instance_args method"""
         instance_tags = [
-            {
-                'Key': "Name",
-                'Value': cmd_args['name']
-            },
-            {
-                'Key': "Namespace",
-                'Value': consts.NAMESPACE
-            },
-            {
-                'Key': "DefaultUser",
-                'Value': instance_template['AMI_info']['default_user']
-            }
+            {'Key': "Name", 'Value': cmd_args['name']},
+            {'Key': "Namespace", 'Value': consts.NAMESPACE},
+            {'Key': "DefaultUser", 'Value': consts.AMI_DEFAULT_USER}
         ]
         if cmd_args['tags']:
             for tag_key, tag_value in cmd_args['tags']:
-                instance_tags.append({
-                    'Key': tag_key,
-                    'Value': tag_value
-                })
+                instance_tags.append({'Key': tag_key, 'Value': tag_value})
         if instance_template['ip_handler'] is not None:
             instance_tags.append({
                 'Key': "IpHandler",

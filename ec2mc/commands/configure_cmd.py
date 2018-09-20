@@ -1,9 +1,6 @@
 from ec2mc import consts
-from ec2mc.utils import aws
-from ec2mc.utils import halt
 from ec2mc.utils import os2
 from ec2mc.utils.base_classes import CommandBase
-from ec2mc.validate import validate_perms
 
 class Configure(CommandBase):
 
@@ -21,9 +18,6 @@ class Configure(CommandBase):
         if cmd_args['action'] == "access_key":
             config_dict = self.set_access_key(
                 config_dict, cmd_args['key_id'], cmd_args['key_secret'])
-        elif cmd_args['action'] == "swap_key":
-            config_dict = self.switch_access_key(
-                config_dict, cmd_args['user_name'])
         elif cmd_args['action'] == "whitelist":
             config_dict['region_whitelist'] = list(set(cmd_args['regions']))
             print("Region whitelist set.")
@@ -47,31 +41,6 @@ class Configure(CommandBase):
         return config_dict
 
 
-    @staticmethod
-    def switch_access_key(config_dict, user_name):
-        """set access key stored in backup access keys list as default"""
-        if 'backup_keys' not in config_dict:
-            halt.err("No backup access keys stored in config.")
-
-        for key_id, key_secret in config_dict['backup_keys'].items():
-            # TODO: Validate access key is active
-            key_owner = aws.access_key_owner(key_id)
-            if key_owner is None:
-                continue
-            if key_owner.lower() == user_name.lower():
-                # Swap default access key with requested IAM user's in config
-                config_dict['backup_keys'].update(config_dict['access_key'])
-                config_dict['access_key'] = {key_id: key_secret}
-                del config_dict['backup_keys'][key_id]
-
-                print(f"{key_owner}'s access key set as default in config.")
-                break
-        else:
-            halt.err(f"IAM User \"{user_name}\" backup access key not found.")
-
-        return config_dict
-
-
     @classmethod
     def add_documentation(cls, argparse_obj):
         cmd_parser = super().add_documentation(argparse_obj)
@@ -86,11 +55,6 @@ class Configure(CommandBase):
         access_key_parser.add_argument(
             "key_secret", help="secret access key")
 
-        swap_key_parser = actions.add_parser(
-            "swap_key", help="switch default IAM user access key for another")
-        swap_key_parser.add_argument(
-            "user_name", help="name of desired access key owner")
-
         whitelist_parser = actions.add_parser(
             "whitelist", help="set whitelist for AWS regions")
         whitelist_parser.add_argument(
@@ -101,9 +65,3 @@ class Configure(CommandBase):
         use_handler_parser.add_argument(
             "-f", "--false", dest="boolean", action="store_false",
             help="do not use the handler")
-
-
-    def blocked_actions(self, cmd_args):
-        if cmd_args['action'] == "swap_key":
-            return validate_perms.blocked(actions=["iam:GetAccessKeyLastUsed"])
-        return []

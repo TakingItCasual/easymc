@@ -4,14 +4,6 @@
         "ec2mc_template_info": {
             "type": "object",
             "properties": {
-                "AMI_info": {
-                    "type": "object",
-                    "properties": {
-                        "AMI_name": {"type" : "string"},
-                        "default_user": {"type" : "string"}
-                    },
-                    "required": ["AMI_name", "default_user"]
-                },
                 "instance_type": {"type": "string"},
                 "volume_size": {"type": "integer"},
                 "security_groups": {
@@ -41,7 +33,6 @@
                 }
             },
             "required": [
-                "AMI_info",
                 "instance_type",
                 "volume_size",
                 "security_groups",

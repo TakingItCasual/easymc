@@ -65,7 +65,7 @@ Create an IAM user (e.g. named "Larry") under the setup_users IAM group with the
 
     ec2mc user create Larry setup_users --default
 
-The :bash:`--default` argument sets the new user's access key as the script's default access key.
+The :bash:`--default` argument sets Larry's access key as the script's default access key.
 For more on IAM user management, see `Managing Users`_.
 
 The temporary IAM user should then be deleted from your `IAM Management Console`_.
@@ -81,6 +81,7 @@ Server IP Persistence
 
 By default, the script creates an instance which gets a different IP each time it's started, as this is the cheaper option (see Costs_).
 To create an instance with an elastic IP address (a persistent IP), append :bash:`--elastic_ip` to the instance creation command.
+An elastic IP address can still be attached afterwards with the :bash:`address` subcommands (see Commands_).
 
 To handle non-persistent IPs, the script contains functionality to automatically update instance IPs in the the local Minecraft client's server list.
 The server list will be updated whenever either of the two following script commands are run::
@@ -90,7 +91,7 @@ The server list will be updated whenever either of the two following script comm
 
 This functionality is still available for instances with persistent IP addresses.
 
-You could modify your Minecraft client shortcut to automatically run the :bash:`start` command, to eliminate the need to manually start servers and update IPs in your server list.
+You could modify your Minecraft client shortcut to automatically run the :bash:`start` command, to eliminate the need to manually use the script to start servers and update IPs in your server list.
 
 Creating The Server
 ~~~~~~~~~~~~~~~~~~~
@@ -110,25 +111,38 @@ All provided templates contain bash scripts (which are uploaded to the instances
 
 (A template for a Forge server is also included: "cnb_template". See Customization_ for how to make your own template.)
 
-Conclusion
-----------
+Server Management
+-----------------
 
 You should now have an EC2 instance hosting a Minecraft server up and running.
-If you want to manage the server directly (e.g. to make yourself a server operator), you can SSH into it with the script (provided you have OpenSSH or PuTTY installed) using the following command::
+The subcommands under the :bash:`server` and :bash:`servers` commands can be used to manage your instance(s) (see Commands_).
+
+If you want to manage the server directly (e.g. to make yourself a server operator), you can SSH into it with the script (provided you have OpenSSH_ or PuTTY_ installed) using the following command::
 
     ec2mc server ssh
 
-You can then access the server's console by typing :bash:`screen -r` (use :bash:`Ctrl-a`, :bash:`Ctrl-d` to exit the console, then type :bash:`exit` to close the SSH connection).
+You can then access the server's console by typing :bash:`screen -r`.
+To exit the server's console, use :bash:`Ctrl-a`, :bash:`Ctrl-d`.
+You can then close the SSH connection by typing :bash:`exit`.
+
+Afterword
+---------
 
 See `Managing Users`_ for how to give other people IAM user access keys so they can join and start the server themselves.
 
 
 .. _IAM Management Console: https://console.aws.amazon.com/iam/home#/users
 
-.. _Customization: https://github.com/TakingItCasual/ec2mc/blob/master/docs/customization.rst
+.. _AWS Region: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-regions-availability-zones.html#concepts-available-regions
+
+.. _OpenSSH: http://www.mls-software.com/opensshd.html
+
+.. _PuTTY: https://www.putty.org/
 
 .. _Managing Users: https://github.com/TakingItCasual/ec2mc/blob/master/docs/managing_users.rst
 
-.. _Costs: https://github.com/TakingItCasual/ec2mc/blob/master/docs/costs.rst
+.. _Customization: https://github.com/TakingItCasual/ec2mc/blob/master/docs/customization.rst
 
-.. _AWS Region: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-regions-availability-zones.html#concepts-available-regions
+.. _Commands: https://github.com/TakingItCasual/ec2mc/blob/master/docs/commands.rst
+
+.. _Costs: https://github.com/TakingItCasual/ec2mc/blob/master/docs/costs.rst

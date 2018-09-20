@@ -103,6 +103,18 @@ def attach_tags(region, resource_id, name_tag=None):
         halt.err(f"{resource_id} doesn't exist after a minute of waiting.")
 
 
+def validate_user_exists(path_prefix, user_name):
+    """validate IAM user exists, and return exact name
+
+    Requires iam:ListUsers permission.
+    """
+    iam_users = iam_client().list_users(PathPrefix=path_prefix)['Users']
+    for iam_user in iam_users:
+        if iam_user['UserName'].lower() == user_name.lower():
+            return iam_user['UserName']
+    halt.err(f"IAM user \"{user_name}\" not found from AWS.")
+
+
 def access_key_owner(access_key_id):
     """get name of IAM user who owns access key (or None if key invalid)
 

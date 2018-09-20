@@ -23,8 +23,7 @@ class CommandBase(ABC):
     @classmethod
     def add_documentation(cls, argparse_obj):
         """initialize child's argparse entry and help"""
-        return argparse_obj.add_parser(
-            cls.cmd_name(), help=cls.main.__doc__.split("\n", 1)[0])
+        return argparse_obj.add_parser(cls.cmd_name(), help=cls.cmd_doc())
 
 
     def blocked_actions(self, cmd_args):
@@ -40,6 +39,12 @@ class CommandBase(ABC):
             raise ImportError(f"{name_str} module name must end with "
                 f"\"{cls._module_postfix}\".")
         return name_str[:-len(cls._module_postfix)]
+
+
+    @classmethod
+    def cmd_doc(cls):
+        """return first line of main method's docstring"""
+        return cls.main.__doc__.split("\n", 1)[0]
 
 
 class ParentCommand(CommandBase):

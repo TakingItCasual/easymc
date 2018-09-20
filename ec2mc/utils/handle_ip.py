@@ -11,7 +11,7 @@ def main(instance, new_ip):
         return
 
     handler_base = instance['tags']['IpHandler']
-    handler_path = consts.IP_HANDLER_DIR/handler_base
+    handler_path = consts.IP_HANDLER_DIR / handler_base
     if not handler_path.is_file():
         print(f"  {handler_base} not found from config's ip_handlers.")
         return

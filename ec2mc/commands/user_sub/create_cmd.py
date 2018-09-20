@@ -76,23 +76,23 @@ class CreateUser(CommandBase):
             'region_whitelist': consts.REGIONS
         }
 
-        temp_dir = consts.CONFIG_DIR/".ec2mc"
+        temp_dir = consts.CONFIG_DIR / ".ec2mc"
         if temp_dir.is_dir():
             shutil.rmtree(temp_dir, onerror=os2.del_readonly)
         temp_dir.mkdir()
 
-        shutil.copytree(consts.AWS_SETUP_DIR, temp_dir/"aws_setup")
-        os2.save_json(new_config_dict, temp_dir/"config.json")
+        shutil.copytree(consts.AWS_SETUP_DIR, temp_dir / "aws_setup")
+        os2.save_json(new_config_dict, temp_dir / "config.json")
 
         if give_ssh_key is True:
             if consts.RSA_KEY_PEM.is_file():
                 pem_base = consts.RSA_KEY_PEM.name
-                shutil.copy(consts.RSA_KEY_PEM, temp_dir/pem_base)
+                shutil.copy(consts.RSA_KEY_PEM, temp_dir / pem_base)
             if consts.RSA_KEY_PPK.is_file():
                 ppk_base = consts.RSA_KEY_PPK.name
-                shutil.copy(consts.RSA_KEY_PPK, temp_dir/ppk_base)
+                shutil.copy(consts.RSA_KEY_PPK, temp_dir / ppk_base)
 
-        out_zip = consts.CONFIG_DIR/f"{user_name}_config"
+        out_zip = consts.CONFIG_DIR / f"{user_name}_config"
         shutil.make_archive(out_zip, "zip", consts.CONFIG_DIR, ".ec2mc")
         shutil.rmtree(temp_dir, onerror=os2.del_readonly)
 
