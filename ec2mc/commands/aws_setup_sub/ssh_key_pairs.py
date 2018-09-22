@@ -7,16 +7,18 @@ from ec2mc.utils.threader import Threader
 
 class SSHKeyPairSetup(ComponentSetup):
 
-    def check_component(self, _):
+    def __init__(self, _):
+        self.pem_file = consts.RSA_KEY_PEM.name
+        self.key_pair_name = consts.RSA_KEY_PEM.stem
+
+
+    def check_component(self):
         """determine which regions need namespace RSA key pairs created
 
         Returns:
             dict: Which regions namespace EC2 key pair exists in.
                 Region name (str/None): Public key fingerprint, if pair exists.
         """
-        self.pem_file = consts.RSA_KEY_PEM.name
-        self.key_pair_name = consts.RSA_KEY_PEM.stem
-
         threader = Threader()
         for region in consts.REGIONS:
             threader.add_thread(
@@ -101,10 +103,9 @@ class SSHKeyPairSetup(ComponentSetup):
 
     def region_namespace_key_fingerprint(self, region):
         """return key fingerprint if region has namespace RSA key pair"""
-        key_pairs = aws.ec2_client(region).describe_key_pairs(Filters=[{
-            'Name': "key-name",
-            'Values': [self.key_pair_name]
-        }])['KeyPairs']
+        key_pairs = aws.ec2_client(region).describe_key_pairs(Filters=[
+            {'Name': "key-name", 'Values': [self.key_pair_name]}
+        ])['KeyPairs']
         if key_pairs:
             return key_pairs[0]['KeyFingerprint']
         return None
@@ -126,8 +127,9 @@ class SSHKeyPairSetup(ComponentSetup):
         return False
 
 
-    def blocked_actions(self, sub_command):
-        self.describe_actions = ["ec2:DescribeKeyPairs"]
-        self.upload_actions = ["ec2:ImportKeyPair"]
-        self.delete_actions = ["ec2:DeleteKeyPair"]
+    @classmethod
+    def blocked_actions(cls, sub_command):
+        cls.describe_actions = ["ec2:DescribeKeyPairs"]
+        cls.upload_actions = ["ec2:ImportKeyPair"]
+        cls.delete_actions = ["ec2:DeleteKeyPair"]
         return super().blocked_actions(sub_command)

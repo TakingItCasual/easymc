@@ -64,12 +64,10 @@ def probe_regions(regions=None, tag_filter=None):
     """
     if regions is None:
         regions = consts.REGIONS
+
     if tag_filter is None:
         tag_filter = []
-    tag_filter.append({
-        'Name': "tag:Namespace",
-        'Values': [consts.NAMESPACE]
-    })
+    tag_filter.append({'Name': "tag:Namespace", 'Values': [consts.NAMESPACE]})
 
     threader = Threader()
     for region in regions:

@@ -5,14 +5,16 @@ from ec2mc.validate import validate_perms
 
 class DeleteServer(CommandBase):
 
+    def __init__(self, cmd_args):
+        self.ec2_client = aws.ec2_client(cmd_args['region'])
+
+
     def main(self, cmd_args):
         """terminate an EC2 instance given its ID and name
 
         Args:
             cmd_args (dict): See add_documentation method.
         """
-        self.ec2_client = aws.ec2_client(cmd_args['region'])
-
         reservations = self.ec2_client.describe_instances(Filters=[
             {'Name': "instance-id", 'Values': [cmd_args['id']]},
             {'Name': "tag:Name", 'Values': [cmd_args['name']]}
@@ -23,10 +25,9 @@ class DeleteServer(CommandBase):
         if instance_state in ("shutting-down", "terminated"):
             halt.err("Instance has already been terminated.")
 
-        addresses = self.ec2_client.describe_addresses(Filters=[{
-            'Name': "instance-id",
-            'Values': [cmd_args['id']]
-        }])['Addresses']
+        addresses = self.ec2_client.describe_addresses(Filters=[
+            {'Name': "instance-id", 'Values': [cmd_args['id']]}
+        ])['Addresses']
         print("")
         if addresses:
             self.disassociate_addresses(addresses, cmd_args['save_ip'])

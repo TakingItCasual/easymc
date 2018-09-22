@@ -2,6 +2,7 @@
 
 import os
 from pathlib import Path
+import shutil
 import filecmp
 import json
 import jsonschema
@@ -51,6 +52,7 @@ def save_json(input_dict, file_path):
     """modify/create JSON file from dictionary"""
     with file_path.open("w", encoding="utf-8") as out_file:
         json.dump(input_dict, out_file, ensure_ascii=False, indent=4)
+    file_path.chmod(consts.CONFIG_PERMS)
 
 
 def parse_yaml(file_path):
@@ -62,6 +64,33 @@ def parse_yaml(file_path):
         return yaml.safe_load(file_contents)
     except Exception: # Multiple exceptions possible. Idk what they all are.
         halt.err(f"{file_path} is not a valid YAML file.")
+
+
+def create_configuration_zip(new_key, give_ssh_key, user_name):
+    """create zipped config folder containing new IAM user access key"""
+    temp_dir = consts.CONFIG_DIR / ".ec2mc"
+    if temp_dir.is_dir():
+        shutil.rmtree(temp_dir, onerror=del_readonly)
+    temp_dir.mkdir()
+
+    new_config_dict = {
+        'access_key': new_key,
+        'region_whitelist': consts.REGIONS
+    }
+    shutil.copytree(consts.AWS_SETUP_DIR, temp_dir / "aws_setup")
+    save_json(new_config_dict, temp_dir / "config.json")
+
+    if give_ssh_key is True:
+        if consts.RSA_KEY_PEM.is_file():
+            pem_base = consts.RSA_KEY_PEM.name
+            shutil.copy(consts.RSA_KEY_PEM, temp_dir / pem_base)
+        if consts.RSA_KEY_PPK.is_file():
+            ppk_base = consts.RSA_KEY_PPK.name
+            shutil.copy(consts.RSA_KEY_PPK, temp_dir / ppk_base)
+
+    out_zip = consts.CONFIG_DIR / f"{user_name}_config"
+    shutil.make_archive(out_zip, "zip", consts.CONFIG_DIR, ".ec2mc")
+    shutil.rmtree(temp_dir, onerror=del_readonly)
 
 
 def del_readonly(action, name, exc):

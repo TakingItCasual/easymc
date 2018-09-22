@@ -1,4 +1,3 @@
-import shutil
 from time import sleep
 import boto3
 from botocore.exceptions import ClientError
@@ -63,38 +62,9 @@ class CreateUser(CommandBase):
             config_dict['backup_keys'].update(new_key)
             os2.save_json(config_dict, consts.CONFIG_JSON)
 
-            self.create_configuration_zip(
+            os2.create_configuration_zip(
                 new_key, cmd_args['ssh_key'], cmd_args['name'])
             print("  User's zipped configuration created in config.")
-
-
-    @staticmethod
-    def create_configuration_zip(new_key, give_ssh_key, user_name):
-        """create zipped config folder containing new IAM user access key"""
-        new_config_dict = {
-            'access_key': new_key,
-            'region_whitelist': consts.REGIONS
-        }
-
-        temp_dir = consts.CONFIG_DIR / ".ec2mc"
-        if temp_dir.is_dir():
-            shutil.rmtree(temp_dir, onerror=os2.del_readonly)
-        temp_dir.mkdir()
-
-        shutil.copytree(consts.AWS_SETUP_DIR, temp_dir / "aws_setup")
-        os2.save_json(new_config_dict, temp_dir / "config.json")
-
-        if give_ssh_key is True:
-            if consts.RSA_KEY_PEM.is_file():
-                pem_base = consts.RSA_KEY_PEM.name
-                shutil.copy(consts.RSA_KEY_PEM, temp_dir / pem_base)
-            if consts.RSA_KEY_PPK.is_file():
-                ppk_base = consts.RSA_KEY_PPK.name
-                shutil.copy(consts.RSA_KEY_PPK, temp_dir / ppk_base)
-
-        out_zip = consts.CONFIG_DIR / f"{user_name}_config"
-        shutil.make_archive(out_zip, "zip", consts.CONFIG_DIR, ".ec2mc")
-        shutil.rmtree(temp_dir, onerror=os2.del_readonly)
 
 
     @staticmethod

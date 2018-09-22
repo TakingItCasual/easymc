@@ -85,8 +85,12 @@ class ComponentSetup(ABC):
     upload_actions = []
     delete_actions = []
 
+    def __init__(self, config_aws_setup):
+        pass
+
+
     @abstractmethod
-    def check_component(self, config_aws_setup):
+    def check_component(self):
         """check if AWS already has component, and if it is up to date"""
         pass
 
@@ -109,22 +113,24 @@ class ComponentSetup(ABC):
         pass
 
 
+    @classmethod
     @abstractmethod
-    def blocked_actions(self, sub_command):
+    def blocked_actions(cls, sub_command):
         """check whether IAM user is allowed to perform actions on component
 
         Should be overridden by child classes in the following fashion:
-            def blocked_actions(self, sub_command):
-                self.describe_actions = []
-                self.upload_actions = []
-                self.delete_actions = []
+            @classmethod
+            def blocked_actions(cls, sub_command):
+                cls.describe_actions = []
+                cls.upload_actions = []
+                cls.delete_actions = []
                 return super().blocked_actions(sub_command)
         """
-        needed_actions = self.describe_actions
+        needed_actions = cls.describe_actions
         if sub_command == "upload":
-            needed_actions.extend(self.upload_actions)
+            needed_actions.extend(cls.upload_actions)
         elif sub_command == "delete":
-            needed_actions.extend(self.delete_actions)
+            needed_actions.extend(cls.delete_actions)
         return validate_perms.blocked(actions=needed_actions)
 
 

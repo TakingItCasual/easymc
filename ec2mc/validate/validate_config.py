@@ -9,28 +9,32 @@ from ec2mc.validate import validate_perms
 
 def main():
     """validates existence of config file, as well as each key's value"""
-    # If config directory doesn't already exist, create it.
     consts.CONFIG_DIR.mkdir(exist_ok=True)
 
-    # Retrieve config/credentials file. Halt if neither exist.
-    if not consts.CONFIG_JSON.is_file():
-        credentials_csv = consts.CONFIG_DIR / "accessKeys.csv"
-        if not credentials_csv.is_file():
-            config_base = consts.CONFIG_JSON.name
-            halt.err(f"{config_base} not found from config directory.",
-                "  An IAM user access key is needed to interact with AWS.",
-                "  Set access key with \"ec2mc configure access_key\"."
-            )
-        create_config_from_credentials_csv(credentials_csv)
-    config_dict = os2.parse_json(consts.CONFIG_JSON)
+    config_dict = {}
+    file_credentials = credentials_from_file()
+    if not consts.CONFIG_JSON.is_file() and file_credentials is None:
+        halt.err(f"{consts.CONFIG_JSON.name} not found from config directory.",
+            "  An IAM user access key is needed to interact with AWS.",
+            "  Set access key with \"ec2mc configure access_key\"."
+        )
+    elif consts.CONFIG_JSON.is_file():
+        config_dict = os2.parse_json(consts.CONFIG_JSON)
+
+    # Validate config.json adheres to its schema.
+    schema = os2.get_json_schema("config")
+    os2.validate_dict(config_dict, schema, "config.json")
 
     if 'use_handler' not in config_dict:
         config_dict['use_handler'] = True
     consts.USE_HANDLER = config_dict['use_handler']
 
-    # Validate config.json adheres to its schema.
-    schema = os2.get_json_schema("config")
-    os2.validate_dict(config_dict, schema, "config.json")
+    if 'access_key' not in config_dict:
+        if file_credentials is None:
+            halt.err("IAM user access key not set.",
+                "  Set with \"ec2mc configure access_key\".")
+        config_dict['access_key'] = file_credentials
+        os2.save_json(config_dict, consts.CONFIG_JSON)
 
     # Validate config's IAM user access key and save to consts.
     validate_user(config_dict)
@@ -51,10 +55,6 @@ def validate_user(config_dict):
             'access_key' (dict): IAM user's access key.
                 Access key ID (str): Secret access key.
     """
-    if 'access_key' not in config_dict:
-        halt.err("IAM user access key not set.",
-            "  Set with \"ec2mc configure access_key\".")
-
     consts.KEY_ID = next(iter(config_dict['access_key']))
     consts.KEY_SECRET = config_dict['access_key'][consts.KEY_ID]
 
@@ -113,11 +113,12 @@ def validate_region_whitelist(config_dict):
     consts.REGIONS = whitelist
 
 
-def create_config_from_credentials_csv(file_path):
-    """create JSON config file from IAM user's accessKeys.csv file"""
-    with file_path.open(encoding="utf-8") as csv_file:
-        key_id_and_secret = csv_file.readlines()[1].strip().split(",")
-    config_dict = {'access_key': {key_id_and_secret[0]: key_id_and_secret[1]}}
+def credentials_from_file():
+    """return access key parsed from accessKeys.csv, or None if non-existent"""
+    credentials_csv = consts.CONFIG_DIR / "accessKeys.csv"
+    if not credentials_csv.is_file():
+        return None
 
-    os2.save_json(config_dict, consts.CONFIG_JSON)
-    consts.CONFIG_JSON.chmod(consts.CONFIG_PERMS)
+    with credentials_csv.open(encoding="utf-8") as csv_file:
+        key_id_and_secret = csv_file.readlines()[1].strip().split(",")
+    return {key_id_and_secret[0]: key_id_and_secret[1]}

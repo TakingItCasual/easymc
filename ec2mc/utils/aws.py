@@ -38,10 +38,9 @@ def get_region_vpc(region):
 
     Requires ec2:DescribeVpcs permission.
     """
-    vpcs = ec2_client(region).describe_vpcs(Filters=[{
-        'Name': "tag:Name",
-        'Values': [consts.NAMESPACE]
-    }])['Vpcs']
+    vpcs = ec2_client(region).describe_vpcs(Filters=[
+        {'Name': "tag:Name", 'Values': [consts.NAMESPACE]}
+    ])['Vpcs']
 
     if len(vpcs) > 1:
         halt.err(f"Multiple VPCs named {consts.NAMESPACE} in {region} region.")
@@ -55,10 +54,9 @@ def get_vpc_security_groups(region, vpc_id):
 
     Requires ec2:DescribeSecurityGroups permission.
     """
-    aws_sgs = ec2_client(region).describe_security_groups(Filters=[{
-        'Name': "vpc-id",
-        'Values': [vpc_id]
-    }])['SecurityGroups']
+    aws_sgs = ec2_client(region).describe_security_groups(Filters=[
+        {'Name': "vpc-id", 'Values': [vpc_id]}
+    ])['SecurityGroups']
     return [sg for sg in aws_sgs if sg['GroupName'] != "default"]
 
 
@@ -79,28 +77,22 @@ def attach_tags(region, resource_id, name_tag=None):
         resource_id (str): The ID of the resource.
         name_tag (str): A tag value to assign to the tag key "Name".
     """
-    new_tags = [{
-        'Key': "Namespace",
-        'Value': consts.NAMESPACE
-    }]
+    new_tags = [{'Key': "Namespace", 'Value': consts.NAMESPACE}]
     if name_tag is not None:
-        new_tags.append({
-            'Key': "Name",
-            'Value': name_tag
-        })
+        new_tags.append({'Key': "Name", 'Value': name_tag})
 
+    _ec2_client = ec2_client(region)
     not_found_regex = re.compile("Invalid[a-zA-Z]*\\.NotFound")
     for _ in range(60):
         try:
-            ec2_client(region).create_tags(
-                Resources=[resource_id], Tags=new_tags)
+            _ec2_client.create_tags(Resources=[resource_id], Tags=new_tags)
             break
         except ClientError as e:
             if not_found_regex.search(e.response['Error']['Code']) is None:
                 halt.err(f"Exception when tagging {resource_id}:", str(e))
             sleep(1)
     else:
-        halt.err(f"{resource_id} doesn't exist after a minute of waiting.")
+        halt.err(f"Can't find {resource_id} a minute after its creation.")
 
 
 def validate_user_exists(path_prefix, user_name):

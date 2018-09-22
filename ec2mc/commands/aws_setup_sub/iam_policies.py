@@ -8,11 +8,16 @@ from ec2mc.utils.base_classes import ComponentSetup
 
 class IAMPolicySetup(ComponentSetup):
 
-    def check_component(self, config_aws_setup):
-        """determine which policies need creating/updating, and which don't
+    def __init__(self, config_aws_setup):
+        self.iam_client = aws.iam_client()
+        self.policy_dir = consts.AWS_SETUP_DIR / "iam_policies"
+        self.path_prefix = f"/{consts.NAMESPACE}/"
+        # Local IAM policy setup information (names and descriptions)
+        self.iam_policy_setup = config_aws_setup['IAM']['Policies']
 
-        Args:
-            config_aws_setup (dict): Config dict loaded from user's config.
+
+    def check_component(self):
+        """determine which policies need creating/updating, and which don't
 
         Returns:
             dict: IAM customer managed policy information.
@@ -21,13 +26,6 @@ class IAMPolicySetup(ComponentSetup):
                 'ToUpdate': Policies on AWS not the same as local versions.
                 'UpToDate': Policies on AWS up to date with local versions.
         """
-        self.iam_client = aws.iam_client()
-        self.policy_dir = consts.AWS_SETUP_DIR / "iam_policies"
-        self.path_prefix = f"/{consts.NAMESPACE}/"
-
-        # Local IAM policy(s) list
-        self.iam_policy_setup = config_aws_setup['IAM']['Policies']
-
         # IAM Policies already present on AWS
         aws_policies = self.get_iam_policies()
 
@@ -80,7 +78,7 @@ class IAMPolicySetup(ComponentSetup):
         for policy in policy_names['AWSExtra']:
             print(f"IAM policy {policy} found from AWS but not locally.")
         for policy in policy_names['ToCreate']:
-            print(f"Local IAM policy {policy} not found from AWS.")
+            print(f"IAM policy {policy} not found from AWS.")
         for policy in policy_names['ToUpdate']:
             print(f"IAM policy {policy} on AWS to be updated.")
         for policy in policy_names['UpToDate']:
@@ -136,13 +134,13 @@ class IAMPolicySetup(ComponentSetup):
         local_policy_document = os2.parse_json(
             self.policy_dir / f"{policy_name}.json")
 
-        aws_policy_desc = next(aws_policy for aws_policy in aws_policies
+        aws_policy = next(aws_policy for aws_policy in aws_policies
             if aws_policy['PolicyName'] == policy_name)
 
         # Delete beforehand to avoid error of 5 versions already existing
-        self.delete_old_policy_versions(aws_policy_desc['Arn'])
+        self.delete_old_policy_versions(aws_policy['Arn'])
         self.iam_client.create_policy_version(
-            PolicyArn=aws_policy_desc['Arn'],
+            PolicyArn=aws_policy['Arn'],
             PolicyDocument=json.dumps(local_policy_document),
             SetAsDefault=True
         )
@@ -201,18 +199,19 @@ class IAMPolicySetup(ComponentSetup):
         )['Policies']
 
 
-    def blocked_actions(self, sub_command):
-        self.describe_actions = [
+    @classmethod
+    def blocked_actions(cls, sub_command):
+        cls.describe_actions = [
             "iam:ListPolicies",
             "iam:ListPolicyVersions",
             "iam:GetPolicyVersion"
         ]
-        self.upload_actions = [
+        cls.upload_actions = [
             "iam:CreatePolicy",
             "iam:CreatePolicyVersion",
             "iam:DeletePolicyVersion"
         ]
-        self.delete_actions = [
+        cls.delete_actions = [
             "iam:ListEntitiesForPolicy",
             "iam:DetachGroupPolicy",
             "iam:DetachRolePolicy",

@@ -9,11 +9,13 @@ from ec2mc.utils.threader import Threader
 
 class VPCSetup(ComponentSetup):
 
-    def check_component(self, config_aws_setup):
-        """determine statuses for VPC(s) and SG(s) on AWS
+    def __init__(self, config_aws_setup):
+        # Local VPC security group setup information (names and descriptions)
+        self.security_group_setup = config_aws_setup['VPC']['SecurityGroups']
 
-        Args:
-            config_aws_setup (dict): Config dict loaded from user's config.
+
+    def check_component(self):
+        """determine statuses of VPC(s) and SG(s) on AWS
 
         Returns:
             tuple:
@@ -34,7 +36,6 @@ class VPCSetup(ComponentSetup):
             'Existing': []
         }
 
-        self.security_group_setup = config_aws_setup['VPC']['SecurityGroups']
         # Status for each SG in each region
         sg_names = {sg_name: {
             'ToCreate': list(regions),
@@ -354,8 +355,9 @@ class VPCSetup(ComponentSetup):
         return os2.parse_json(sg_dir / f"{sg_name}.json")['Ingress']
 
 
-    def blocked_actions(self, sub_command):
-        self.describe_actions = [
+    @classmethod
+    def blocked_actions(cls, sub_command):
+        cls.describe_actions = [
             "ec2:DescribeVpcs",
             "ec2:DescribeSubnets",
             "ec2:DescribeSecurityGroups",
@@ -363,7 +365,7 @@ class VPCSetup(ComponentSetup):
             "ec2:DescribeRouteTables",
             "ec2:DescribeInternetGateways"
         ]
-        self.upload_actions = [
+        cls.upload_actions = [
             "ec2:CreateVpc",
             "ec2:CreateTags",
             "ec2:ModifyVpcAttribute",
@@ -379,7 +381,7 @@ class VPCSetup(ComponentSetup):
             "ec2:AuthorizeSecurityGroupIngress",
             "ec2:CreateTags"
         ]
-        self.delete_actions = [
+        cls.delete_actions = [
             "ec2:DeleteSecurityGroup",
             "ec2:DeleteSubnet",
             "ec2:DetachInternetGateway",

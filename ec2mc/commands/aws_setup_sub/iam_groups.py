@@ -4,11 +4,15 @@ from ec2mc.utils.base_classes import ComponentSetup
 
 class IAMGroupSetup(ComponentSetup):
 
-    def check_component(self, config_aws_setup):
-        """determine which groups need creating/updating, and which don't
+    def __init__(self, config_aws_setup):
+        self.iam_client = aws.iam_client()
+        self.path_prefix = f"/{consts.NAMESPACE}/"
+        # Local IAM group setup information (names and attached policies)
+        self.iam_group_setup = config_aws_setup['IAM']['Groups']
 
-        Args:
-            config_aws_setup (dict): Config dict loaded from user's config.
+
+    def check_component(self):
+        """determine which groups need creating/updating, and which don't
 
         Returns:
             dict: IAM group information.
@@ -17,12 +21,6 @@ class IAMGroupSetup(ComponentSetup):
                 'ToUpdate': Groups on AWS not the same as local versions.
                 'UpToDate': Groups on AWS up to date with local versions.
         """
-        self.iam_client = aws.iam_client()
-        self.path_prefix = f"/{consts.NAMESPACE}/"
-
-        # Local IAM group setup information (names and attached policies)
-        self.iam_group_setup = config_aws_setup['IAM']['Groups']
-
         # IAM Groups already present on AWS
         aws_groups = self.get_iam_groups()
 
@@ -66,7 +64,7 @@ class IAMGroupSetup(ComponentSetup):
         for group in group_names['AWSExtra']:
             print(f"IAM group {group} found from AWS but not locally.")
         for group in group_names['ToCreate']:
-            print(f"Local IAM group {group} not found from AWS.")
+            print(f"IAM group {group} not found from AWS.")
         for group in group_names['ToUpdate']:
             print(f"IAM group {group} on AWS to be updated.")
         for group in group_names['UpToDate']:
@@ -161,18 +159,19 @@ class IAMGroupSetup(ComponentSetup):
             PathPrefix=self.path_prefix)['Groups']
 
 
-    def blocked_actions(self, sub_command):
-        self.describe_actions = [
+    @classmethod
+    def blocked_actions(cls, sub_command):
+        cls.describe_actions = [
             "iam:ListGroups",
             "iam:ListAttachedGroupPolicies"
         ]
-        self.upload_actions = [
+        cls.upload_actions = [
             "iam:CreateGroup",
             "iam:ListPolicies",
             "iam:AttachGroupPolicy",
             "iam:DetachGroupPolicy"
         ]
-        self.delete_actions = [
+        cls.delete_actions = [
             "iam:DetachGroupPolicy",
             "iam:DeleteGroup"
         ]

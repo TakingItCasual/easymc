@@ -16,7 +16,6 @@
             "Sid": "InstancePermissions",
             "Effect": "Allow",
             "Action": [
-                "ec2:DescribeVpcs",
                 "ec2:DescribeInstances",
                 "ec2:StartInstances"
             ],

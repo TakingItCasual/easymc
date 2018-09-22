@@ -5,8 +5,11 @@
             "Sid": "AdminPermissions",
             "Effect": "Allow",
             "Action": [
+                "ec2:DescribeVpcs",
+                "ec2:DescribeSubnets",
                 "ec2:DescribeSecurityGroups",
                 "ec2:DescribeAddresses",
+                "ec2:DescribeKeyPairs",
                 "ec2:DescribeImages",
                 "ec2:CreateTags",
                 "ec2:StopInstances"
@@ -34,6 +37,23 @@
             "Resource": "*"
         },
         {
+            "Sid": "ElasticAddressPermissions",
+            "Effect": "Allow",
+            "Action": [
+                "ec2:AllocateAddress",
+                "ec2:AssociateAddress",
+                "ec2:DisassociateAddress",
+                "ec2:ReleaseAddress"
+            ],
+            "Resource": "*"
+        },
+        {
+            "Sid": "DeleteInstancePermissions",
+            "Effect": "Allow",
+            "Action": ["ec2:TerminateInstances"],
+            "Resource": "*"
+        },
+        {
             "Sid": "CreateInstancePermissions",
             "Effect": "Allow",
             "Action": ["ec2:RunInstances"],
@@ -46,31 +66,10 @@
             ]
         },
         {
-            "Sid": "DeleteInstancePermissions",
-            "Effect": "Allow",
-            "Action": ["ec2:TerminateInstances"],
-            "Resource": "*"
-        },
-        {
-            "Sid": "ElasticAddressPermissions",
-            "Effect": "Allow",
-            "Action": [
-                "ec2:AllocateAddress",
-                "ec2:AssociateAddress",
-                "ec2:DisassociateAddress",
-                "ec2:ReleaseAddress"
-            ],
-            "Resource": "*"
-        },
-        {
             "Sid": "LimitInstanceVolumeSize",
             "Effect": "Allow",
-            "Action": [
-                "ec2:RunInstances"
-            ],
-            "Resource": [
-                "arn:aws:ec2:*:*:volume/*"
-            ],
+            "Action": ["ec2:RunInstances"],
+            "Resource": ["arn:aws:ec2:*:*:volume/*"],
             "Condition": {
                 "NumericLessThanEquals": {
                     "ec2:VolumeSize": "16"
@@ -80,12 +79,8 @@
         {
             "Sid": "LimitInstanceTypes",
             "Effect": "Allow",
-            "Action": [
-                "ec2:RunInstances"
-            ],
-            "Resource": [
-                "arn:aws:ec2:*:*:instance/*"
-            ],
+            "Action": ["ec2:RunInstances"],
+            "Resource": ["arn:aws:ec2:*:*:instance/*"],
             "Condition": {
                 "StringEquals": {
                     "ec2:InstanceType": [

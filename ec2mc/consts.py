@@ -61,7 +61,7 @@ PK_PERMS = 0o400
 # Set in ec2mc.validate.validate_config:validate_region_whitelist
 REGIONS = None
 
-# Name of AMI to create instance with
+# Name of the Amazon Linux 2 AMI to create instances with
 AMI_NAME = "amzn2-ami-hvm-2.0.20180810-x86_64-gp2"
-# AMI's default user (used for SSHing into instance)
+# Value for instances' DefaultUser tag (used for SSH)
 AMI_DEFAULT_USER = "ec2-user"

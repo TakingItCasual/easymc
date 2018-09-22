@@ -12,8 +12,11 @@ from ec2mc.utils.find import find_addresses
 from ec2mc.utils.find import find_instances
 from ec2mc.validate import validate_perms
 
-# TODO: Consider allowing elastic IP address reassociation
 class CreateServer(CommandBase):
+
+    def __init__(self, cmd_args):
+        self.ec2_client = aws.ec2_client(cmd_args['region'])
+
 
     def main(self, cmd_args):
         """create and initialize a new EC2 instance
@@ -24,8 +27,6 @@ class CreateServer(CommandBase):
         template_yaml_files = os2.dir_files(consts.USER_DATA_DIR)
         if f"{cmd_args['template']}.yaml" not in template_yaml_files:
             halt.err(f"Template {cmd_args['template']} not found from config.")
-
-        self.ec2_client = aws.ec2_client(cmd_args['region'])
 
         self.validate_name_is_unique(cmd_args['name'])
 
@@ -252,6 +253,15 @@ class CreateServer(CommandBase):
 
 
     @staticmethod
+    def validate_name_is_unique(instance_name):
+        """validate desired instance name isn't in use by another instance"""
+        all_instances = find_instances.probe_regions()
+        instance_names = [instance['name'] for instance in all_instances]
+        if instance_name in instance_names:
+            halt.err(f"Instance name \"{instance_name}\" already in use.")
+
+
+    @staticmethod
     def validate_type_and_size_allowed(instance_type, volume_size):
         """validate user is allowed to create instance with type and size"""
         if validate_perms.blocked(actions=["ec2:RunInstances"],
@@ -274,15 +284,6 @@ class CreateServer(CommandBase):
         if region is not None and region != address['region']:
             halt.err(f"Elastic IP address is not in the {region} region.")
         return address
-
-
-    @staticmethod
-    def validate_name_is_unique(instance_name):
-        """validate desired instance name isn't in use by another instance"""
-        all_instances = find_instances.probe_regions()
-        instance_names = [instance['name'] for instance in all_instances]
-        if instance_name in instance_names:
-            halt.err(f"Instance name \"{instance_name}\" already in use.")
 
 
     @staticmethod

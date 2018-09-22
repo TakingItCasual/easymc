@@ -14,10 +14,10 @@ from ec2mc.commands.aws_setup_sub import ssh_key_pairs
 class AWSSetup(CommandBase):
 
     aws_components = [
-        iam_policies.IAMPolicySetup(),
-        iam_groups.IAMGroupSetup(),
-        vpcs.VPCSetup(),
-        ssh_key_pairs.SSHKeyPairSetup()
+        iam_policies.IAMPolicySetup,
+        iam_groups.IAMGroupSetup,
+        vpcs.VPCSetup,
+        ssh_key_pairs.SSHKeyPairSetup
     ]
 
     def main(self, cmd_args):
@@ -39,7 +39,8 @@ class AWSSetup(CommandBase):
         config_aws_setup = os2.parse_json(consts.AWS_SETUP_JSON)
 
         for component in self.aws_components:
-            component_info = component.check_component(config_aws_setup)
+            component = component(config_aws_setup)
+            component_info = component.check_component()
             print("")
             if cmd_args['action'] == "check":
                 component.notify_state(component_info)

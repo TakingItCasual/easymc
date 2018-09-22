@@ -6,9 +6,12 @@ from ec2mc.validate import validate_perms
 
 class RotateUserKey(CommandBase):
 
+    def __init__(self, cmd_args):
+        self.iam_client = aws.iam_client()
+
+
     def main(self, cmd_args):
         """delete IAM user's access key(s) and create new one"""
-        self.iam_client = aws.iam_client()
         path_prefix = f"/{consts.NAMESPACE}/"
         user_name = aws.validate_user_exists(path_prefix, cmd_args['name'])
 

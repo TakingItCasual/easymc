@@ -7,9 +7,12 @@ from ec2mc.validate import validate_perms
 
 class DeleteUser(CommandBase):
 
+    def __init__(self, cmd_args):
+        self.iam_client = aws.iam_client()
+
+
     def main(self, cmd_args):
         """delete an existing IAM user from AWS"""
-        self.iam_client = aws.iam_client()
         path_prefix = f"/{consts.NAMESPACE}/"
         user_name = cmd_args['name']
 

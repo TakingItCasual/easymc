@@ -6,6 +6,8 @@ IAM user is a part of.
 """
 
 import sys
+#import pprint
+#pp = pprint.PrettyPrinter(indent=2)
 
 from ec2mc import __version__
 from ec2mc.utils import halt
@@ -20,14 +22,11 @@ from ec2mc.commands import servers_cmds
 from ec2mc.commands import address_cmds
 from ec2mc.commands import user_cmds
 
-#import pprint
-#pp = pprint.PrettyPrinter(indent=2)
-
 def main(args=None):
     """ec2mc script's entry point
 
     Args:
-        args (list): Args for argparse. If None, set to sys.argv[1:].
+        args (list): Arguments for argparse. If None, set to sys.argv[1:].
     """
     if args is None:
         args = sys.argv[1:]
@@ -44,16 +43,17 @@ def main(args=None):
 
         # Use argparse to turn args into dict of arguments
         cmd_args = argv_to_cmd_args(args, commands)
-        # Get the command class object from the commands list
-        chosen_cmd = next(cmd(cmd_args) for cmd in commands
-            if cmd.cmd_name() == cmd_args['command'])
 
         # If basic configuration being done, skip config validation
-        if chosen_cmd.cmd_name() != "configure":
+        if cmd_args['command'] != "configure":
             # Validate config's config.json
             validate_config.main()
             # Validate config's aws_setup.json and YAML instance templates
             validate_setup.main()
+
+        # Get the command class object from the commands list
+        chosen_cmd = next(cmd(cmd_args) for cmd in commands
+            if cmd.cmd_name() == cmd_args['command'])
 
         # Validate IAM user has needed permissions to use the command
         halt.assert_empty(chosen_cmd.blocked_actions(cmd_args))

@@ -27,7 +27,6 @@ class Configure(CommandBase):
 
         if config_dict:
             os2.save_json(config_dict, consts.CONFIG_JSON)
-            consts.CONFIG_JSON.chmod(consts.CONFIG_PERMS)
 
 
     @staticmethod
