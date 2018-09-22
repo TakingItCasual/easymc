@@ -92,6 +92,8 @@ class CreateServer(CommandBase):
                 'sg_ids' (list[str]): ID(s) of VPC SG(s) to assign to instance.
                 'subnet_id' (str): ID of VPC subnet to assign to instance.
                 'key_name' (str): Name of EC2 key pair to assign (for SSH).
+                'instance_profile_arn' (str): ARN of IAM instance profile
+                    to associate to instance.
         """
         region = cmd_args['region']
         creation_kwargs = {}
@@ -122,7 +124,8 @@ class CreateServer(CommandBase):
             'key_name': self.validate_ec2_key_pair(),
             'sg_ids': self.template_security_groups(
                 region, vpc_id, instance_template['security_groups']),
-            'subnet_id': self.first_subnet_id(vpc_id)
+            'subnet_id': self.first_subnet_id(vpc_id),
+            'instance_profile_arn': self.iam_instance_profile_arn()
         })
 
         return creation_kwargs
@@ -213,6 +216,9 @@ class CreateServer(CommandBase):
             }],
             SecurityGroupIds=creation_kwargs['sg_ids'],
             SubnetId=creation_kwargs['subnet_id'],
+            IamInstanceProfile={
+                'Arn': creation_kwargs['instance_profile_arn']
+            },
             UserData=user_data
         )['Instances'][0]
 
@@ -252,6 +258,15 @@ class CreateServer(CommandBase):
 
 
     @staticmethod
+    def validate_name_is_unique(instance_name):
+        """validate desired instance name isn't in use by another instance"""
+        all_instances = find_instances.probe_regions()
+        instance_names = [instance['name'] for instance in all_instances]
+        if instance_name in instance_names:
+            halt.err(f"Instance name \"{instance_name}\" already in use.")
+
+
+    @staticmethod
     def validate_type_and_size_allowed(instance_type, volume_size):
         """validate user is allowed to create instance with type and size"""
         if validate_perms.blocked(actions=["ec2:RunInstances"],
@@ -274,15 +289,6 @@ class CreateServer(CommandBase):
         if region is not None and region != address['region']:
             halt.err(f"Elastic IP address is not in the {region} region.")
         return address
-
-
-    @staticmethod
-    def validate_name_is_unique(instance_name):
-        """validate desired instance name isn't in use by another instance"""
-        all_instances = find_instances.probe_regions()
-        instance_names = [instance['name'] for instance in all_instances]
-        if instance_name in instance_names:
-            halt.err(f"Instance name \"{instance_name}\" already in use.")
 
 
     @staticmethod
@@ -320,6 +326,19 @@ class CreateServer(CommandBase):
         }])['Subnets']
         vpc_subnets.sort(key=lambda k: k['AvailabilityZone'])
         return vpc_subnets[0]['SubnetId']
+
+
+    @staticmethod
+    def iam_instance_profile_arn():
+        """return ARN of namespace IAM instance profile"""
+        instance_profiles = aws.iam_client().list_instance_profiles(
+            PathPrefix=f"/{consts.NAMESPACE}/")['InstanceProfiles']
+        try:
+            return next(profile['Arn'] for profile in instance_profiles
+                if profile['InstanceProfileName'] == consts.NAMESPACE)
+        except StopIteration:
+            halt.err(f"Namespace IAM instance profile not found from AWS.",
+                "  Have you uploaded the AWS setup?")
 
 
     def validate_ec2_key_pair(self):
@@ -369,6 +388,7 @@ class CreateServer(CommandBase):
     def blocked_actions(self, cmd_args):
         needed_actions = [
             "ec2:DescribeInstances",
+            "iam:ListInstanceProfiles",
             "ec2:DescribeVpcs",
             "ec2:DescribeSubnets",
             "ec2:DescribeSecurityGroups",

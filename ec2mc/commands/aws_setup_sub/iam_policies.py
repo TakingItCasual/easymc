@@ -80,7 +80,7 @@ class IAMPolicySetup(ComponentSetup):
         for policy in policy_names['AWSExtra']:
             print(f"IAM policy {policy} found from AWS but not locally.")
         for policy in policy_names['ToCreate']:
-            print(f"Local IAM policy {policy} not found from AWS.")
+            print(f"IAM policy {policy} not found from AWS.")
         for policy in policy_names['ToUpdate']:
             print(f"IAM policy {policy} on AWS to be updated.")
         for policy in policy_names['UpToDate']:
@@ -136,13 +136,13 @@ class IAMPolicySetup(ComponentSetup):
         local_policy_document = os2.parse_json(
             self.policy_dir / f"{policy_name}.json")
 
-        aws_policy_desc = next(aws_policy for aws_policy in aws_policies
+        aws_policy = next(aws_policy for aws_policy in aws_policies
             if aws_policy['PolicyName'] == policy_name)
 
         # Delete beforehand to avoid error of 5 versions already existing
-        self.delete_old_policy_versions(aws_policy_desc['Arn'])
+        self.delete_old_policy_versions(aws_policy['Arn'])
         self.iam_client.create_policy_version(
-            PolicyArn=aws_policy_desc['Arn'],
+            PolicyArn=aws_policy['Arn'],
             PolicyDocument=json.dumps(local_policy_document),
             SetAsDefault=True
         )

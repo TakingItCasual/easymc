@@ -10,7 +10,7 @@ from ec2mc.utils.threader import Threader
 class VPCSetup(ComponentSetup):
 
     def check_component(self, config_aws_setup):
-        """determine statuses for VPC(s) and SG(s) on AWS
+        """determine status(es) of VPC(s) and SG(s) on AWS
 
         Args:
             config_aws_setup (dict): Config dict loaded from user's config.

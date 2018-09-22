@@ -101,10 +101,9 @@ class SSHKeyPairSetup(ComponentSetup):
 
     def region_namespace_key_fingerprint(self, region):
         """return key fingerprint if region has namespace RSA key pair"""
-        key_pairs = aws.ec2_client(region).describe_key_pairs(Filters=[{
-            'Name': "key-name",
-            'Values': [self.key_pair_name]
-        }])['KeyPairs']
+        key_pairs = aws.ec2_client(region).describe_key_pairs(Filters=[
+            {'Name': "key-name", 'Values': [self.key_pair_name]}
+        ])['KeyPairs']
         if key_pairs:
             return key_pairs[0]['KeyFingerprint']
         return None

@@ -4,10 +4,10 @@ from setuptools import setup
 from setuptools import find_packages
 
 from ec2mc import __version__
+from ec2mc import __min_python__
 
 CURRENT_PYTHON = sys.version_info[:2]
-REQUIRED_PYTHON = (3, 6)
-if CURRENT_PYTHON < REQUIRED_PYTHON:
+if CURRENT_PYTHON < __min_python__:
     sys.stderr.write("""
 ==========================
 Unsupported Python version
@@ -15,7 +15,7 @@ Unsupported Python version
 
 This version of ec2mc requires Python {}.{}. You're using Python {}.{}.
 Install the required Python version and ensure it is in your PATH.
-""".format(*(REQUIRED_PYTHON + CURRENT_PYTHON)))
+""".format(*(__min_python__ + CURRENT_PYTHON)))
     sys.exit(1)
 
 REPO_URL = "https://github.com/TakingItCasual/ec2mc"
@@ -33,7 +33,7 @@ setup(
     author="TakingItCasual",
     author_email="takingitcasual+gh@gmail.com",
     url=REPO_URL,
-    download_url="{0}/archive/v{1}.tar.gz".format(REPO_URL, __version__),
+    download_url="{}/archive/v{}.tar.gz".format(REPO_URL, __version__),
     license="MIT",
     classifiers=[
         "Development Status :: 3 - Alpha",
@@ -52,7 +52,7 @@ setup(
     ],
     keywords="mc minecraft ssh server aws ec2 iam cloud-config",
     packages=find_packages(exclude=["docs", "tests"]),
-    python_requires="~=3.6",
+    python_requires="~={}.{}".format(*__min_python__),
     entry_points={'console_scripts': ["ec2mc=ec2mc.__main__:main"]},
     include_package_data=True,
     install_requires=[
@@ -60,7 +60,7 @@ setup(
         "nbtlib ~= 1.2",
         "deepdiff ~= 3.3",
         "cryptography ~= 2.3",
-        "ruamel.yaml >= 0.15, < 0.16",
+        "ruamel.yaml ~= 0.15.0",
         "jsonschema ~= 2.6"
     ]
 )

@@ -11,10 +11,10 @@ ec2mc_template_info:
   - local_dir: crontabs
     instance_dir: /etc/cron.d/
   - local_dir: manage_scripts
-    instance_dir: /home/ec2-user/manage-scripts/
+    instance_dir: /home/ssm-user/manage-scripts/
     chmod: "0775"
   - local_dir: mc_folder
-    instance_dir: /home/ec2-user/minecraft/
+    instance_dir: /home/ssm-user/minecraft/
 
 # add security patches and bug fixes
 repo_update: true
@@ -31,10 +31,10 @@ packages:
 runcmd:
 - [ curl, "https://launcher.mojang.com/v1/objects/\
   fe123682e9cb30031eae351764f653500b7396c9/server.jar", # 1.13.1 server
-  --create-dirs, -o, /home/ec2-user/minecraft/server.jar ]
-- /home/ec2-user/manage-scripts/start_server.sh &
+  --create-dirs, -o, /home/ssm-user/minecraft/server.jar ]
+- /home/ssm-user/manage-scripts/start_server.sh &
 - wait $!
-- sed -i 's/eula=false/eula=true/g' /home/ec2-user/minecraft/eula.txt
+- sed -i 's/eula=false/eula=true/g' /home/ssm-user/minecraft/eula.txt
 
 # Reboot instance after completing setup
 power_state:

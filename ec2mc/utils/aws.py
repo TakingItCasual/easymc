@@ -79,15 +79,9 @@ def attach_tags(region, resource_id, name_tag=None):
         resource_id (str): The ID of the resource.
         name_tag (str): A tag value to assign to the tag key "Name".
     """
-    new_tags = [{
-        'Key': "Namespace",
-        'Value': consts.NAMESPACE
-    }]
+    new_tags = [{'Key': "Namespace", 'Value': consts.NAMESPACE}]
     if name_tag is not None:
-        new_tags.append({
-            'Key': "Name",
-            'Value': name_tag
-        })
+        new_tags.append({'Key': "Name", 'Value': name_tag})
 
     not_found_regex = re.compile("Invalid[a-zA-Z]*\\.NotFound")
     for _ in range(60):

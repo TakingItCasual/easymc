@@ -39,7 +39,12 @@ IAM_ARN = None
 IAM_NAME = None
 
 """This string is used for the following purposes:
-- Path prefix for IAM groups, policies, and users ("/" on both sides).
+- Path prefix ("/" on both sides) for:
+  - IAM group(s).
+  - IAM policy(s).
+  - IAM user(s).
+  - IAM role (also as Name).
+  - IAM instance profile (also as Name).
 - Name and Namespace tags of:
   - VPC created in each region.
     - VPC's route table.
@@ -61,7 +66,7 @@ PK_PERMS = 0o400
 # Set in ec2mc.validate.validate_config:validate_region_whitelist
 REGIONS = None
 
-# Name of AMI to create instance with
+# Name of the Amazon Linux 2 AMI to create instances with
 AMI_NAME = "amzn2-ami-hvm-2.0.20180810-x86_64-gp2"
-# AMI's default user (used for SSHing into instance)
+# Value for instances' DefaultUser tag (used for SSH)
 AMI_DEFAULT_USER = "ec2-user"

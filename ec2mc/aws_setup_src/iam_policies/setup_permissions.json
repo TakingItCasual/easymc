@@ -86,6 +86,26 @@
                 "ec2:DeleteKeyPair"
             ],
             "Resource": "*"
+        },
+        {
+            "Sid": "IAMInstanceProfileSetupPermissions",
+            "Effect": "Allow",
+            "Action": [
+                "iam:ListInstanceProfiles",
+                "iam:ListRoles",
+                "iam:CreateRole",
+                "iam:CreateInstanceProfile",
+                "iam:ListPolicies",
+                "iam:AttachRolePolicy",
+                "iam:PassRole",
+                "iam:AddRoleToInstanceProfile",
+                "iam:RemoveRoleFromInstanceProfile",
+                "iam:ListAttachedRolePolicies",
+                "iam:DetachRolePolicy",
+                "iam:DeleteRole",
+                "iam:DeleteInstanceProfile"
+            ],
+            "Resource": "*"
         }
     ]
 }

@@ -8,6 +8,7 @@ from ec2mc.validate import validate_perms
 
 from ec2mc.commands.aws_setup_sub import iam_policies
 from ec2mc.commands.aws_setup_sub import iam_groups
+from ec2mc.commands.aws_setup_sub import iam_instance_profiles
 from ec2mc.commands.aws_setup_sub import vpcs
 from ec2mc.commands.aws_setup_sub import ssh_key_pairs
 
@@ -16,6 +17,7 @@ class AWSSetup(CommandBase):
     aws_components = [
         iam_policies.IAMPolicySetup(),
         iam_groups.IAMGroupSetup(),
+        iam_instance_profiles.IAMInstanceProfileSetup(),
         vpcs.VPCSetup(),
         ssh_key_pairs.SSHKeyPairSetup()
     ]
