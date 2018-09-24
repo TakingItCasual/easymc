@@ -95,9 +95,8 @@ def create_configuration_zip(new_key, give_ssh_key, user_name):
 
 def del_readonly(action, name, exc):
     """handle deletion of readonly files for shutil.rmtree"""
-    name = Path(name)
-    name.chmod(0o777)
-    name.unlink()
+    Path(name).chmod(0o777)
+    action(name)
 
 
 def recursive_cmpfiles(src_dir, dest_dir):

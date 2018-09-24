@@ -15,15 +15,7 @@ class CreateUser(CommandBase):
         """create a new IAM user under an IAM group"""
         iam_client = aws.iam_client()
         path_prefix = f"/{consts.NAMESPACE}/"
-
-        # Validate specified IAM group exists
-        iam_groups = iam_client.list_groups(PathPrefix=path_prefix)['Groups']
-        for iam_group in iam_groups:
-            if (iam_group['Path'] == path_prefix and
-                    iam_group['GroupName'] == cmd_args['group']):
-                break
-        else:
-            halt.err(f"IAM group {cmd_args['group']} not found from AWS.")
+        aws.validate_group_exists(path_prefix, cmd_args['group'])
 
         # IAM user created and added to group (given the name is unique)
         try:

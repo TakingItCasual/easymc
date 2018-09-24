@@ -2,7 +2,6 @@ import importlib.util
 
 from ec2mc import consts
 
-# TODO: Offer JSON validation for handler JSON files.
 def main(instance, new_ip):
     """pass along instance info to handler under config's ip_handlers"""
     if consts.USE_HANDLER is False:
@@ -18,8 +17,7 @@ def main(instance, new_ip):
 
     handler = load_script(handler_path)
     if handler is not None:
-        handler.main(
-            instance['region'], instance['name'], instance['id'], new_ip)
+        handler.main(instance['name'], new_ip)
 
 
 def load_script(script_path):
@@ -32,5 +30,5 @@ def load_script(script_path):
     except ImportError as e:
         handler_base = script_path.name
         print(f"  {e.name} package required by {handler_base} not found.")
-        print(f"    Install with \"pip install {e.name}\".")
+        print(f"    Install with \"python -m pip install {e.name}\".")
     return None

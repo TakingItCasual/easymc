@@ -53,7 +53,6 @@ class ParentCommand(CommandBase):
     sub_commands = []
 
     def __init__(self, cmd_args):
-        super().__init__(cmd_args)
         self.chosen_cmd = next(cmd(cmd_args) for cmd in self.sub_commands
             if cmd.cmd_name() == cmd_args['action'])
 

@@ -9,7 +9,7 @@ Script Installation
 
 This script requires Python (version 3.6 or greater).
 Python can be downloaded from http://www.python.org/.
-If your OS is 64-bit, please find and download the latest 64-bit version of Python from the downloads page for your OS (32-bit Python can't use 64-bit exclusive executables).
+If your OS is 64-bit, please download the latest 64-bit version of Python from the downloads page for your OS (e.g. `Windows x86-64 executable installer`_).
 In Python's installer, enable the "Add Python3.x to PATH" option so that Python can be used from a terminal.
 The script can then be installed from a terminal with pip::
 
@@ -29,7 +29,7 @@ To create the necessary AWS account, visit https://aws.amazon.com/.
 You'll need to attach a payment method, as the script uses services not covered by the free tier.
 
 This script requires an AWS IAM user access key to interact with your account.
-To set up your AWS account with the configuration provided by the script, a temporary IAM user is needed.
+To set up your AWS account with the configuration provided by the script, a temporary IAM user with administrator privileges is needed.
 The script provides IAM group permissions to prevent accidentally creating large and expensive servers, so the temporary user should be deleted after creating an IAM user under the setup_users IAM group.
 
 To create the temporary IAM user, go to your `IAM Management Console`_ and create a new user.
@@ -130,6 +130,8 @@ Afterword
 
 See `Managing Users`_ for how to give other people IAM user access keys so they can join and start the server themselves.
 
+
+.. _Windows x86-64 executable installer: https://www.python.org/downloads/windows/
 
 .. _IAM Management Console: https://console.aws.amazon.com/iam/home#/users
 

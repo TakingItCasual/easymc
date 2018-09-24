@@ -1,5 +1,3 @@
-from botocore.exceptions import WaiterError
-
 from ec2mc.utils import aws
 from ec2mc.utils.base_classes import CommandBase
 from ec2mc.utils.find import find_instances
@@ -15,6 +13,8 @@ class StopServers(CommandBase):
         """
         instances = find_instances.main(cmd_args)
 
+        instances_to_stop = False
+        instances_stopping = False
         for instance in instances:
             print("")
             print(f"Attempting to stop {instance['name']} "
@@ -26,23 +26,23 @@ class StopServers(CommandBase):
             if instance_state == "stopped":
                 print("  Instance is already stopped.")
                 continue
-
-            ec2_client = aws.ec2_client(instance['region'])
-
-            print("  Stopping instance...")
-            ec2_client.stop_instances(InstanceIds=[instance['id']])
-
-            try:
-                ec2_client.get_waiter("instance_stopped").wait(
-                    InstanceIds=[instance['id']],
-                    WaiterConfig={'Delay': 5, 'MaxAttempts': 12}
-                )
-            except WaiterError:
-                print("  Instance not stopped after waiting 1 minute.")
-                print("    Check instance's state in a minute.")
+            if instance_state == "stopping":
+                instances_stopping = True
+                print("  Instance is already in the process of stopping.")
                 continue
 
-            print("  Instance stopped.")
+            instances_to_stop = True
+            aws.ec2_client(instance['region']).stop_instances(
+                InstanceIds=[instance['id']])
+            print(f"  Instance is now stopping.")
+
+        print("")
+        if instances_to_stop is True:
+            print("Instance(s) may take a few minutes to fully stop.")
+        elif instances_stopping is True:
+            print("Instance(s) already stopping.")
+        else:
+            print("No instances to stop.")
 
 
     @classmethod

@@ -8,7 +8,7 @@ from ec2mc.validate import validate_perms
 class BeUser(CommandBase):
 
     def main(self, cmd_args):
-        """become another user by setting their access key as default"""
+        """set another IAM user's access key as default in config"""
         user_name = cmd_args['user_name']
 
         if user_name.lower() == consts.IAM_NAME.lower():

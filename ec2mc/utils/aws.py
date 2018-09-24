@@ -96,7 +96,7 @@ def attach_tags(region, resource_id, name_tag=None):
 
 
 def validate_user_exists(path_prefix, user_name):
-    """validate IAM user exists, and return exact name
+    """validate IAM user exists (case insensitive), and return exact name
 
     Requires iam:ListUsers permission.
     """
@@ -105,6 +105,18 @@ def validate_user_exists(path_prefix, user_name):
         if iam_user['UserName'].lower() == user_name.lower():
             return iam_user['UserName']
     halt.err(f"IAM user \"{user_name}\" not found from AWS.")
+
+
+def validate_group_exists(path_prefix, group_name):
+    """validate IAM group exists (case sensitive), and return name
+
+    Requires iam:ListGroups permission.
+    """
+    iam_groups = iam_client().list_groups(PathPrefix=path_prefix)['Groups']
+    for iam_group in iam_groups:
+        if iam_group['GroupName'] == group_name:
+            return iam_group['GroupName']
+    halt.err(f"IAM group \"{group_name}\" not found from AWS.")
 
 
 def access_key_owner(access_key_id):
