@@ -1,5 +1,4 @@
 from time import sleep
-import pytest
 
 from ec2mc import __main__
 

@@ -38,13 +38,14 @@ In step 2, switch to "Attach existing policies directly" and enable "Administrat
 Create the user.
 Keep the page that loads open for the next step.
 
-To have the script use the access key, you can download your IAM user's accessKeys.csv file (by clicking "Download .csv") and move the file to the script's configuration folder.
-Alternatively, you can copy the IAM user's access key ID and secret access key, and paste them into the corresponding inputs for the access key configuration command.
+To have the script use the IAM user access key, you can download the accessKeys.csv file (by clicking "Download .csv") and move the file to the script's configuration folder.
+Alternatively, you can copy the access key ID and secret access key, and paste them into the corresponding inputs for the access key configuration command.
 For example::
 
     ec2mc configure access_key AKIAIOSFODNN7EXAMPLE wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
 
-You must specify what `AWS Region`_\(s) the script will interact with (ideally, the one(s) closest to you).
+The script will attempt to determine the closest `AWS Region`_ to you and set it as your region whitelist.
+However, automated latency comparisons are not perfect, so it is recommended to set the region whitelist manually to ensure low latency.
 For example, to restrict the script to interacting with just the London region::
 
     ec2mc configure whitelist eu-west-2
@@ -79,9 +80,9 @@ AWS EC2 On-Demand instances (the cloud servers) can be started and stopped at wi
 Server IP Persistence
 ~~~~~~~~~~~~~~~~~~~~~
 
-By default, the script creates an instance which gets a different IP each time it's started, as this is the cheaper option (see Costs_).
-To create an instance with an elastic IP address (a persistent IP), append :bash:`--elastic_ip` to the instance creation command.
-An elastic IP address can still be attached afterwards with the :bash:`address` subcommands (see Commands_).
+By default, the script creates an instance which receives a different IP each time it's started, as this is the cheaper option (see Costs_).
+An instance can be created with an elastic IP address (a persistent IP) by appending :bash:`--elastic_ip` to the instance creation command.
+An elastic IP address can still be attached afterwards with the :bash:`address` command's subcommands (see Commands_).
 
 To handle non-persistent IPs, the script contains functionality to automatically update instance IPs in the the local Minecraft client's server list.
 The server list will be updated whenever either of the two following script commands are run::
@@ -91,7 +92,7 @@ The server list will be updated whenever either of the two following script comm
 
 This functionality is still available for instances with persistent IP addresses.
 
-You could modify your Minecraft client shortcut to automatically run the :bash:`start` command, to eliminate the need to manually use the script to start servers and update IPs in your server list.
+You could modify your Minecraft client shortcut to automatically run the :bash:`start` command, to eliminate the need to manually use the script from a terminal to start servers and update IPs in your server list.
 
 Creating The Server
 ~~~~~~~~~~~~~~~~~~~
@@ -115,7 +116,7 @@ Server Management
 -----------------
 
 You should now have an EC2 instance hosting a Minecraft server up and running.
-The subcommands under the :bash:`server` and :bash:`servers` commands can be used to manage your instance(s) (see Commands_).
+See Commands_ for the various commands that the script provides for managing instances.
 
 If you want to manage the server directly (e.g. to make yourself a server operator), you can SSH into it with the script (provided you have OpenSSH_ or PuTTY_ installed) using the following command::
 
@@ -128,7 +129,7 @@ You can then close the SSH connection by typing :bash:`exit`.
 Afterword
 ---------
 
-See `Managing Users`_ for how to give other people IAM user access keys so they can join and start the server themselves.
+See `Managing Users`_ for how to give friends/family IAM user access keys so they can join and start the server themselves.
 
 
 .. _Windows x86-64 executable installer: https://www.python.org/downloads/windows/

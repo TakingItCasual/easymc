@@ -62,7 +62,7 @@ def parse_yaml(file_path):
     file_contents = file_path.read_text(encoding="utf-8")
     try:
         return yaml.safe_load(file_contents)
-    except Exception: # Multiple exceptions possible. Idk what they all are.
+    except Exception:  # Multiple exceptions possible. Idk what they all are.
         halt.err(f"{file_path} is not a valid YAML file.")
 
 

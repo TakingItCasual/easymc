@@ -8,6 +8,7 @@ from ec2mc.utils.base_classes import CommandBase
 from ec2mc.utils.find import find_instances
 from ec2mc.validate import validate_perms
 
+# TODO: Look into SSH over SSM when it becomes available
 class SSHServer(CommandBase):
 
     def main(self, cmd_args):

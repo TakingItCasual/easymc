@@ -9,8 +9,8 @@ from ec2mc import consts
 from ec2mc.utils import halt
 
 def ec2_client(region):
-    """create and return EC2 client using IAM user access key and a region"""
-    if region is None: # True for when command has unused region argument
+    """wrapper for ec2_client_no_validate which validates specified region"""
+    if region is None:  # True for when command has unused region argument
         if len(consts.REGIONS) > 1:
             halt.err("AWS region whitelist has more than one entry.",
                 "  A region must be specified using the -r argument.")
@@ -18,6 +18,11 @@ def ec2_client(region):
     elif region not in consts.REGIONS:
         halt.err(f"\"{region}\" not in region whitelist.")
 
+    return ec2_client_no_validate(region)
+
+
+def ec2_client_no_validate(region):
+    """create and return EC2 client using IAM user access key and a region"""
     return boto3.client("ec2",
         aws_access_key_id=consts.KEY_ID,
         aws_secret_access_key=consts.KEY_SECRET,

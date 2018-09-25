@@ -66,7 +66,7 @@ class DeleteServer(CommandBase):
         cmd_parser.add_argument(
             "name", help="value for instance's tag key \"Name\"")
         cmd_parser.add_argument(
-           "-s", "--save_ip", action="store_true",
+            "-s", "--save_ip", action="store_true",
             help="preserve any associated elastic IPs")
         cmd_parser.add_argument(
             "-r", dest="region", metavar="",

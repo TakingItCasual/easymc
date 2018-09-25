@@ -309,6 +309,10 @@ class CreateServer(CommandBase):
     def template_security_groups(region, vpc_id, security_groups):
         """return VPC security group ID(s)"""
         vpc_sgs = aws.get_vpc_security_groups(region, vpc_id)
+        vpc_sg_names = [sg['GroupName'] for sg in vpc_sgs]
+        if not set(security_groups).issubset(set(vpc_sg_names)):
+            halt.err("Following template SG(s) not found from AWS:",
+                *(set(security_groups) - set(vpc_sg_names)))
         return [sg['GroupId'] for sg in vpc_sgs
             if sg['GroupName'] in security_groups]
 

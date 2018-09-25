@@ -6,7 +6,6 @@ from nbtlib.tag import Compound
 from nbtlib.tag import String
 
 from ec2mc import consts
-from ec2mc.utils import os2
 
 def main(instance_name, new_ip):
     """update MC client's server list with specified instance's IP

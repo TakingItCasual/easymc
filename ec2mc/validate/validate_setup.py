@@ -5,7 +5,6 @@ from ec2mc import consts
 from ec2mc.utils import os2
 from ec2mc.utils import halt
 
-# TODO: Validate local AWS setup against AWS (e.g. template SG(s))
 def main():
     """validate contents of user's config's aws_setup directory"""
     # Directory path for distribution's packaged aws_setup
@@ -101,18 +100,11 @@ def validate_instance_templates(config_aws_setup):
     template_yaml_files = os2.dir_files(consts.USER_DATA_DIR, ext=".yaml")
 
     schema = os2.get_json_schema("instance_templates")
-    sg_names = [sg for sg in config_aws_setup['VPC']['SecurityGroups']]
     for template_yaml_file in template_yaml_files:
         user_data = os2.parse_yaml(consts.USER_DATA_DIR / template_yaml_file)
         os2.validate_dict(user_data, schema, template_yaml_file)
 
         template_info = user_data['ec2mc_template_info']
-        # Validate template security group(s) also described in aws_setup.json
-        for security_group in template_info['security_groups']:
-            if security_group not in sg_names:
-                halt.err(f"{template_yaml_file} incorrectly formatted:",
-                    f"SG {security_group} not found in aws_setup.json.")
-
         template_name = Path(template_yaml_file).stem
         template_dir = consts.USER_DATA_DIR / template_name
         # If write_directories in template, validate template directory exists
@@ -140,7 +132,7 @@ def validate_vpc_security_groups(config_aws_setup):
     # Actual SG json files located in aws_setup/vpc_security_groups/
     vpc_sg_json_files = os2.dir_files(sg_dir, ext=".json")
 
-    # Halt if aws_setup.json describes SGs not found in vpc_security_groups
+    # Halt if aws_setup.json describes SGs not found in sg_dir
     if not set(setup_sg_list).issubset(set(vpc_sg_json_files)):
         halt.err(
             "Following SG(s) not found from aws_setup/vpc_security_groups/:",

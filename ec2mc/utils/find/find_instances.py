@@ -24,6 +24,10 @@ def main(cmd_args, *, single_instance=False):
     all_instances = probe_regions(regions, tag_filter)
 
     if not all_instances:
+        if (cmd_args['region_filter'] or cmd_args['tag_filters'] or
+                cmd_args['name_filter'] or cmd_args['id_filter']):
+            halt.err("No namespace instances found.",
+                "  Remove specified filter(s) and try again.")
         halt.err("No namespace instances found.")
 
     for region in regions:

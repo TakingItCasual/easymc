@@ -20,4 +20,4 @@ def stop(*halt_messages):
         print("")
         for halt_message in halt_messages:
             print(halt_message)
-    raise SystemExit(0) # Equivalent to sys.exit(0)
+    raise SystemExit(0)  # Equivalent to sys.exit(0)
