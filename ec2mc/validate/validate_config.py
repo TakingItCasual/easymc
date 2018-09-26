@@ -102,7 +102,7 @@ def validate_region_whitelist(config_dict):
         if not set(whitelist).issubset(set(region_names)):
             halt.err("Following invalid region(s) in config whitelist:",
                 *(set(whitelist) - set(region_names)))
-        consts.REGIONS = whitelist
+        consts.REGIONS = sorted(whitelist)
     else:
         print("Searching for closest AWS EC2 region...")
         closest_region = find_closest_region.main(region_names)

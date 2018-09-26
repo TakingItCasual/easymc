@@ -30,11 +30,19 @@ packages:
 # Commands to run on instance's first boot
 runcmd:
 - mkdir -p /home/ec2-user/minecraft/ && cd "$_"
-# 1.13.1 Minecraft server
-- [ curl, "https://launcher.mojang.com/v1/objects/\
-  fe123682e9cb30031eae351764f653500b7396c9/server.jar", -o, server.jar ]
-- java -Xms1024M -Xmx1024M -jar server.jar nogui & wait $!
+# 1.12.2 Forge installer (14.23.4.2759)
+- [ curl, "https://files.minecraftforge.net/maven/net/minecraftforge/forge/\
+  1.12.2-14.23.4.2759/forge-1.12.2-14.23.4.2759-installer.jar",
+  -o, forge_installer.jar ]
+- java -Xms1024M -Xmx1024M -jar forge_installer.jar nogui --installServer
+- rm forge_installer.jar
+# The actual Forge server
+- mv *universal.jar forge.jar
+- java -Xms1024M -Xmx1024M -jar forge.jar nogui & wait $!
 - sed -i 's/eula=false/eula=true/g' eula.txt
+- mkdir -p mods && cd "$_"
+# 1.12.2 Chisels & Bits (14.24)
+- curl -O https://media.forgecdn.net/files/2617/805/chiselsandbits-14.24.jar
 
 # Reboot instance after completing setup
 power_state:

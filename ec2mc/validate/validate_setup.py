@@ -37,8 +37,8 @@ def main():
 
     validate_iam_policies(config_aws_setup)
     validate_iam_groups(config_aws_setup)
-    validate_instance_templates(config_aws_setup)
     validate_vpc_security_groups(config_aws_setup)
+    validate_instance_templates()
 
 
 def get_config_aws_setup_dict():
@@ -95,7 +95,31 @@ def validate_iam_groups(config_aws_setup):
                     if policy not in setup_policies])
 
 
-def validate_instance_templates(config_aws_setup):
+def validate_vpc_security_groups(config_aws_setup):
+    """validate aws_setup.json reflects contents of vpc_security_groups dir"""
+    sg_dir = consts.AWS_SETUP_DIR / "vpc_security_groups"
+
+    # SGs described in aws_setup/aws_setup.json
+    setup_sg_list = [f"{sg_name}.json" for sg_name
+        in config_aws_setup['VPC']['SecurityGroups']]
+    # Actual SG json files located in aws_setup/vpc_security_groups/
+    vpc_sg_json_files = os2.dir_files(sg_dir, ext=".json")
+
+    # Halt if aws_setup.json describes SGs not found in sg_dir
+    if not set(setup_sg_list).issubset(set(vpc_sg_json_files)):
+        halt.err(
+            "Following SG(s) not found from aws_setup/vpc_security_groups/:",
+            *[sg for sg in setup_sg_list if sg not in vpc_sg_json_files]
+        )
+
+    # Halt if any security group missing Ingress key
+    schema = os2.get_json_schema("vpc_security_groups")
+    for sg_file in vpc_sg_json_files:
+        sg_dict = os2.parse_json(sg_dir / sg_file)
+        os2.validate_dict(sg_dict, schema, f"SG {sg_file}")
+
+
+def validate_instance_templates():
     """validate config aws_setup user_data YAML instance templates"""
     template_yaml_files = os2.dir_files(consts.USER_DATA_DIR, ext=".yaml")
 
@@ -120,27 +144,3 @@ def validate_instance_templates(config_aws_setup):
                         halt.err(f"{template_name} template's "
                             f"{write_dir['local_dir']} subdir not found.")
     # write_files path uniqueness validated in create:process_user_data
-
-
-def validate_vpc_security_groups(config_aws_setup):
-    """validate aws_setup.json reflects contents of vpc_security_groups dir"""
-    sg_dir = consts.AWS_SETUP_DIR / "vpc_security_groups"
-
-    # SGs described in aws_setup/aws_setup.json
-    setup_sg_list = [f"{sg_name}.json" for sg_name
-        in config_aws_setup['VPC']['SecurityGroups']]
-    # Actual SG json files located in aws_setup/vpc_security_groups/
-    vpc_sg_json_files = os2.dir_files(sg_dir, ext=".json")
-
-    # Halt if aws_setup.json describes SGs not found in sg_dir
-    if not set(setup_sg_list).issubset(set(vpc_sg_json_files)):
-        halt.err(
-            "Following SG(s) not found from aws_setup/vpc_security_groups/:",
-            *[sg for sg in setup_sg_list if sg not in vpc_sg_json_files]
-        )
-
-    # Halt if any security group missing Ingress key
-    schema = os2.get_json_schema("vpc_security_groups")
-    for sg_file in vpc_sg_json_files:
-        sg_dict = os2.parse_json(sg_dir / sg_file)
-        os2.validate_dict(sg_dict, schema, f"SG {sg_file}")

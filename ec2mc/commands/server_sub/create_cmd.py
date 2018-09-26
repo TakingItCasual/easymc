@@ -347,9 +347,9 @@ class CreateServer(CommandBase):
     def add_documentation(cls, argparse_obj):
         cmd_parser = super().add_documentation(argparse_obj)
         cmd_parser.add_argument(
-            "template", help="instance setup template in config to use")
-        cmd_parser.add_argument(
             "name", help="value for instance's tag key \"Name\"")
+        cmd_parser.add_argument(
+            "template", help="instance setup template in config to use")
         cmd_parser.add_argument(
             "-c", "--confirm", action="store_true",
             help="confirm instance creation")

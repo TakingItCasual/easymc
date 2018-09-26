@@ -18,5 +18,8 @@ def test_user_commands():
         "user", "rotate_key", "Ec2Mc_TeSt_UsEr"
     ]) is not False
     assert __main__.main([
+        "user", "set_group", "EC2MC_TEST_USER", "admin_users"
+    ]) is not False
+    assert __main__.main([
         "user", "delete", "eC2mC_tEsT_uSeR"
     ]) is not False

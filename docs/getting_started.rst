@@ -100,13 +100,14 @@ Creating The Server
 The script provides the template "mc_template" for creating a Minecraft 1.13.1 vanilla server.
 Create an instance (e.g. named "test_server") using the following command::
 
-    ec2mc server create mc_template test_server
+    ec2mc server create test_server mc_template
 
 Or if a persistent IP address is desired::
 
-    ec2mc server create mc_template test_server --elastic_ip
+    ec2mc server create test_server mc_template --elastic_ip
 
-The server will take a few minutes to initialize before it is ready for use/management.
+The server will take some minutes to initialize before it is ready for use/management.
+It is possible to SSH into the instance before the initialization is complete, but the server won't be running and you'll get booted for the post-initialization reboot.
 
 All provided templates contain bash scripts (which are uploaded to the instances themselves) which will shut down the instances after 10 consecutive minutes of no online players (and no SSH connections).
 
