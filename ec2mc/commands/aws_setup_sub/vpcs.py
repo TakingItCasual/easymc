@@ -126,7 +126,8 @@ class VPCSetup(ComponentSetup):
         if create_num > 0:
             print(f"VPC {consts.NAMESPACE} created in {create_num} region(s).")
         else:
-            print(f"VPC {consts.NAMESPACE} already present in all regions.")
+            print(f"VPC {consts.NAMESPACE} already present "
+                "in whitelisted region(s).")
 
         vpc_ids = {}
         threader = Threader()
@@ -156,7 +157,8 @@ class VPCSetup(ComponentSetup):
                 print(f"VPC SG {sg_name} updated in "
                     f"{len(sg_regions['ToUpdate'])} region(s).")
             if not sg_regions['ToCreate'] and not sg_regions['ToUpdate']:
-                print(f"VPC SG {sg_name} already up to date in all regions.")
+                print(f"VPC SG {sg_name} already up to date "
+                    "in whitelisted region(s).")
 
 
     def delete_component(self):
@@ -167,7 +169,8 @@ class VPCSetup(ComponentSetup):
         deleted_vpcs = threader.get_results()
 
         if any(deleted_vpcs):
-            print(f"VPC {consts.NAMESPACE} deleted from all AWS regions.")
+            print(f"VPC {consts.NAMESPACE} deleted "
+                "from whitelisted AWS region(s).")
         else:
             print("No VPCs to delete.")
 

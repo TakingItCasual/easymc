@@ -13,7 +13,7 @@ class SSHKeyPairSetup(ComponentSetup):
 
 
     def check_component(self):
-        """determine which regions need namespace RSA key pairs created
+        """determine which regions need namespace EC2 key pair created
 
         Returns:
             dict: Which regions namespace EC2 key pair exists in.
@@ -46,7 +46,7 @@ class SSHKeyPairSetup(ComponentSetup):
 
 
     def upload_component(self, fingerprint_regions):
-        """create namespace RSA key pairs in all AWS regions
+        """create namespace EC2 key pair in each whitelisted AWS regions
 
         Args:
             fingerprint_regions (dict): See what check_component returns.
@@ -84,11 +84,11 @@ class SSHKeyPairSetup(ComponentSetup):
                 f"{len(created_pair_fingerprints)} AWS region(s).")
         else:
             print(f"EC2 key pair {self.key_pair_name} "
-                "already present in all regions.")
+                "already present in whitelisted region(s).")
 
 
     def delete_component(self):
-        """remove namespace RSA key pairs from all AWS regions"""
+        """remove namespace EC2 key pair from each whitelisted AWS region"""
         threader = Threader()
         for region in consts.REGIONS:
             threader.add_thread(self.delete_region_key_pair, (region,))
@@ -96,13 +96,13 @@ class SSHKeyPairSetup(ComponentSetup):
 
         if any(deleted_key_pairs):
             print(f"EC2 key pair {self.key_pair_name} "
-                "deleted from all AWS regions.")
+                "deleted from whitelisted AWS region(s).")
         else:
             print("No EC2 key pairs to delete.")
 
 
     def region_namespace_key_fingerprint(self, region):
-        """return key fingerprint if region has namespace RSA key pair"""
+        """return key fingerprint if region has namespace EC2 key pair"""
         key_pairs = aws.ec2_client(region).describe_key_pairs(Filters=[
             {'Name': "key-name", 'Values': [self.key_pair_name]}
         ])['KeyPairs']
@@ -120,7 +120,7 @@ class SSHKeyPairSetup(ComponentSetup):
 
 
     def delete_region_key_pair(self, region):
-        """delete SSH key pair from region"""
+        """delete namespace EC2 key pair from region"""
         if self.region_namespace_key_fingerprint(region) is not None:
             aws.ec2_client(region).delete_key_pair(KeyName=self.key_pair_name)
             return True

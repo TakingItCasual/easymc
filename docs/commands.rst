@@ -6,8 +6,8 @@ Commands
 
 Python's argparse is used to manage the commands and their arguments, so you can append :bash:`-h` or :bash:`--help` to any command to display a summary of the command's arguments.
 
-:bash:`configure`
------------------
+:bash:`configure` subcommands
+-----------------------------
 
 :bash:`configure access_key`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -25,6 +25,11 @@ Takes zero or more arguments.
 Each argument should be from the :bash:`Code` column of the `AWS Regions`_ table.
 If no arguments are given, the whitelist is cleared (the script will re-estimate the closest region to you when next used).
 
+WARNING: You should decide upon the whitelist before uploading the AWS setup.
+The AWS setup will need to be reuploaded if new regions are added to the whitelist.
+Removing regions from the whitelist will only hide the AWS setup, instances, elastic IP addresses, etc. located in the removed regions.
+Updates to your region whitelist are not propagated to users you've distributed IAM user access keys to.
+
 :bash:`configure use_handler`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -32,8 +37,8 @@ Configure the script to use the IP handler specified by an instance's IpHandler 
 For example, the mc_handler.py handler updates the local Minecraft client server list with the IP of the instance.
 If you want to disable the usage of handlers (e.g. if you don't have Minecraft installed), append the :bash:`--false` argument.
 
-:bash:`aws_setup`
------------------
+:bash:`aws_setup` subcommands
+-----------------------------
 
 :bash:`aws_setup check`
 ~~~~~~~~~~~~~~~~~~~~~~~
@@ -52,8 +57,8 @@ If your AWS account is already configured and changes have been made to aws_setu
 Delete your AWS account's configuration.
 This command will not run if there are still any IAM users or EC2 instances left.
 
-:bash:`server`
---------------
+:bash:`server` subcommands
+--------------------------
 
 :bash:`server create`
 ~~~~~~~~~~~~~~~~~~~~~
@@ -74,6 +79,8 @@ Requires two arguments: The ID and name of the instance.
 If the AWS region whitelist has more than one entry, the instance's region must be specified with the :bash:`-r` argument.
 By default, this command will release any elastic IP addresses associated with the instance.
 To preserve the instance's address(es), use the :bash:`--save_ips` argument.
+Note that this command does not require confirmation, unlike :bash:`server create`.
+I consider needing to specify both the instance's ID and name as confirmation enough.
 
 :bash:`server ssh`
 ~~~~~~~~~~~~~~~~~~
@@ -83,8 +90,8 @@ If you have more than one instance, you'll have to set a filter (this command ha
 To use this command, you must have either OpenSSH_ or PuTTY_ installed (Windows 10 has OpenSSH natively, but it must be enabled).
 If you use PuTTY, you'll need to convert your .pem RSA private key (in the script's config directory) to .ppk `using PuTTYgen`_.
 
-:bash:`servers`
----------------
+:bash:`servers` subcommands
+---------------------------
 
 :bash:`servers check`
 ~~~~~~~~~~~~~~~~~~~~~
@@ -117,8 +124,8 @@ Stop instances.
 If an instance doesn't have an elastic IP address, when it is started again it will have a different IP address.
 This command has the same filtering options as :bash:`servers check`.
 
-:bash:`address`
----------------
+:bash:`address` subcommands
+---------------------------
 
 :bash:`address list`
 ~~~~~~~~~~~~~~~~~~~~
@@ -153,8 +160,8 @@ Release an elastic IP address (give the address back to AWS).
 Requires one argument: The ip of the address.
 If the address is in use, the :bash:`--force` argument must be used.
 
-:bash:`user`
-------------
+:bash:`user` subcommands
+------------------------
 
 :bash:`user list`
 ~~~~~~~~~~~~~~~~~
@@ -166,7 +173,7 @@ List the IAM groups and what IAM users belong to each.
 
 Set another IAM user's access key as the script's default access key.
 Takes one argument: The name of the desired IAM user.
-It is not possible to request existing access keys from AWS, so this works due to the script storing access keys generated from the :bash:`user create` and :bash:`user rotate_key` commands in your config.
+As it is not possible to request existing access keys from AWS, this works by the script storing access keys generated from the :bash:`user create` and :bash:`user rotate_key` commands in your config.
 The stored access keys are gone over in an attempt to find one belonging to the desired IAM user.
 
 :bash:`user create`

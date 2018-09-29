@@ -58,9 +58,10 @@ def main(args=None):
         # Validate IAM user has needed permissions to use the command
         halt.assert_empty(chosen_cmd.blocked_actions(cmd_args))
         # Use the command
-        return chosen_cmd.main(cmd_args)
+        chosen_cmd.main(cmd_args)
     except SystemExit:
         return False
+    return True
 
 
 def argv_to_cmd_args(args, commands):

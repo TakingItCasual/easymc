@@ -54,23 +54,23 @@ class ParentCommand(CommandBase):
 
     def __init__(self, cmd_args):
         self.chosen_cmd = next(cmd(cmd_args) for cmd in self.sub_commands
-            if cmd.cmd_name() == cmd_args['action'])
+            if cmd.cmd_name() == cmd_args['subcommand'])
 
 
     def main(self, cmd_args):
         """Execute chosen subcommand"""
-        return self.chosen_cmd.main(cmd_args)
+        self.chosen_cmd.main(cmd_args)
 
 
     @classmethod
     def add_documentation(cls, argparse_obj):
         """set up argparse for command and all of its subcommands"""
         cmd_parser = super().add_documentation(argparse_obj)
-        actions = cmd_parser.add_subparsers(
-            title="commands", metavar="<action>", dest="action")
-        actions.required = True
+        subcommands = cmd_parser.add_subparsers(
+            title="subcommands", metavar="<subcommand>", dest="subcommand")
+        subcommands.required = True
         for sub_command in cls.sub_commands:
-            sub_command.add_documentation(actions)
+            sub_command.add_documentation(subcommands)
 
 
     def blocked_actions(self, cmd_args):

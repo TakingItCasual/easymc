@@ -12,7 +12,6 @@ from ec2mc.utils.find import find_addresses
 from ec2mc.utils.find import find_instances
 from ec2mc.validate import validate_perms
 
-# TODO: Check for if the instance/address limit has been reached
 class CreateServer(CommandBase):
 
     def __init__(self, cmd_args):
@@ -30,6 +29,7 @@ class CreateServer(CommandBase):
             halt.err(f"Template {cmd_args['template']} not found from config.")
 
         self.validate_name_is_unique(cmd_args['name'])
+        self.validate_limits_not_reached(cmd_args['elastic_ip'])
 
         inst_template = os2.parse_yaml(consts.USER_DATA_DIR /
             f"{cmd_args['template']}.yaml")['ec2mc_template_info']
@@ -42,32 +42,26 @@ class CreateServer(CommandBase):
 
         creation_kwargs = self.parse_run_instance_args(cmd_args, inst_template)
         user_data = self.process_user_data(cmd_args['template'], inst_template)
-
-        # Instance creation dry run to validate template and IAM permissions
-        try:
-            self.create_instance(creation_kwargs, user_data, dry_run=True)
-        except ClientError as e:
-            if not e.response['Error']['Code'] == "DryRunOperation":
-                halt.err(str(e))
+        self.create_instance(creation_kwargs, user_data, dry_run=True)
 
         print("")
         if cmd_args['confirm'] is False:
             print("IAM permissions and instance template validated.")
             print("Append the -c argument to confirm instance creation.")
-        else:
-            instance = self.create_instance(
-                creation_kwargs, user_data, dry_run=False)
-            print("Instance created. It may take a few minutes to initialize.")
-            if consts.USE_HANDLER is True:
-                print("  Utilize IP handler with \"ec2mc servers check\".")
+            return
 
-            if cmd_args['elastic_ip'] is True:
-                self.create_elastic_ip(
-                    cmd_args['region'], instance['InstanceId'])
-                print("New elastic IP associated with created instance.")
-            elif cmd_args['use_ip'] is not None:
-                self.reuse_elastic_ip(address, instance['InstanceId'])
-                print("Existing elastic IP associated with created instance.")
+        instance = self.create_instance(
+            creation_kwargs, user_data, dry_run=False)
+        print("Instance created. It may take a few minutes to initialize.")
+        if consts.USE_HANDLER is True:
+            print("  Utilize IP handler with \"ec2mc servers check\".")
+
+        if cmd_args['elastic_ip'] is True:
+            self.create_elastic_ip(cmd_args['region'], instance['InstanceId'])
+            print("New elastic IP associated with created instance.")
+        elif cmd_args['use_ip'] is not None:
+            self.reuse_elastic_ip(address, instance['InstanceId'])
+            print("Existing elastic IP associated with created instance.")
 
 
     def parse_run_instance_args(self, cmd_args, instance_template):
@@ -199,30 +193,38 @@ class CreateServer(CommandBase):
             user_data (str): cloud-config to initialize instance on boot.
             dry_run (bool): If True, only test if IAM user is allowed to.
         """
-        return self.ec2_client.run_instances(
-            DryRun=dry_run,
-            KeyName=creation_kwargs['key_name'],
-            MinCount=1, MaxCount=1,
-            ImageId=creation_kwargs['ami_id'],
-            InstanceType=creation_kwargs['instance_type'],
-            BlockDeviceMappings=[{
-                'DeviceName': creation_kwargs['device_name'],
-                'Ebs': {'VolumeSize': creation_kwargs['volume_size']}
-            }],
-            TagSpecifications=[{
-                'ResourceType': "instance",
-                'Tags': creation_kwargs['tags']
-            }],
-            SecurityGroupIds=creation_kwargs['sg_ids'],
-            SubnetId=creation_kwargs['subnet_id'],
-            UserData=user_data
-        )['Instances'][0]
+        try:
+            return self.ec2_client.run_instances(
+                DryRun=dry_run,
+                KeyName=creation_kwargs['key_name'],
+                MinCount=1, MaxCount=1,
+                ImageId=creation_kwargs['ami_id'],
+                InstanceType=creation_kwargs['instance_type'],
+                BlockDeviceMappings=[{
+                    'DeviceName': creation_kwargs['device_name'],
+                    'Ebs': {'VolumeSize': creation_kwargs['volume_size']}
+                }],
+                TagSpecifications=[{
+                    'ResourceType': "instance",
+                    'Tags': creation_kwargs['tags']
+                }],
+                SecurityGroupIds=creation_kwargs['sg_ids'],
+                SubnetId=creation_kwargs['subnet_id'],
+                UserData=user_data
+            )['Instances'][0]
+        except ClientError as e:
+            if not e.response['Error']['Code'] == "DryRunOperation":
+                halt.err(str(e))
 
 
     def create_elastic_ip(self, region, instance_id):
         """allocate new elastic IP address, and associate with instance"""
-        allocation_id = self.ec2_client.allocate_address(
-            Domain="vpc")['AllocationId']
+        try:
+            allocation_id = self.ec2_client.allocate_address(
+                Domain="vpc")['AllocationId']
+        except ClientError as e:
+            halt.err(str(e))
+
         aws.attach_tags(region, allocation_id)
         self.associate_elastic_ip(instance_id, allocation_id)
 
@@ -260,6 +262,35 @@ class CreateServer(CommandBase):
         instance_names = [instance['name'] for instance in all_instances]
         if instance_name in instance_names:
             halt.err(f"Instance name \"{instance_name}\" already in use.")
+
+
+    def validate_limits_not_reached(self, allocate_address):
+        """validate instance/address limits haven't been reached"""
+        attributes = self.ec2_client.describe_account_attributes(
+            AttributeNames=["max-instances", "vpc-max-elastic-ips"]
+        )['AccountAttributes']
+        max_instances = int(next(
+            attribute['AttributeValues'][0]['AttributeValue']
+            for attribute in attributes
+            if attribute['AttributeName'] == "max-instances"))
+        max_addresses = int(next(
+            attribute['AttributeValues'][0]['AttributeValue']
+            for attribute in attributes
+            if attribute['AttributeName'] == "vpc-max-elastic-ips"))
+
+        instance_count = sum(len(reservation['Instances']) for reservation
+            in self.ec2_client.describe_instances()['Reservations'])
+        if instance_count >= max_instances:
+            halt.err(f"You cannot possess more than {max_instances} "
+                "instances in this region.")
+
+        if allocate_address is True:
+            address_count = len(self.ec2_client.describe_addresses(Filters=[
+                {'Name': "domain", 'Values': ["vpc"]}
+            ])['Addresses'])
+            if address_count >= max_addresses:
+                halt.err(f"You cannot possess more than {max_addresses} "
+                    "elastic IP addresses in this region.")
 
 
     @staticmethod
@@ -375,6 +406,7 @@ class CreateServer(CommandBase):
     def blocked_actions(self, cmd_args):
         needed_actions = [
             "ec2:DescribeInstances",
+            "ec2:DescribeAccountAttributes",
             "ec2:DescribeVpcs",
             "ec2:DescribeSubnets",
             "ec2:DescribeSecurityGroups",
@@ -384,6 +416,7 @@ class CreateServer(CommandBase):
         ]
         if cmd_args['elastic_ip'] is True:
             needed_actions.extend([
+                "ec2:DescribeAddresses",
                 "ec2:AllocateAddress",
                 "ec2:AssociateAddress"
             ])

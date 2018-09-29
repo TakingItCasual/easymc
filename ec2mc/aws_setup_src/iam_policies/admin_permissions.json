@@ -5,6 +5,7 @@
             "Sid": "AdminPermissions",
             "Effect": "Allow",
             "Action": [
+                "ec2:DescribeAccountAttributes",
                 "ec2:DescribeVpcs",
                 "ec2:DescribeSubnets",
                 "ec2:DescribeSecurityGroups",

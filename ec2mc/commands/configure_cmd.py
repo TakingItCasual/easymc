@@ -15,12 +15,12 @@ class Configure(CommandBase):
             config_dict = os2.parse_json(consts.CONFIG_JSON)
             os2.validate_dict(config_dict, schema, "config.json")
 
-        if cmd_args['action'] == "access_key":
+        if cmd_args['subcommand'] == "access_key":
             config_dict = self.set_access_key(
                 config_dict, cmd_args['key_id'], cmd_args['key_secret'])
-        elif cmd_args['action'] == "whitelist":
+        elif cmd_args['subcommand'] == "whitelist":
             self.set_region_whitelist(config_dict, cmd_args['regions'])
-        elif cmd_args['action'] == "use_handler":
+        elif cmd_args['subcommand'] == "use_handler":
             config_dict['use_handler'] = cmd_args['boolean']
             print(f"IP handler usage set to {str(cmd_args['boolean'])}.")
 
@@ -53,24 +53,24 @@ class Configure(CommandBase):
     @classmethod
     def add_documentation(cls, argparse_obj):
         cmd_parser = super().add_documentation(argparse_obj)
-        actions = cmd_parser.add_subparsers(
-            title="commands", metavar="<action>", dest="action")
-        actions.required = True
+        subcommands = cmd_parser.add_subparsers(
+            title="subcommands", metavar="<subcommand>", dest="subcommand")
+        subcommands.required = True
 
-        access_key_parser = actions.add_parser(
+        access_key_parser = subcommands.add_parser(
             "access_key", help="set default IAM user access key")
         access_key_parser.add_argument(
             "key_id", help="ID of access key")
         access_key_parser.add_argument(
             "key_secret", help="secret access key")
 
-        whitelist_parser = actions.add_parser(
+        whitelist_parser = subcommands.add_parser(
             "whitelist", help="set whitelist for AWS regions")
         whitelist_parser.add_argument(
             "regions", nargs="*",
             help="list of AWS regions (leave empty to clear)")
 
-        use_handler_parser = actions.add_parser(
+        use_handler_parser = subcommands.add_parser(
             "use_handler", help="use IP handlers described by instance tags")
         use_handler_parser.add_argument(
             "-f", "--false", dest="boolean", action="store_false",

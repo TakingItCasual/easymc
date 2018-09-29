@@ -26,7 +26,7 @@ class AWSSetup(CommandBase):
         Args:
             cmd_args (dict): See add_documentation method.
         """
-        if cmd_args['action'] == "delete":
+        if cmd_args['subcommand'] == "delete":
             path_prefix = f"/{consts.NAMESPACE}/"
             if not self.namespace_groups_empty(path_prefix):
                 halt.err("IAM User(s) attached to namespace IAM group(s).")
@@ -42,11 +42,11 @@ class AWSSetup(CommandBase):
             component = component(config_aws_setup)
             component_info = component.check_component()
             print("")
-            if cmd_args['action'] == "check":
+            if cmd_args['subcommand'] == "check":
                 component.notify_state(component_info)
-            elif cmd_args['action'] == "upload":
+            elif cmd_args['subcommand'] == "upload":
                 component.upload_component(component_info)
-            elif cmd_args['action'] == "delete":
+            elif cmd_args['subcommand'] == "delete":
                 component.delete_component()
 
 
@@ -108,20 +108,20 @@ class AWSSetup(CommandBase):
     @classmethod
     def add_documentation(cls, argparse_obj):
         cmd_parser = super().add_documentation(argparse_obj)
-        actions = cmd_parser.add_subparsers(
-            title="commands", metavar="<action>", dest="action")
-        actions.required = True
-        actions.add_parser(
+        subcommands = cmd_parser.add_subparsers(
+            title="subcommands", metavar="<subcommand>", dest="subcommand")
+        subcommands.required = True
+        subcommands.add_parser(
             "check", help="check differences between local and AWS setup")
-        actions.add_parser(
+        subcommands.add_parser(
             "upload", help="configure AWS with ~/.ec2mc/aws_setup/")
-        actions.add_parser(
+        subcommands.add_parser(
             "delete", help="delete namespace configuration from AWS")
 
 
     def blocked_actions(self, cmd_args):
         denied_actions = []
-        if cmd_args['action'] == "delete":
+        if cmd_args['subcommand'] == "delete":
             denied_actions.extend(validate_perms.blocked(actions=[
                 "iam:ListGroups",
                 "iam:GetGroup",
@@ -132,5 +132,5 @@ class AWSSetup(CommandBase):
             ]))
         for component in self.aws_components:
             denied_actions.extend(
-                component.blocked_actions(cmd_args['action']))
+                component.blocked_actions(cmd_args['subcommand']))
         return denied_actions
