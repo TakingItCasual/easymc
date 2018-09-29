@@ -25,7 +25,7 @@ class RotateUserKey(CommandBase):
         print("")
         print(f"{user_name}'s access key rotated.")
 
-        os2.create_configuration_zip(new_key, cmd_args['ssh_key'], user_name)
+        os2.create_configuration_zip(user_name, new_key, cmd_args['ssh_key'])
         print("  User's updated zipped configuration created in config.")
 
 

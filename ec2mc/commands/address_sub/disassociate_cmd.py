@@ -18,7 +18,7 @@ class DisassociateAddress(CommandBase):
         ec2_client = aws.ec2_client(address['region'])
 
         if 'association_id' not in address:
-            halt.err("Elastic IP address not associated to anything.")
+            halt.err("Elastic IP address not associated with anything.")
 
         try:
             ec2_client.disassociate_address(

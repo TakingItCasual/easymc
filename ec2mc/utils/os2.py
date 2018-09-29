@@ -66,7 +66,7 @@ def parse_yaml(file_path):
         halt.err(f"{file_path} is not a valid YAML file.")
 
 
-def create_configuration_zip(new_key, give_ssh_key, user_name):
+def create_configuration_zip(user_name, new_key, give_ssh_key):
     """create zipped config folder containing new IAM user access key"""
     temp_dir = consts.CONFIG_DIR / ".ec2mc"
     if temp_dir.is_dir():

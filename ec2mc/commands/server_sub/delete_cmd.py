@@ -30,8 +30,8 @@ class DeleteServer(CommandBase):
         ])['Addresses']
         print("")
         if addresses:
-            self.disassociate_addresses(addresses, cmd_args['save_ip'])
-        elif cmd_args['save_ip'] is True:
+            self.disassociate_addresses(addresses, cmd_args['save_ips'])
+        elif cmd_args['save_ips'] is True:
             print("No elastic IPs associated with instance.")
 
         self.ec2_client.terminate_instances(InstanceIds=[cmd_args['id']])
@@ -66,8 +66,8 @@ class DeleteServer(CommandBase):
         cmd_parser.add_argument(
             "name", help="value for instance's tag key \"Name\"")
         cmd_parser.add_argument(
-            "-s", "--save_ip", action="store_true",
-            help="preserve any associated elastic IPs")
+            "-s", "--save_ips", action="store_true",
+            help="do not release associated elastic IP address(es)")
         cmd_parser.add_argument(
             "-r", dest="region", metavar="",
             help="AWS region the instance is located in")

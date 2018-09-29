@@ -44,8 +44,8 @@ For example::
 
     ec2mc configure access_key AKIAIOSFODNN7EXAMPLE wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
 
-The script will attempt to determine the closest `AWS Region`_ to you and set it as your region whitelist.
-However, automated latency comparisons are not perfect, so it is recommended to set the region whitelist manually to ensure low latency.
+The script will estimate the closest `AWS Region`_ to you and set it as your region whitelist.
+However, as automated latency comparisons are not perfect, it is recommended to set the region whitelist manually to ensure low latency.
 For example, to restrict the script to interacting with just the London region::
 
     ec2mc configure whitelist eu-west-2
@@ -107,7 +107,6 @@ Or if a persistent IP address is desired::
     ec2mc server create test_server mc_template --elastic_ip
 
 The server will take some minutes to initialize before it is ready for use/management.
-It is possible to SSH into the instance before the initialization is complete, but the server won't be running and you'll get booted for the post-initialization reboot.
 
 All provided templates contain bash scripts (which are uploaded to the instances themselves) which will shut down the instances after 10 consecutive minutes of no online players (and no SSH connections).
 
@@ -119,13 +118,15 @@ Server Management
 You should now have an EC2 instance hosting a Minecraft server up and running.
 See Commands_ for the various commands that the script provides for managing instances.
 
-If you want to manage the server directly (e.g. to make yourself a server operator), you can SSH into it with the script (provided you have OpenSSH_ or PuTTY_ installed) using the following command::
+If you want to manage the server directly (e.g. to make yourself a server operator), you can SSH into the instance with the script (provided you have OpenSSH_ or PuTTY_ installed) using the following command::
 
     ec2mc server ssh
 
 You can then access the server's console by typing :bash:`screen -r`.
 To exit the server's console, use :bash:`Ctrl-a`, :bash:`Ctrl-d`.
 You can then close the SSH connection by typing :bash:`exit`.
+
+(Note that it is possible to SSH into the instance before it is done initializing, in which case the server won't be running and you'll get booted for the post-initialization reboot.)
 
 Afterword
 ---------

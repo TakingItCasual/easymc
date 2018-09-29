@@ -199,6 +199,9 @@ def get_state_and_ip(region, instance_ip):
 def argparse_args(cmd_parser):
     """initialize argparse arguments that the main() function expects"""
     cmd_parser.add_argument(
+        "-n", dest="name_filter", nargs="+", metavar="",
+        help="Instance tag value filter for the tag key \"Name\".")
+    cmd_parser.add_argument(
         "-r", dest="region_filter", nargs="+", metavar="",
         help=("AWS region(s) to probe for instances. If not set, all "
             "whitelisted regions will be probed."))
@@ -207,9 +210,6 @@ def argparse_args(cmd_parser):
         help=("Instance tag value filter. First value is the tag key, with "
             "proceeding value(s) as the tag value(s). If only 1 value given, "
             "the tag key itself will be filtered for instead."))
-    cmd_parser.add_argument(
-        "-n", dest="name_filter", nargs="+", metavar="",
-        help="Instance tag value filter for the tag key \"Name\".")
     cmd_parser.add_argument(
         "-i", dest="id_filter", nargs="+", metavar="",
         help="Instance ID filter.")

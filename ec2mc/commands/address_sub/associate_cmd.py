@@ -29,7 +29,7 @@ class AssociateAddress(CommandBase):
             halt.err("Instance and address are in different regions.")
         if 'instance_name' in address:
             if instance['name'] == address['instance_name']:
-                halt.err("Address already associated to specified instance.")
+                halt.err("Address already associated with specified instance.")
 
         if 'association_id' in address and cmd_args['force'] is False:
             halt.err(f"Elastic IP address {address['ip']} currently in use.",
@@ -47,7 +47,7 @@ class AssociateAddress(CommandBase):
             halt.err(str(e))
 
         print("")
-        print("Address associated to instance.")
+        print("Address associated with instance.")
 
 
     @classmethod
@@ -56,7 +56,7 @@ class AssociateAddress(CommandBase):
         cmd_parser.add_argument(
             "ip", help="IP of elastic IP address to (re)associate")
         cmd_parser.add_argument(
-            "name", help="name of instance to associate address to")
+            "name", help="name of instance to associate address with")
         cmd_parser.add_argument(
             "-f", "--force", action="store_true",
             help="disassociate address if it is in use")

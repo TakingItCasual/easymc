@@ -12,6 +12,7 @@ from ec2mc.utils.find import find_addresses
 from ec2mc.utils.find import find_instances
 from ec2mc.validate import validate_perms
 
+# TODO: Check for if the instance/address limit has been reached
 class CreateServer(CommandBase):
 
     def __init__(self, cmd_args):
@@ -219,7 +220,7 @@ class CreateServer(CommandBase):
 
 
     def create_elastic_ip(self, region, instance_id):
-        """allocate new elastic IP to AWS account, and associate to instance"""
+        """allocate new elastic IP address, and associate with instance"""
         allocation_id = self.ec2_client.allocate_address(
             Domain="vpc")['AllocationId']
         aws.attach_tags(region, allocation_id)
@@ -227,7 +228,7 @@ class CreateServer(CommandBase):
 
 
     def reuse_elastic_ip(self, address, instance_id):
-        """associate already owned unassociated elastic IP to instance"""
+        """associate already owned elastic IP with instance"""
         if 'association_id' in address:
             self.ec2_client.disassociate_address(
                 AssociationId=address['association_id'])
@@ -361,11 +362,11 @@ class CreateServer(CommandBase):
             help="AWS region to create the instance in")
         cmd_group = cmd_parser.add_mutually_exclusive_group()
         cmd_group.add_argument(
-            "-e", "--elastic_ip", action="store_true",
-            help="create new elastic IP and associate to instance")
+            "--elastic_ip", action="store_true",
+            help="create new elastic IP and associate with instance")
         cmd_group.add_argument(
             "--use_ip", metavar="",
-            help="possessed elastic IP address to associate to instance")
+            help="possessed elastic IP address to associate with instance")
         cmd_parser.add_argument(
             "-f", "--force", action="store_true",
             help="disassociate possessed elastic IP address if it is in use")

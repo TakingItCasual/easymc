@@ -4,7 +4,7 @@ from ec2mc.utils import aws
 from ec2mc.utils.threader import Threader
 
 def main(regions):
-    """repeatedly use ec2:DescribeRegions action to determine closest region"""
+    """repeatedly use ec2:DescribeRegions action to estimate closest region"""
     ping_num = 50
 
     threader = Threader()

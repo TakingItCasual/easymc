@@ -55,7 +55,7 @@ class CreateUser(CommandBase):
             os2.save_json(config_dict, consts.CONFIG_JSON)
 
             os2.create_configuration_zip(
-                new_key, cmd_args['ssh_key'], cmd_args['name'])
+                cmd_args['name'], new_key, cmd_args['ssh_key'])
             print("  User's zipped configuration created in config.")
 
 
