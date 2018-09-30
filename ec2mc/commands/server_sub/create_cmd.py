@@ -101,7 +101,7 @@ class CreateServer(CommandBase):
             {'Name': "name", 'Values': [consts.AMI_NAME]}
         ])['Images']
         if not aws_images:
-            halt.err("Template's AWS image name not found from AWS.")
+            halt.err("AMI name specified by script is invalid.")
         creation_kwargs.update({
             'ami_id': aws_images[0]['ImageId'],
             'device_name': aws_images[0]['RootDeviceName']
@@ -213,7 +213,7 @@ class CreateServer(CommandBase):
                 UserData=user_data
             )['Instances'][0]
         except ClientError as e:
-            if not e.response['Error']['Code'] == "DryRunOperation":
+            if e.response['Error']['Code'] != "DryRunOperation":
                 halt.err(str(e))
 
 

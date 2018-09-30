@@ -26,7 +26,6 @@ Each argument should be from the :bash:`Code` column of the `AWS Regions`_ table
 If no arguments are given, the whitelist is cleared (the script will re-estimate the closest region to you when next used).
 
 WARNING: You should decide upon the whitelist before uploading the AWS setup.
-The AWS setup will need to be reuploaded if new regions are added to the whitelist.
 Removing regions from the whitelist will only hide the AWS setup, instances, elastic IP addresses, etc. located in the removed regions.
 Updates to your region whitelist are not propagated to users you've distributed IAM user access keys to.
 

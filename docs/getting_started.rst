@@ -67,7 +67,6 @@ Create an IAM user (e.g. named "Larry") under the setup_users IAM group with the
     ec2mc user create Larry setup_users --default
 
 The :bash:`--default` argument sets Larry's access key as the script's default access key.
-For more on IAM user management, see `Managing Users`_.
 
 The temporary IAM user should then be deleted from your `IAM Management Console`_.
 
@@ -82,7 +81,7 @@ Server IP Persistence
 
 By default, the script creates an instance which receives a different IP each time it's started, as this is the cheaper option (see Costs_).
 An instance can be created with an elastic IP address (a persistent IP) by appending :bash:`--elastic_ip` to the instance creation command.
-An elastic IP address can still be attached afterwards with the :bash:`address` command's subcommands (see Commands_).
+An elastic IP address can still be attached afterwards with the `address subcommands`_.
 
 To handle non-persistent IPs, the script contains functionality to automatically update instance IPs in the the local Minecraft client's server list.
 The server list will be updated whenever either of the two following script commands are run::
@@ -139,6 +138,8 @@ See `Managing Users`_ for how to give friends/family IAM user access keys so the
 .. _IAM Management Console: https://console.aws.amazon.com/iam/home#/users
 
 .. _AWS Region: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-regions-availability-zones.html#concepts-available-regions
+
+.. _address subcommands: https://github.com/TakingItCasual/ec2mc/blob/master/docs/commands.rst#address-subcommands
 
 .. _OpenSSH: http://www.mls-software.com/opensshd.html
 

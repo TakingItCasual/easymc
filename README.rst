@@ -32,8 +32,8 @@ For a guide on removing everything from AWS, see `Cleaning Up`_.
 
 .. _Cleaning Up: https://github.com/TakingItCasual/ec2mc/blob/master/docs/cleaning_up.rst
 
-.. |PyPI Version| image:: https://raw.githubusercontent.com/TakingItCasual/ec2mc/master/docs/images/pypi-v0.1.3-orange.svg?sanitize=true
+.. |PyPI Version| image:: https://raw.githubusercontent.com/TakingItCasual/ec2mc/master/docs/images/pypi-version-orange.svg?sanitize=true
    :target: https://pypi.org/project/ec2mc/
 
-.. |Python Version| image:: https://raw.githubusercontent.com/TakingItCasual/ec2mc/master/docs/images/python-3.6-blue.svg?sanitize=true
+.. |Python Version| image:: https://raw.githubusercontent.com/TakingItCasual/ec2mc/master/docs/images/python-minversion-blue.svg?sanitize=true
    :target: https://pypi.org/project/ec2mc/

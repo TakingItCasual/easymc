@@ -3,27 +3,29 @@
     "Namespace": "ec2mc",
     "IAM": {
         "Policies": {
-            "setup_permissions": "Permissions to modify AWS account setup.",
-            "admin_permissions": "Admin privileges for ec2mc script user.",
-            "basic_permissions": "Basic privileges for ec2mc script user."
+            "setup_perms": "Permissions to manage AWS account setup.",
+            "power_perms": "Permissions to manage IPs, instances, and users.",
+            "admin_perms": "Permissions to manage existing instances.",
+            "basic_perms": "Basic permissions for ec2mc script user."
         },
         "Groups": {
             "setup_users": {
                 "Policies": [
-                    "setup_permissions",
-                    "admin_permissions",
-                    "basic_permissions"
+                    "setup_perms",
+                    "power_perms",
+                    "admin_perms",
+                    "basic_perms"
                 ]
             },
             "admin_users": {
                 "Policies": [
-                    "admin_permissions",
-                    "basic_permissions"
+                    "admin_perms",
+                    "basic_perms"
                 ]
             },
             "basic_users": {
                 "Policies": [
-                    "basic_permissions"
+                    "basic_perms"
                 ]
             }
         }
