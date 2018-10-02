@@ -96,10 +96,9 @@ class AWSSetup(CommandBase):
         ec2_client = aws.ec2_client(region)
         namespace_vpc = aws.get_region_vpc(region)
         if namespace_vpc is not None:
-            vpc_reservations = ec2_client.describe_instances(Filters=[{
-                'Name': "vpc-id",
-                'Values': [namespace_vpc['VpcId']]
-            }])['Reservations']
+            vpc_reservations = ec2_client.describe_instances(Filters=[
+                {'Name': "vpc-id", 'Values': [namespace_vpc['VpcId']]}
+            ])['Reservations']
             if vpc_reservations:
                 return False
         return True

@@ -191,7 +191,7 @@ class IAMPolicySetup(ComponentSetup):
 
 
     def get_iam_policies(self):
-        """returns IAM policy(s) on AWS under set namespace"""
+        """return namespace IAM policy(s) on AWS"""
         return self.iam_client.list_policies(
             Scope="Local",
             OnlyAttached=False,

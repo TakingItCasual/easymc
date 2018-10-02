@@ -1,5 +1,6 @@
 from ec2mc import consts
 from ec2mc.utils import aws
+from ec2mc.utils import halt
 from ec2mc.utils.base_classes import CommandBase
 from ec2mc.validate import validate_perms
 
@@ -12,18 +13,22 @@ class SetUserGroup(CommandBase):
         user_name = aws.validate_user_exists(path_prefix, cmd_args['name'])
         group_name = aws.validate_group_exists(path_prefix, cmd_args['group'])
 
-        user_groups = iam_client.list_groups_for_user(
-            UserName=user_name)['Groups']
-        for user_group in user_groups:
-            iam_client.remove_user_from_group(
-                GroupName=user_group['GroupName'],
+        old_group_names = [old_group['GroupName'] for old_group
+            in iam_client.list_groups_for_user(UserName=user_name)['Groups']]
+        if group_name in old_group_names and len(old_group_names) == 1:
+            halt.err(f"{user_name} is already in the {group_name} IAM group.")
+
+        if group_name not in old_group_names:
+            iam_client.add_user_to_group(
+                GroupName=group_name,
                 UserName=user_name
             )
-
-        iam_client.add_user_to_group(
-            GroupName=group_name,
-            UserName=user_name
-        )
+        for old_group_name in old_group_names:
+            if old_group_name != group_name:
+                iam_client.remove_user_from_group(
+                    GroupName=old_group_name,
+                    UserName=user_name
+                )
 
         print("")
         print(f"{user_name}'s group set to the {group_name} IAM group.")

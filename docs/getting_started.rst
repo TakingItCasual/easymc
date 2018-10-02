@@ -25,8 +25,12 @@ You will get a "Configuration is not set" error, but the folder will be created 
 Amazon Web Services Setup
 -------------------------
 
+A word of forewarning: You cannot remove your AWS payment method.
+If you want to stop using AWS, you should close your account (see `Cleaning Up`_).
+Please be aware of the various costs that using this script can incur (see Costs_).
+
 To create the necessary AWS account, visit https://aws.amazon.com/.
-You'll need to attach a payment method, as the script uses services not covered by the free tier.
+(You'll need to provide information such as your address, phone number, and credit/debit card.)
 
 This script requires an AWS IAM user access key to interact with your account.
 To set up your AWS account with the configuration provided by the script, a temporary IAM user with administrator privileges is needed.
@@ -109,7 +113,7 @@ The server will take some minutes to initialize before it is ready for use/manag
 
 All provided templates contain bash scripts (which are uploaded to the instances themselves) which will shut down the instances after 10 consecutive minutes of no online players (and no SSH connections).
 
-(A template for a Forge server is also included: "cnb_template". See Customization_ for how to make your own template.)
+(A template for a Forge server is also included: "cnb_template". See Customization_ for how to modify the templates.)
 
 Server Management
 -----------------
@@ -152,3 +156,5 @@ See `Managing Users`_ for how to give friends/family IAM user access keys so the
 .. _Commands: https://github.com/TakingItCasual/ec2mc/blob/master/docs/commands.rst
 
 .. _Costs: https://github.com/TakingItCasual/ec2mc/blob/master/docs/costs.rst
+
+.. _Cleaning Up: https://github.com/TakingItCasual/ec2mc/blob/master/docs/cleaning_up.rst

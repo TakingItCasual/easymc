@@ -21,23 +21,24 @@ You can create an IAM user (e.g. named "Bob") under the :bash:`basic_users` IAM 
 
     ec2mc user create Bob basic_users
 
-Or under the :bash:`admin_users` group, if you want Bob to be able to manage your server(s)::
+Bob's zipped config "Bob_config.zip" will be created under your config directory.
+This file is what you send to Bob.
+Instruct Bob on how to install this script, and to unzip the zip file into his home directory (e.g. "C:\\Users\\Bob\\").
+Bob will then be able to get the IPs of instances you've created (:bash:`ec2mc servers check`), as well as start them (:bash:`ec2mc servers start`).
+
+Alternatively, you can place Bob under the :bash:`admin_users` group, if you want him to be able to manage your server(s)::
 
     ec2mc user create Bob admin_users --ssh_key
 
-The :bash:`--ssh_key` argument is needed to package the RSA private key file(s) needed for SSH into the created zip.
-SSM is an alternative to SSH that removes the need to worry about SSH keys, but this script does not (yet?) offer support for it.
-
-Once the IAM user "Bob" is created, "Bob_config.zip" is created in the script's config directory.
-This file is what you send to Bob.
-Instruct Bob on how to install this script, and to unzip the file into his home directory (e.g. "C:\\Users\\Bob\\").
+The :bash:`--ssh_key` argument is used to package the RSA private key file(s) needed for SSH into the created zip.
+(Removing the need to worry about SSH keys by using AWS's SSM is on the TODO.)
 
 You can rotate an IAM user's access key (delete the old one and create a new one) with the script::
 
     ec2mc user rotate_key Bob
 
-Their zipped config is regenerated (you'll need to resend it).
-This can also be used to add the SSH key(s) to the zipped config if they were mistakenly left out before.
+Bob's zipped config will be regenerated (you'll need to resend it).
+This command provides the :bash:`--ssh_key` argument as well, so you'll need to remember to include it for users who've recieved the SSH key(s) before.
 
 See the `user subcommands`_ for all of the provided commands for managing users.
 

@@ -26,7 +26,7 @@ def main(regions):
 
 
 def get_region_latency(ec2_client):
-    """get millisecond latency of region endpoint"""
+    """get AWS region endpoint latency"""
     start_time = timer()
     ec2_client.describe_regions()
     end_time = timer()

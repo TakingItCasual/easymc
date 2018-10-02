@@ -21,9 +21,6 @@ class IAMGroupSetup(ComponentSetup):
                 'ToUpdate': Groups on AWS not the same as local versions.
                 'UpToDate': Groups on AWS up to date with local versions.
         """
-        # IAM Groups already present on AWS
-        aws_groups = self.get_iam_groups()
-
         # Names of local policies described in aws_setup.json
         group_names = {
             'AWSExtra': [],
@@ -34,8 +31,8 @@ class IAMGroupSetup(ComponentSetup):
 
         # Check if group(s) described by aws_setup.json already on AWS
         for group_name in group_names['ToCreate'][:]:
-            for aws_group in aws_groups:
-                if group_name == aws_group['GroupName']:
+            for aws_group_name in self.get_iam_group_names():
+                if group_name == aws_group_name:
                     # Group already exists on AWS, so next check if to update
                     group_names['ToCreate'].remove(group_name)
                     group_names['ToUpdate'].append(group_name)
@@ -90,14 +87,14 @@ class IAMGroupSetup(ComponentSetup):
 
 
     def delete_component(self):
-        """remove user(s) and policy(s) from group(s), then delete group(s)"""
-        aws_groups = self.get_iam_groups()
-        if not aws_groups:
+        """remove policy(s) from group(s), then delete group(s)"""
+        aws_group_names = self.get_iam_group_names()
+        if not aws_group_names:
             print("No IAM groups on AWS to delete.")
 
-        for aws_group in aws_groups:
-            self.delete_group(aws_group['GroupName'])
-            print(f"IAM group {aws_group['GroupName']} deleted from AWS.")
+        for aws_group_name in aws_group_names:
+            self.delete_group(aws_group_name)
+            print(f"IAM group {aws_group_name} deleted from AWS.")
 
 
     def create_group(self, group_name):
@@ -153,10 +150,11 @@ class IAMGroupSetup(ComponentSetup):
             )
 
 
-    def get_iam_groups(self):
-        """returns IAM group(s) on AWS under set namespace"""
-        return self.iam_client.list_groups(
+    def get_iam_group_names(self):
+        """return name(s) of namespace IAM group(s) on AWS"""
+        aws_iam_groups = self.iam_client.list_groups(
             PathPrefix=self.path_prefix)['Groups']
+        return [iam_group['GroupName'] for iam_group in aws_iam_groups]
 
 
     @classmethod

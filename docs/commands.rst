@@ -174,6 +174,7 @@ Set another IAM user's access key as the script's default access key.
 Takes one argument: The name of the desired IAM user.
 As it is not possible to request existing access keys from AWS, this works by the script storing access keys generated from the :bash:`user create` and :bash:`user rotate_key` commands in your config.
 The stored access keys are gone over in an attempt to find one belonging to the desired IAM user.
+Once set, the previous default access key is stored. 
 
 :bash:`user create`
 ~~~~~~~~~~~~~~~~~~~
@@ -188,7 +189,7 @@ If you want to add the RSA private key needed for SSH to the .zip, use the :bash
 ~~~~~~~~~~~~~~~~~~~~~~
 
 Set what IAM group an IAM user belongs to.
-Requires two arguments: The name of the user, and the name of the group to add the user to.
+Takes two arguments: The name of the user, and the name of the group to add the user to.
 The user is removed from any groups it belonged to before.
 
 :bash:`user rotate_key`
@@ -203,7 +204,7 @@ If you want to add the RSA private key needed for SSH to the .zip, use the :bash
 ~~~~~~~~~~~~~~~~~~~
 
 Delete an IAM user.
-Requires one argument: The name of the user.
+Takes one argument: The name of the user.
 
 
 .. _AWS Regions: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-regions-availability-zones.html#concepts-available-regions
