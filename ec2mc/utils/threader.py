@@ -1,7 +1,7 @@
 from queue import Queue
 from threading import Thread
 
-class Threader(object):
+class Threader:
     """thread arbitrary number of functions, then block when results wanted
 
     Attributes:

@@ -24,7 +24,6 @@ README_PATH = os.path.join(os.path.dirname(__file__), "README.rst")
 with open(README_PATH, encoding="utf-8") as f:
     LONG_DESC = f.read()
 
-# The OS restrictions are due to the cryptography package.
 setup(
     name="ec2mc",
     version=__version__,
@@ -43,12 +42,10 @@ setup(
         "Natural Language :: English",
         "Operating System :: MacOS :: MacOS X",
         "Operating System :: Microsoft :: Windows",
-        "Operating System :: POSIX",
-        "Operating System :: POSIX :: BSD",
         "Operating System :: POSIX :: Linux",
         "Programming Language :: Python",
-        "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.6"
+        "Programming Language :: Python :: {}".format(__min_python__[0]),
+        "Programming Language :: Python :: {}.{}".format(*__min_python__)
     ],
     keywords="mc minecraft ssh server aws ec2 iam cloud-config",
     packages=find_packages(exclude=["docs", "tests"]),

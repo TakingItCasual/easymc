@@ -1,5 +1,7 @@
 """provides functions to kill the script by raising SystemExit"""
 
+import sys
+
 def assert_empty(blocked_actions):
     """used with validate_perms, which returns list of denied AWS actions"""
     if blocked_actions:
@@ -18,6 +20,5 @@ def stop(*halt_messages):
     """halts the script by raising SystemExit"""
     if halt_messages:
         print("")
-        for halt_message in halt_messages:
-            print(halt_message)
-    raise SystemExit(0)  # Equivalent to sys.exit(0)
+        print("\n".join(halt_messages), file=sys.stderr, flush=True)
+    sys.exit(1)

@@ -67,12 +67,11 @@ class CreateUser(CommandBase):
             aws_secret_access_key=next(iter(new_key.values()))
         )
         for _ in range(60):
-            try:
+            with aws.ClientErrorHalt(allow=["InvalidClientTokenId"]):
                 # New IAM user is assumed to have the iam:GetUser permission.
                 iam_client.get_user()
                 break
-            except ClientError:
-                sleep(1)
+            sleep(1)
         else:
             halt.err("Access key not usable even after waiting 1 minute.")
 

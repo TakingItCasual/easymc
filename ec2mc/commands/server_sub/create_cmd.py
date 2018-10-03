@@ -1,6 +1,5 @@
 from time import sleep
 from ruamel import yaml
-from botocore.exceptions import ClientError
 
 from ec2mc import consts
 from ec2mc.utils import aws
@@ -193,7 +192,7 @@ class CreateServer(CommandBase):
             user_data (str): cloud-config to initialize instance on boot.
             dry_run (bool): If True, only test if IAM user is allowed to.
         """
-        try:
+        with aws.ClientErrorHalt(allow=["DryRunOperation"]):
             return self.ec2_client.run_instances(
                 DryRun=dry_run,
                 KeyName=creation_kwargs['key_name'],
@@ -212,18 +211,13 @@ class CreateServer(CommandBase):
                 SubnetId=creation_kwargs['subnet_id'],
                 UserData=user_data
             )['Instances'][0]
-        except ClientError as e:
-            if e.response['Error']['Code'] != "DryRunOperation":
-                halt.err(str(e))
 
 
     def create_elastic_ip(self, region, instance_id):
         """allocate new elastic IP address, and associate with instance"""
-        try:
+        with aws.ClientErrorHalt():
             allocation_id = self.ec2_client.allocate_address(
                 Domain="vpc")['AllocationId']
-        except ClientError as e:
-            halt.err(str(e))
 
         aws.attach_tags(region, allocation_id)
         self.associate_elastic_ip(instance_id, allocation_id)
@@ -240,17 +234,14 @@ class CreateServer(CommandBase):
     def associate_elastic_ip(self, instance_id, allocation_id):
         """attempt to assign elastic IP to instance for 60 seconds"""
         for _ in range(60):
-            try:
+            with aws.ClientErrorHalt(allow=["InvalidInstanceID"]):
                 self.ec2_client.associate_address(
                     AllocationId=allocation_id,
                     InstanceId=instance_id,
                     AllowReassociation=False
                 )
                 break
-            except ClientError as e:
-                if e.response['Error']['Code'] != "InvalidInstanceID":
-                    halt.err(str(e))
-                sleep(1)
+            sleep(1)
         else:
             halt.err("Couldn't assign elastic IP to instance.")
 

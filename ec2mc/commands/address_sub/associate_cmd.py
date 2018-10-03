@@ -1,5 +1,3 @@
-from botocore.exceptions import ClientError
-
 from ec2mc.utils import aws
 from ec2mc.utils import halt
 from ec2mc.utils.base_classes import CommandBase
@@ -35,7 +33,7 @@ class AssociateAddress(CommandBase):
             halt.err(f"Elastic IP address {address['ip']} currently in use.",
                 "  Append the -f argument to force disassociation.")
 
-        try:
+        with aws.ClientErrorHalt():
             if 'association_id' in address:
                 ec2_client.disassociate_address(
                     AssociationId=address['association_id'])
@@ -43,8 +41,6 @@ class AssociateAddress(CommandBase):
                 AllocationId=address['allocation_id'],
                 InstanceId=instance['id']
             )
-        except ClientError as e:
-            halt.err(str(e))
 
         print("")
         print("Address associated with instance.")

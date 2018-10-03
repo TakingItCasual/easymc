@@ -129,10 +129,26 @@ def access_key_owner(access_key_id):
 
     Requires iam:GetAccessKeyLastUsed permission.
     """
-    try:
+    with ClientErrorHalt(allow=["AccessDenied"]):
         return iam_client().get_access_key_last_used(
             AccessKeyId=access_key_id)['UserName']
-    except ClientError as e:
-        if e.response['Error']['Code'] == "AccessDenied":
-            return None
-        halt.err(str(e))
+    return None
+
+
+class ClientErrorHalt:
+    """context manager to catch ClientErrors"""
+
+    def __init__(self, *, allow=None):
+        self.pass_exceptions = allow
+        if allow is None:
+            self.pass_exceptions = []
+
+    def __enter__(self):
+        return None
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        if exc_type is not None and issubclass(exc_type, ClientError):
+            if exc_value.response['Error']['Code'] not in self.pass_exceptions:
+                halt.err(str(exc_value))
+            return True  # Ignore ClientError
+        return False  # ClientError wasn't raised

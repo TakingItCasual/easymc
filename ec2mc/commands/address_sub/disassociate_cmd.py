@@ -1,5 +1,3 @@
-from botocore.exceptions import ClientError
-
 from ec2mc.utils import aws
 from ec2mc.utils import halt
 from ec2mc.utils.base_classes import CommandBase
@@ -20,11 +18,9 @@ class DisassociateAddress(CommandBase):
         if 'association_id' not in address:
             halt.err("Elastic IP address not associated with anything.")
 
-        try:
+        with aws.ClientErrorHalt():
             ec2_client.disassociate_address(
                 AssociationId=address['association_id'])
-        except ClientError as e:
-            halt.err(str(e))
 
         print("")
         print("Elastic IP address disassociated.")

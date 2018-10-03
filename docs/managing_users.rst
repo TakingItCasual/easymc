@@ -26,7 +26,7 @@ This file is what you send to Bob.
 Instruct Bob on how to install this script, and to unzip the zip file into his home directory (e.g. "C:\\Users\\Bob\\").
 Bob will then be able to get the IPs of instances you've created (:bash:`ec2mc servers check`), as well as start them (:bash:`ec2mc servers start`).
 
-Alternatively, you can place Bob under the :bash:`admin_users` group, if you want him to be able to manage your server(s)::
+Alternatively, you can place Bob under the :bash:`admin_users` group to give him the ability to manage your existing server(s)::
 
     ec2mc user create Bob admin_users --ssh_key
 

@@ -55,10 +55,8 @@ class RequestAddress(CommandBase):
 
     def request_random_address(self):
         """request random IPv4 elastic IP address from AWS"""
-        try:
+        with aws.ClientErrorHalt():
             return self.ec2_client.allocate_address(Domain="vpc")
-        except ClientError as e:
-            halt.err(str(e))
 
 
     @classmethod

@@ -1,7 +1,7 @@
 AWS EC2 instance manager for Minecraft servers
 ==============================================
 
-|PyPI Version| |Python Version|
+|PyPI| |Pythons| |License|
 
 A Python console script for managing Minecraft servers hosted on AWS EC2 On-Demand instances (cloud computing).
 Functionality is included for automating later parts of the AWS account setup process.
@@ -32,8 +32,14 @@ For a guide on removing everything from AWS, see `Cleaning Up`_.
 
 .. _Cleaning Up: https://github.com/TakingItCasual/ec2mc/blob/master/docs/cleaning_up.rst
 
-.. |PyPI Version| image:: https://raw.githubusercontent.com/TakingItCasual/ec2mc/master/docs/images/pypi-version-orange.svg?sanitize=true
+.. |PyPI| image:: https://img.shields.io/pypi/v/ec2mc.svg
+   :alt: PyPI version
    :target: https://pypi.org/project/ec2mc/
 
-.. |Python Version| image:: https://raw.githubusercontent.com/TakingItCasual/ec2mc/master/docs/images/python-minversion-blue.svg?sanitize=true
+.. |Pythons| image:: https://img.shields.io/pypi/pyversions/ec2mc.svg
+   :alt: Supported Python versions
    :target: https://pypi.org/project/ec2mc/
+
+.. |License| image:: https://img.shields.io/pypi/l/ec2mc.svg
+   :alt: Project license
+   :target: https://github.com/TakingItCasual/ec2mc/blob/master/LICENSE

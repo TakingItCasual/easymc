@@ -34,7 +34,7 @@ Updates to your region whitelist are not propagated to users you've distributed 
 
 Configure the script to use the IP handler specified by an instance's IpHandler tag.
 For example, the mc_handler.py handler updates the local Minecraft client server list with the IP of the instance.
-If you want to disable the usage of handlers (e.g. if you don't have Minecraft installed), append the :bash:`--false` argument.
+To disable the usage of handlers (e.g. if you don't have Minecraft installed), append the :bash:`--false` argument.
 
 :bash:`aws_setup` subcommands
 -----------------------------
@@ -42,7 +42,7 @@ If you want to disable the usage of handlers (e.g. if you don't have Minecraft i
 :bash:`aws_setup check`
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-Report whether your AWS account has been configured, and whether the configuration needs to be updated.
+Report whether your AWS account has been configured, and if any part of the account's configuration differs from the configuration described in ~/.ec2mc/aws_setup/.
 
 :bash:`aws_setup upload`
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -54,7 +54,7 @@ If your AWS account is already configured and changes have been made to aws_setu
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
 Delete your AWS account's configuration.
-This command will not run if there are still any IAM users or EC2 instances left.
+This command will not run until all IAM users and EC2 instances have been deleted.
 
 :bash:`server` subcommands
 --------------------------
@@ -181,9 +181,9 @@ Once set, the previous default access key is stored.
 
 Create a new IAM user.
 Requires two arguments: A name for the user, and the IAM group to add the user to.
-If you want to set the new user's access key as the script's default, use the :bash:`--default` argument.
+To set the new user's access key as the script's default, use the :bash:`--default` argument.
 Otherwise, the script will create a .zip file of the new user's config directory.
-If you want to add the RSA private key needed for SSH to the .zip, use the :bash:`--ssh_key` argument.
+To add the RSA private key needed for SSH to the .zip, use the :bash:`--ssh_key` argument.
 
 :bash:`user set_group`
 ~~~~~~~~~~~~~~~~~~~~~~
@@ -198,7 +198,7 @@ The user is removed from any groups it belonged to before.
 Delete an IAM user's existing access key(s) and create a new access key for the user.
 Requires one argument: The name of the user.
 If rotating an access key for a user other than yourself, the user's zipped config directory is (re)generated.
-If you want to add the RSA private key needed for SSH to the .zip, use the :bash:`--ssh_key` argument.
+To add the RSA private key needed for SSH to the .zip, use the :bash:`--ssh_key` argument.
 
 :bash:`user delete`
 ~~~~~~~~~~~~~~~~~~~
