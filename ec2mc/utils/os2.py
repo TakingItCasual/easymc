@@ -3,7 +3,6 @@
 import os
 from pathlib import Path
 import shutil
-import filecmp
 import json
 import jsonschema
 from jsonschema.exceptions import ValidationError
@@ -16,6 +15,14 @@ def dir_files(target_dir, *, ext=""):
     """return list[str] of names of files in directory"""
     return [f.name for f in target_dir.iterdir()
         if (target_dir / f).is_file() and str(f).endswith(ext)]
+
+
+def recursive_dir_files(target_dir):
+    """return list[Path] of files under target_dir, with prefix removed"""
+    prefix_len = len(target_dir.parts)
+    return [Path(*(Path(path) / f).parts[prefix_len:])
+        for path, _, files in os.walk(target_dir)
+        for f in files]
 
 
 def dir_dirs(target_dir):
@@ -97,13 +104,3 @@ def del_readonly(action, name, exc):
     """handle deletion of readonly files for shutil.rmtree"""
     Path(name).chmod(0o777)
     action(name)
-
-
-def recursive_cmpfiles(src_dir, dest_dir):
-    """wrapper for filecmp.cmpfiles, which recursively finds src_dir's files"""
-    prefix_len = len(src_dir.parts)
-    cmp_files = []
-    for path, _, files in os.walk(src_dir):
-        for f in files:
-            cmp_files.append(Path(*(Path(path) / f).parts[prefix_len:]))
-    return filecmp.cmpfiles(src_dir, dest_dir, cmp_files, shallow=False)

@@ -151,4 +151,4 @@ class ClientErrorHalt:
             if exc_value.response['Error']['Code'] not in self.pass_exceptions:
                 halt.err(str(exc_value))
             return True  # Ignore ClientError
-        return False  # ClientError wasn't raised
+        return False  # Allow other exceptions to propagate

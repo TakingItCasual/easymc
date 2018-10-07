@@ -46,7 +46,7 @@ class SSHServer(CommandBase):
             if platform.system() == "Windows":
                 halt.err("Neither OpenSSH for Windows nor PuTTY were found.",
                     "  Please install one and ensure it is in PATH.",
-                    "  OpenSSH: http://www.mls-software.com/opensshd.html",
+                    "  OpenSSH: https://www.mls-software.com/opensshd.html",
                     "  PuTTY: https://www.putty.org/")
             halt.err("Neither the OpenSSH client nor PuTTY were found.",
                 "  Please install one and ensure it is in PATH.")

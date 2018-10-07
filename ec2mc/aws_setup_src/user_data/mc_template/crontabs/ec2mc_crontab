@@ -1,4 +1,0 @@
-SHELL=/bin/bash
-PATH=/usr/bin/:/usr/sbin/
-@reboot root /home/ec2-user/manage-scripts/startup_script.sh > /dev/null
-* * * * * root /home/ec2-user/manage-scripts/connection_listener.sh > /dev/null

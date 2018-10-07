@@ -1,3 +1,4 @@
+from pathlib import PurePosixPath
 from time import sleep
 from ruamel import yaml
 
@@ -140,12 +141,9 @@ class CreateServer(CommandBase):
             consts.USER_DATA_DIR / f"{template_name}.yaml")
 
         if 'write_directories' in template:
-            write_files = cls.generate_write_files(
-                template_name, template['write_directories'])
+            write_files = cls.write_files_gen(template['write_directories'])
             if write_files:
-                if 'write_files' not in user_data:
-                    user_data['write_files'] = []
-                user_data['write_files'].extend(write_files)
+                user_data.setdefault('write_files', []).extend(write_files)
 
         # Halt if write_files contains any duplicate paths
         if 'write_files' in user_data:
@@ -161,21 +159,20 @@ class CreateServer(CommandBase):
         return f"#cloud-config\n{user_data_str}"
 
 
-    # TODO: Make this recursively search local_dirs
     @staticmethod
-    def generate_write_files(template_name, write_dirs):
-        """fill out write_files list from template directory"""
-        template_dir = consts.USER_DATA_DIR / template_name
+    def write_files_gen(write_dirs):
+        """fill out write_files list from specified directory(s)"""
         write_files = []
         for write_dir in write_dirs:
-            dir_files = os2.dir_files(template_dir / write_dir['local_dir'])
-            for dir_file in dir_files:
-                file_path = template_dir / write_dir['local_dir'] / dir_file
+            dir_path = consts.USER_DATA_DIR.joinpath(*write_dir['local_dir'])
+            for dir_file in os2.recursive_dir_files(dir_path):
+                file_path = dir_path / dir_file
                 # Convert Windows line endings to Unix line endings
                 file_bytes = file_path.read_bytes().replace(b"\r\n", b"\n")
                 write_files.append({
                     'content': file_bytes,
-                    'path': f"{write_dir['instance_dir']}{dir_file}"
+                    'path': str(PurePosixPath(
+                        write_dir['instance_dir'], dir_file))
                 })
                 if 'owner' in write_dir:
                     write_files[-1]['owner'] = write_dir['owner']

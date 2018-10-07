@@ -18,7 +18,11 @@
                     "items": {
                         "type": "object",
                         "properties": {
-                            "local_dir": {"type": "string"},
+                            "local_dir": {
+                                "type": "array",
+                                "items": {"type": "string"},
+                                "minItems": 1
+                            },
                             "instance_dir": {"type": "string"},
                             "owner": {"type": "string"},
                             "chmod": {

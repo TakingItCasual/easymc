@@ -1,4 +1,5 @@
 import shutil
+import filecmp
 from pathlib import Path
 
 from ec2mc import consts
@@ -22,14 +23,15 @@ def main():
 
     # If 'Modified' key is True, prevent overwriting config's aws_setup
     if config_aws_setup['Modified'] is False:
-        diffs = os2.recursive_cmpfiles(src_aws_setup_dir, consts.AWS_SETUP_DIR)
+        cmp_files = os2.recursive_dir_files(src_aws_setup_dir)
+        diffs = filecmp.cmpfiles(
+            src_aws_setup_dir, consts.AWS_SETUP_DIR, cmp_files, shallow=False)
         # If source and config aws_setup differ, overwrite config aws_setup
         # If config aws_setup missing files, overwrite config aws_setup
         if diffs[1] or diffs[2]:
             cp_aws_setup_to_config(src_aws_setup_dir)
+            print("Config's aws_setup directory updated.")
             config_aws_setup = get_config_aws_setup_dict()
-
-    validate_aws_setup(config_aws_setup)
 
     consts.NAMESPACE = config_aws_setup['Namespace']
     consts.RSA_KEY_PEM = consts.CONFIG_DIR / f"{consts.NAMESPACE}.pem"
@@ -45,7 +47,11 @@ def get_config_aws_setup_dict():
     """return aws_setup.json from config in user's home dir as dict"""
     if not consts.AWS_SETUP_JSON.is_file():
         halt.err("aws_setup.json not found from config.")
-    return os2.parse_json(consts.AWS_SETUP_JSON)
+
+    config_aws_setup = os2.parse_json(consts.AWS_SETUP_JSON)
+    schema = os2.get_json_schema("aws_setup")
+    os2.validate_dict(config_aws_setup, schema, "aws_setup.json")
+    return config_aws_setup
 
 
 def cp_aws_setup_to_config(src_aws_setup_dir):
@@ -53,12 +59,6 @@ def cp_aws_setup_to_config(src_aws_setup_dir):
     if consts.AWS_SETUP_DIR.is_dir():
         shutil.rmtree(consts.AWS_SETUP_DIR, onerror=os2.del_readonly)
     shutil.copytree(src_aws_setup_dir, consts.AWS_SETUP_DIR)
-
-
-def validate_aws_setup(config_aws_setup):
-    """validate config's aws_setup.json"""
-    schema = os2.get_json_schema("aws_setup")
-    os2.validate_dict(config_aws_setup, schema, "aws_setup.json")
 
 
 def validate_iam_policies(config_aws_setup):
@@ -125,22 +125,17 @@ def validate_instance_templates():
 
     schema = os2.get_json_schema("instance_templates")
     for template_yaml_file in template_yaml_files:
+        template_name = Path(template_yaml_file).stem
         user_data = os2.parse_yaml(consts.USER_DATA_DIR / template_yaml_file)
         os2.validate_dict(user_data, schema, template_yaml_file)
 
         template_info = user_data['ec2mc_template_info']
-        template_name = Path(template_yaml_file).stem
-        template_dir = consts.USER_DATA_DIR / template_name
-        # If write_directories in template, validate template directory exists
-        if not template_dir.is_dir():
-            if 'write_directories' in template_info:
-                halt.err(f"{template_name} template's directory not found.")
-        # Validate template's subdirectories exist
-        else:
-            template_subdirs = os2.dir_dirs(template_dir)
-            if 'write_directories' in template_info:
-                for write_dir in template_info['write_directories']:
-                    if write_dir['local_dir'] not in template_subdirs:
-                        halt.err(f"{template_name} template's "
-                            f"{write_dir['local_dir']} subdir not found.")
+        if 'write_directories' not in template_info:
+            continue
+
+        for write_dir in template_info['write_directories']:
+            dir_path = consts.USER_DATA_DIR.joinpath(*write_dir['local_dir'])
+            if not dir_path.is_dir():
+                halt.err(f"{dir_path} directory for the {template_name} "
+                    "template not found.")
     # write_files path uniqueness validated in create:process_user_data

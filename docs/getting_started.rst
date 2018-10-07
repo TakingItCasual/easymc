@@ -8,7 +8,7 @@ Script Installation
 -------------------
 
 This script requires Python (version 3.6 or greater).
-Python can be downloaded from http://www.python.org/.
+Python can be downloaded from https://www.python.org/.
 If your OS is 64-bit, please download the latest 64-bit version of Python from the downloads page for your OS (e.g. `Windows x86-64 executable installer`_).
 In Python's installer, enable the "Add Python3.x to PATH" option so that Python can be used from a terminal.
 The script can then be installed from a terminal with pip::
@@ -78,7 +78,7 @@ Server Creation
 ---------------
 
 Please note that AWS refers to the servers they provide as "instances".
-AWS EC2 On-Demand instances (the cloud servers) can be started and stopped at will, and you will only be charged for the time they're running (see Costs_).
+AWS EC2 On-Demand instances (the cloud servers) can be started and stopped at will, and you will only be billed for the time they're running (see Costs_).
 
 Server IP Persistence
 ~~~~~~~~~~~~~~~~~~~~~
@@ -145,7 +145,7 @@ See `Managing Users`_ for how to give friends/family IAM user access keys so the
 
 .. _address subcommands: https://github.com/TakingItCasual/ec2mc/blob/master/docs/commands.rst#address-subcommands
 
-.. _OpenSSH: http://www.mls-software.com/opensshd.html
+.. _OpenSSH: https://www.mls-software.com/opensshd.html
 
 .. _PuTTY: https://www.putty.org/
 

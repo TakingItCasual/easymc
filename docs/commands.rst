@@ -209,7 +209,7 @@ Takes one argument: The name of the user.
 
 .. _AWS Regions: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-regions-availability-zones.html#concepts-available-regions
 
-.. _OpenSSH: http://www.mls-software.com/opensshd.html
+.. _OpenSSH: https://www.mls-software.com/opensshd.html
 
 .. _PuTTY: https://www.putty.org/
 
