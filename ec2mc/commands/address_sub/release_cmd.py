@@ -10,12 +10,12 @@ class ReleaseAddress(CommandBase):
         """release elastic IP address (give up possession)
 
         Args:
-            cmd_args (dict): See add_documentation method.
+            cmd_args (namedtuple): See add_documentation method.
         """
-        address = find_addresses.main(cmd_args['ip'])
+        address = find_addresses.main(cmd_args.ip)
         ec2_client = aws.ec2_client(address['region'])
 
-        if 'association_id' in address and cmd_args['force'] is False:
+        if 'association_id' in address and cmd_args.force is False:
             halt.err(f"Elastic IP address {address['ip']} currently in use.",
                 "  Append the -f argument to force disassociation.")
 
@@ -49,6 +49,6 @@ class ReleaseAddress(CommandBase):
             "ec2:DescribeAddresses",
             "ec2:ReleaseAddress"
         ]
-        if cmd_args['force'] is True:
+        if cmd_args.force is True:
             needed_actions.append("ec2:DisassociateAddress")
         return validate_perms.blocked(actions=needed_actions)

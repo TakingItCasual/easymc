@@ -20,7 +20,7 @@ class SSHServer(CommandBase):
         is printed, for if an alternative SSH method is desired.
 
         Args:
-            cmd_args (dict): See utils.find.find_instances:argparse_args
+            cmd_args (namedtuple): See find_instances:add_argparse_args
         """
         instance = find_instances.main(cmd_args, single_instance=True)
         instance_state, instance_ip = find_instances.get_state_and_ip(
@@ -94,7 +94,7 @@ class SSHServer(CommandBase):
     @classmethod
     def add_documentation(cls, argparse_obj):
         cmd_parser = super().add_documentation(argparse_obj)
-        find_instances.argparse_args(cmd_parser)
+        find_instances.add_argparse_args(cmd_parser)
 
 
     def blocked_actions(self, _):

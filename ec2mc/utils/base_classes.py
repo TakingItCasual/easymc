@@ -54,7 +54,7 @@ class ParentCommand(CommandBase):
 
     def __init__(self, cmd_args):
         self.chosen_cmd = next(cmd(cmd_args) for cmd in self.sub_commands
-            if cmd.cmd_name() == cmd_args['subcommand'])
+            if cmd.cmd_name() == cmd_args.subcommand)
 
 
     def main(self, cmd_args):

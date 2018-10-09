@@ -10,8 +10,8 @@ class SetUserGroup(CommandBase):
         """change what IAM group an IAM user is a part of"""
         iam_client = aws.iam_client()
         path_prefix = f"/{consts.NAMESPACE}/"
-        user_name = aws.validate_user_exists(path_prefix, cmd_args['name'])
-        group_name = aws.validate_group_exists(path_prefix, cmd_args['group'])
+        user_name = aws.validate_user_exists(path_prefix, cmd_args.name)
+        group_name = aws.validate_group_exists(path_prefix, cmd_args.group)
 
         old_group_names = [old_group['GroupName'] for old_group
             in iam_client.list_groups_for_user(UserName=user_name)['Groups']]

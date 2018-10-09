@@ -9,7 +9,7 @@ class CheckServers(CommandBase):
         """check instance status(es)
 
         Args:
-            cmd_args (dict): See utils.find.find_instances:argparse_args
+            cmd_args (namedtuple): See find_instances:add_argparse_args
         """
         instances = find_instances.main(cmd_args)
 
@@ -29,7 +29,7 @@ class CheckServers(CommandBase):
     @classmethod
     def add_documentation(cls, argparse_obj):
         cmd_parser = super().add_documentation(argparse_obj)
-        find_instances.argparse_args(cmd_parser)
+        find_instances.add_argparse_args(cmd_parser)
 
 
     def blocked_actions(self, _):

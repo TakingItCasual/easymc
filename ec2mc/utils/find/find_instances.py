@@ -11,7 +11,7 @@ def main(cmd_args, *, single_instance=False):
     Halts if no instances found. This functionality is relied upon.
 
     Args:
-        cmd_args (dict): See argparse_args function.
+        cmd_args (namedtuple): See argparse_args function.
         single_instance (bool): Halt if multiple instances are found.
 
     Returns: See what probe_regions returns.
@@ -24,8 +24,8 @@ def main(cmd_args, *, single_instance=False):
     all_instances = probe_regions(regions, tag_filter)
 
     if not all_instances:
-        if (cmd_args['region_filter'] or cmd_args['tag_filters'] or
-                cmd_args['name_filter'] or cmd_args['id_filter']):
+        if (cmd_args.region_filter or cmd_args.tag_filters or
+                cmd_args.name_filter or cmd_args.id_filter):
             halt.err("No namespace instances found.",
                 "  Remove specified filter(s) and try again.")
         halt.err("No namespace instances found.")
@@ -126,7 +126,7 @@ def parse_filters(cmd_args):
     """parses region and tag filters
 
     Args:
-        cmd_args (dict): See main's arguments.
+        cmd_args (namedtuple): See main's arguments.
 
     Returns:
         tuple:
@@ -134,8 +134,8 @@ def parse_filters(cmd_args):
             list[dict]: Filter to pass to EC2 client's describe_instances.
     """
     regions = consts.REGIONS
-    if cmd_args['region_filter'] is not None:
-        region_filter = set(cmd_args['region_filter'])
+    if cmd_args.region_filter is not None:
+        region_filter = set(cmd_args.region_filter)
         # Validate region filter
         if not region_filter.issubset(set(regions)):
             halt.err("Following region(s) not in region whitelist:",
@@ -143,9 +143,9 @@ def parse_filters(cmd_args):
         regions = tuple(region_filter)
 
     tag_filter = []
-    if cmd_args['tag_filters']:
+    if cmd_args.tag_filters:
         # Convert dict(s) list to what describe_instances' Filters expects.
-        for filter_elements in cmd_args['tag_filters']:
+        for filter_elements in cmd_args.tag_filters:
             # Filter instances based on tag key-value(s).
             if len(filter_elements) > 1:
                 tag_filter.append({
@@ -158,15 +158,15 @@ def parse_filters(cmd_args):
                     'Name': "tag-key",
                     'Values': [filter_elements[0]]
                 })
-    if cmd_args['name_filter']:
+    if cmd_args.name_filter:
         tag_filter.append({
             'Name': "tag:Name",
-            'Values': cmd_args['name_filter']
+            'Values': cmd_args.name_filter
         })
-    if cmd_args['id_filter']:
+    if cmd_args.id_filter:
         tag_filter.append({
             'Name': "instance-id",
-            'Values': cmd_args['id_filter']
+            'Values': cmd_args.id_filter
         })
 
     return (regions, tag_filter)
@@ -196,7 +196,7 @@ def get_state_and_ip(region, instance_ip):
     return (instance_state, instance_ip)
 
 
-def argparse_args(cmd_parser):
+def add_argparse_args(cmd_parser):
     """initialize argparse arguments that the main() function expects"""
     cmd_parser.add_argument(
         "-n", dest="name_filter", nargs="+", metavar="",

@@ -6,6 +6,7 @@ IAM user is a part of.
 """
 
 import sys
+from collections import namedtuple
 #import pprint
 #pp = pprint.PrettyPrinter(indent=2)
 
@@ -45,7 +46,7 @@ def main(args=None):
         cmd_args = argv_to_cmd_args(args, commands)
 
         # If basic configuration being done, skip config validation
-        if cmd_args['command'] != "configure":
+        if cmd_args.command != "configure":
             # Validate config's config.json
             validate_config.main()
             # Validate config's aws_setup.json and YAML instance templates
@@ -53,7 +54,7 @@ def main(args=None):
 
         # Get the command class object from the commands list
         chosen_cmd = next(cmd(cmd_args) for cmd in commands
-            if cmd.cmd_name() == cmd_args['command'])
+            if cmd.cmd_name() == cmd_args.command)
 
         # Validate IAM user has needed permissions to use the command
         halt.assert_empty(chosen_cmd.blocked_actions(cmd_args))
@@ -85,7 +86,8 @@ def argv_to_cmd_args(args, commands):
     if not args:
         args = ["-h"]
 
-    return vars(parser.parse_args(args))
+    cmd_args_dict = vars(parser.parse_args(args))
+    return namedtuple("cmd_args", cmd_args_dict)(**cmd_args_dict)
 
 
 if __name__ == "__main__":

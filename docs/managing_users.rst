@@ -4,7 +4,8 @@ Managing Users
 .. role:: bash(code)
    :language: bash
 
-The script, by default, provides three IAM groups to place IAM users in: :bash:`basic_users`, :bash:`admin_users`, and :bash:`setup_users`. The groups have the following capabilities (each group inherits the permissions of the previous):
+The script, by default, provides three IAM groups to place IAM users in: :bash:`basic_users`, :bash:`admin_users`, and :bash:`setup_users`.
+The groups have the following capabilities (each group inherits the permissions of the previous):
 
 - :bash:`basic_users`: Can check and start instances.
 - :bash:`admin_users`: Can stop instances (SSM capabilities are on the TODO).
@@ -13,7 +14,7 @@ The script, by default, provides three IAM groups to place IAM users in: :bash:`
 Note that the :bash:`setup_users` group has the needed permissions to grant access to *all* AWS services.
 A malicious IAM user in the :bash:`setup_users` group could activate services that cost tens of thousands of dollars per day or more.
 AWS provides support_, but disputing charges is not guaranteed to work.
-It is **strongly** recommended to `set a billing alarm`_.
+It is **strongly** recommended to `set a budget`_ (see Costs_).
 
 TL;DR: Don't put users in groups with permissions they don't need.
 
@@ -45,6 +46,8 @@ See the `user subcommands`_ for all of the provided commands for managing users.
 
 .. _support: https://console.aws.amazon.com/support/home/?#
 
-.. _set a billing alarm: https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/monitor_estimated_charges_with_cloudwatch.html
+.. _set a budget: https://aws.amazon.com/aws-cost-management/aws-budgets/
+
+.. _Costs: https://github.com/TakingItCasual/ec2mc/blob/master/docs/costs.rst
 
 .. _user subcommands: https://github.com/TakingItCasual/ec2mc/blob/master/docs/commands.rst#user-subcommands

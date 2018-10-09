@@ -9,22 +9,22 @@ from ec2mc.validate import validate_perms
 class RequestAddress(CommandBase):
 
     def __init__(self, cmd_args):
-        self.ec2_client = aws.ec2_client(cmd_args['region'])
+        self.ec2_client = aws.ec2_client(cmd_args.region)
 
 
     def main(self, cmd_args):
         """attempt to allocate an elastic IP address from AWS
 
         Args:
-            cmd_args (dict): See add_documentation method.
+            cmd_args (namedtuple): See add_documentation method.
         """
-        if cmd_args['ip'] is not None:
+        if cmd_args.ip is not None:
             response = self.request_specific_address(
-                cmd_args['region'], cmd_args['ip'])
+                cmd_args.region, cmd_args.ip)
         else:
             response = self.request_random_address()
 
-        aws.attach_tags(cmd_args['region'], response['AllocationId'])
+        aws.attach_tags(cmd_args.region, response['AllocationId'])
         public_ip = response['PublicIp']
 
         print("")

@@ -9,7 +9,7 @@ class BeUser(CommandBase):
 
     def main(self, cmd_args):
         """set another IAM user's access key as default in config"""
-        user_name = cmd_args['user_name']
+        user_name = cmd_args.user_name
 
         if user_name.lower() == consts.IAM_NAME.lower():
             halt.err(f"You are already {consts.IAM_NAME}.")

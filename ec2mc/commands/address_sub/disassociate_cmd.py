@@ -10,9 +10,9 @@ class DisassociateAddress(CommandBase):
         """disassociate elastic IP address from its instance
 
         Args:
-            cmd_args (dict): See add_documentation method.
+            cmd_args (namedtuple): See add_documentation method.
         """
-        address = find_addresses.main(cmd_args['ip'])
+        address = find_addresses.main(cmd_args.ip)
         ec2_client = aws.ec2_client(address['region'])
 
         if 'association_id' not in address:

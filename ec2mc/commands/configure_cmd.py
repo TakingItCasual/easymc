@@ -15,14 +15,14 @@ class Configure(CommandBase):
             config_dict = os2.parse_json(consts.CONFIG_JSON)
             os2.validate_dict(config_dict, schema, "config.json")
 
-        if cmd_args['subcommand'] == "access_key":
+        if cmd_args.subcommand == "access_key":
             config_dict = self.set_access_key(
-                config_dict, cmd_args['key_id'], cmd_args['key_secret'])
-        elif cmd_args['subcommand'] == "whitelist":
-            self.set_region_whitelist(config_dict, cmd_args['regions'])
-        elif cmd_args['subcommand'] == "use_handler":
-            config_dict['use_handler'] = cmd_args['boolean']
-            print(f"IP handler usage set to {str(cmd_args['boolean'])}.")
+                config_dict, cmd_args.key_id, cmd_args.key_secret)
+        elif cmd_args.subcommand == "whitelist":
+            self.set_region_whitelist(config_dict, cmd_args.regions)
+        elif cmd_args.subcommand == "use_handler":
+            config_dict['use_handler'] = cmd_args.boolean
+            print(f"IP handler usage set to {str(cmd_args.boolean)}.")
 
         os2.save_json(config_dict, consts.CONFIG_JSON)
 

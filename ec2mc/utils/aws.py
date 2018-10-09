@@ -148,7 +148,7 @@ class ClientErrorHalt:
 
     def __exit__(self, exc_type, exc_value, traceback):
         if exc_type is not None and issubclass(exc_type, ClientError):
-            if exc_value.response['Error']['Code'] not in self.pass_exceptions:
-                halt.err(str(exc_value))
-            return True  # Ignore ClientError
+            if exc_value.response['Error']['Code'] in self.pass_exceptions:
+                return True  # Ignore ClientError
+            halt.err(str(exc_value))
         return False  # Allow other exceptions to propagate

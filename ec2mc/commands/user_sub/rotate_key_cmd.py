@@ -13,7 +13,7 @@ class RotateUserKey(CommandBase):
     def main(self, cmd_args):
         """delete IAM user's access key(s) and create a new one"""
         path_prefix = f"/{consts.NAMESPACE}/"
-        user_name = aws.validate_user_exists(path_prefix, cmd_args['name'])
+        user_name = aws.validate_user_exists(path_prefix, cmd_args.name)
 
         old_access_keys = self.iam_client.list_access_keys(
             UserName=user_name)['AccessKeyMetadata']
@@ -25,7 +25,7 @@ class RotateUserKey(CommandBase):
         print("")
         print(f"{user_name}'s access key rotated.")
 
-        os2.create_configuration_zip(user_name, new_key, cmd_args['ssh_key'])
+        os2.create_configuration_zip(user_name, new_key, cmd_args.ssh_key)
         print("  User's updated zipped configuration created in config.")
 
 

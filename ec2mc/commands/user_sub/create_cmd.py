@@ -15,27 +15,27 @@ class CreateUser(CommandBase):
         """create a new IAM user under an IAM group"""
         iam_client = aws.iam_client()
         path_prefix = f"/{consts.NAMESPACE}/"
-        aws.validate_group_exists(path_prefix, cmd_args['group'])
+        aws.validate_group_exists(path_prefix, cmd_args.group)
 
         # IAM user created and added to group (given the name is unique)
         try:
             iam_client.create_user(
-                Path=path_prefix, UserName=cmd_args['name'])
+                Path=path_prefix, UserName=cmd_args.name)
         except ClientError as e:
             if e.response['Error']['Code'] == "EntityAlreadyExists":
-                halt.err(f"IAM user \"{cmd_args['name']}\" already exists.")
+                halt.err(f"IAM user \"{cmd_args.name}\" already exists.")
             halt.err(str(e))
         iam_client.add_user_to_group(
-            GroupName=cmd_args['group'],
-            UserName=cmd_args['name']
+            GroupName=cmd_args.group,
+            UserName=cmd_args.name
         )
 
         print("")
-        print(f"IAM user \"{cmd_args['name']}\" created on AWS.")
+        print(f"IAM user \"{cmd_args.name}\" created on AWS.")
 
         # IAM user access key generated and saved to dictionary
         new_key = iam_client.create_access_key(
-            UserName=cmd_args['name'])['AccessKey']
+            UserName=cmd_args.name)['AccessKey']
         new_key = {new_key['AccessKeyId']: new_key['SecretAccessKey']}
         self.access_key_usable_waiter(new_key)
 
@@ -43,7 +43,7 @@ class CreateUser(CommandBase):
         if 'backup_keys' not in config_dict:
             config_dict['backup_keys'] = {}
 
-        if cmd_args['default']:
+        if cmd_args.default:
             # Modify existing config instead of creating new one
             config_dict['backup_keys'].update(config_dict['access_key'])
             config_dict['access_key'] = new_key
@@ -55,7 +55,7 @@ class CreateUser(CommandBase):
             os2.save_json(config_dict, consts.CONFIG_JSON)
 
             os2.create_configuration_zip(
-                cmd_args['name'], new_key, cmd_args['ssh_key'])
+                cmd_args.name, new_key, cmd_args.ssh_key)
             print("  User's zipped configuration created in config.")
 
 

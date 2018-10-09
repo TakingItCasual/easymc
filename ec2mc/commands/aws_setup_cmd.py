@@ -24,9 +24,9 @@ class AWSSetup(CommandBase):
         """manage AWS account setup with ~/.ec2mc/aws_setup/
 
         Args:
-            cmd_args (dict): See add_documentation method.
+            cmd_args (namedtuple): See add_documentation method.
         """
-        if cmd_args['subcommand'] == "delete":
+        if cmd_args.subcommand == "delete":
             path_prefix = f"/{consts.NAMESPACE}/"
             if not self.namespace_groups_empty(path_prefix):
                 halt.err("IAM User(s) attached to namespace IAM group(s).")
@@ -42,11 +42,11 @@ class AWSSetup(CommandBase):
             component = component(config_aws_setup)
             component_info = component.check_component()
             print("")
-            if cmd_args['subcommand'] == "check":
+            if cmd_args.subcommand == "check":
                 component.notify_state(component_info)
-            elif cmd_args['subcommand'] == "upload":
+            elif cmd_args.subcommand == "upload":
                 component.upload_component(component_info)
-            elif cmd_args['subcommand'] == "delete":
+            elif cmd_args.subcommand == "delete":
                 component.delete_component()
 
 
@@ -120,7 +120,7 @@ class AWSSetup(CommandBase):
 
     def blocked_actions(self, cmd_args):
         denied_actions = []
-        if cmd_args['subcommand'] == "delete":
+        if cmd_args.subcommand == "delete":
             denied_actions.extend(validate_perms.blocked(actions=[
                 "iam:ListGroups",
                 "iam:GetGroup",
@@ -131,5 +131,5 @@ class AWSSetup(CommandBase):
             ]))
         for component in self.aws_components:
             denied_actions.extend(
-                component.blocked_actions(cmd_args['subcommand']))
+                component.blocked_actions(cmd_args.subcommand))
         return denied_actions

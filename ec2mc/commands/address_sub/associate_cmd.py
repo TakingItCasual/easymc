@@ -11,17 +11,17 @@ class AssociateAddress(CommandBase):
         """associate elastic IP address to an (other) instance
 
         Args:
-            cmd_args (dict): See add_documentation method.
+            cmd_args (namedtuple): See add_documentation method.
         """
-        address = find_addresses.main(cmd_args['ip'])
+        address = find_addresses.main(cmd_args.ip)
         ec2_client = aws.ec2_client(address['region'])
 
         all_instances = find_instances.probe_regions()
         try:
             instance = next(instance for instance in all_instances
-                if instance['name'] == cmd_args['name'])
+                if instance['name'] == cmd_args.name)
         except StopIteration:
-            halt.err(f"Instance named \"{cmd_args['name']}\" not found.")
+            halt.err(f"Instance named \"{cmd_args.name}\" not found.")
 
         if instance['region'] != address['region']:
             halt.err("Instance and address are in different regions.")
@@ -29,7 +29,7 @@ class AssociateAddress(CommandBase):
             if instance['name'] == address['instance_name']:
                 halt.err("Address already associated with specified instance.")
 
-        if 'association_id' in address and cmd_args['force'] is False:
+        if 'association_id' in address and cmd_args.force is False:
             halt.err(f"Elastic IP address {address['ip']} currently in use.",
                 "  Append the -f argument to force disassociation.")
 
@@ -64,6 +64,6 @@ class AssociateAddress(CommandBase):
             "ec2:DescribeAddresses",
             "ec2:AssociateAddress"
         ]
-        if cmd_args['force'] is True:
+        if cmd_args.force is True:
             needed_actions.append("ec2:DisassociateAddress")
         return validate_perms.blocked(actions=needed_actions)

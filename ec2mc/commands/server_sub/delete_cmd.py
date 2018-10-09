@@ -6,18 +6,18 @@ from ec2mc.validate import validate_perms
 class DeleteServer(CommandBase):
 
     def __init__(self, cmd_args):
-        self.ec2_client = aws.ec2_client(cmd_args['region'])
+        self.ec2_client = aws.ec2_client(cmd_args.region)
 
 
     def main(self, cmd_args):
         """terminate an EC2 instance given its ID and name
 
         Args:
-            cmd_args (dict): See add_documentation method.
+            cmd_args (namedtuple): See add_documentation method.
         """
         reservations = self.ec2_client.describe_instances(Filters=[
-            {'Name': "instance-id", 'Values': [cmd_args['id']]},
-            {'Name': "tag:Name", 'Values': [cmd_args['name']]}
+            {'Name': "instance-id", 'Values': [cmd_args.id]},
+            {'Name': "tag:Name", 'Values': [cmd_args.name]}
         ])['Reservations']
         if not reservations:
             halt.err("No instances matching given parameters found.")
@@ -26,15 +26,15 @@ class DeleteServer(CommandBase):
             halt.err("Instance has already been terminated.")
 
         addresses = self.ec2_client.describe_addresses(Filters=[
-            {'Name': "instance-id", 'Values': [cmd_args['id']]}
+            {'Name': "instance-id", 'Values': [cmd_args.id]}
         ])['Addresses']
         print("")
         if addresses:
-            self.disassociate_addresses(addresses, cmd_args['save_ips'])
-        elif cmd_args['save_ips'] is True:
+            self.disassociate_addresses(addresses, cmd_args.save_ips)
+        elif cmd_args.save_ips is True:
             print("No elastic IPs associated with instance.")
 
-        self.ec2_client.terminate_instances(InstanceIds=[cmd_args['id']])
+        self.ec2_client.terminate_instances(InstanceIds=[cmd_args.id])
         print("Instance termination process started.")
 
 

@@ -14,7 +14,7 @@ class DeleteUser(CommandBase):
     def main(self, cmd_args):
         """delete an existing IAM user from AWS"""
         path_prefix = f"/{consts.NAMESPACE}/"
-        user_name = cmd_args['name']
+        user_name = cmd_args.name
 
         # IAM user names cannot differ only by case
         if user_name.lower() == consts.IAM_NAME.lower():

@@ -15,37 +15,37 @@ from ec2mc.validate import validate_perms
 class CreateServer(CommandBase):
 
     def __init__(self, cmd_args):
-        self.ec2_client = aws.ec2_client(cmd_args['region'])
+        self.ec2_client = aws.ec2_client(cmd_args.region)
 
 
     def main(self, cmd_args):
         """create and initialize a new EC2 instance
 
         Args:
-            cmd_args (dict): See add_documentation method.
+            cmd_args (namedtuple): See add_documentation method.
         """
         template_yaml_files = os2.dir_files(consts.USER_DATA_DIR)
-        if f"{cmd_args['template']}.yaml" not in template_yaml_files:
-            halt.err(f"Template {cmd_args['template']} not found from config.")
+        if f"{cmd_args.template}.yaml" not in template_yaml_files:
+            halt.err(f"Template {cmd_args.template} not found from config.")
 
-        self.validate_name_is_unique(cmd_args['name'])
-        self.validate_limits_not_reached(cmd_args['elastic_ip'])
+        self.validate_name_is_unique(cmd_args.name)
+        self.validate_limits_not_reached(cmd_args.elastic_ip)
 
         inst_template = os2.parse_yaml(consts.USER_DATA_DIR /
-            f"{cmd_args['template']}.yaml")['ec2mc_template_info']
+            f"{cmd_args.template}.yaml")['ec2mc_template_info']
 
         self.validate_type_and_size_allowed(
             inst_template['instance_type'], inst_template['volume_size'])
-        if cmd_args['use_ip'] is not None:
+        if cmd_args.use_ip is not None:
             address = self.validate_address(
-                cmd_args['use_ip'], cmd_args['region'], cmd_args['force'])
+                cmd_args.use_ip, cmd_args.region, cmd_args.force)
 
         creation_kwargs = self.parse_run_instance_args(cmd_args, inst_template)
-        user_data = self.process_user_data(cmd_args['template'], inst_template)
+        user_data = self.process_user_data(cmd_args.template, inst_template)
         self.create_instance(creation_kwargs, user_data, dry_run=True)
 
         print("")
-        if cmd_args['confirm'] is False:
+        if cmd_args.confirm is False:
             print("IAM permissions and instance template validated.")
             print("Append the -c argument to confirm instance creation.")
             return
@@ -56,10 +56,10 @@ class CreateServer(CommandBase):
         if consts.USE_HANDLER is True:
             print("  Utilize IP handler with \"ec2mc servers check\".")
 
-        if cmd_args['elastic_ip'] is True:
-            self.create_elastic_ip(cmd_args['region'], instance['InstanceId'])
+        if cmd_args.elastic_ip is True:
+            self.create_elastic_ip(cmd_args.region, instance['InstanceId'])
             print("New elastic IP associated with created instance.")
-        elif cmd_args['use_ip'] is not None:
+        elif cmd_args.use_ip is not None:
             self.reuse_elastic_ip(address, instance['InstanceId'])
             print("Existing elastic IP associated with created instance.")
 
@@ -68,10 +68,10 @@ class CreateServer(CommandBase):
         """parse arguments for run_instances from argparse args and template
 
         Args:
-            cmd_args (dict):
-                'region' (str): AWS region to create instance in.
-                'name' (str): Tag value for instance tag key "Name".
-                'tags' (list): Additional instance tag key-value pair(s).
+            cmd_args (namedtuple):
+                region (str): AWS region to create instance in.
+                name (str): Tag value for instance tag key "Name".
+                tags (list): Additional instance tag key-value pair(s).
             instance_template (dict):
                 'instance_type' (str): EC2 instance type to create.
                 'volume_size' (int): EC2 instance volume size (GiB).
@@ -89,7 +89,6 @@ class CreateServer(CommandBase):
                 'subnet_id' (str): ID of VPC subnet to assign to instance.
                 'key_name' (str): Name of EC2 key pair to assign (for SSH).
         """
-        region = cmd_args['region']
         creation_kwargs = {}
 
         creation_kwargs.update({
@@ -107,7 +106,7 @@ class CreateServer(CommandBase):
             'device_name': aws_images[0]['RootDeviceName']
         })
 
-        vpc_info = aws.get_region_vpc(region)
+        vpc_info = aws.get_region_vpc(cmd_args.region)
         if vpc_info is None:
             halt.err(f"VPC {consts.NAMESPACE} not found from AWS region.",
                 "  Have you uploaded the AWS setup?")
@@ -117,7 +116,7 @@ class CreateServer(CommandBase):
             'tags': self.parse_tags(cmd_args, instance_template),
             'key_name': self.validate_ec2_key_pair(),
             'sg_ids': self.template_security_groups(
-                region, vpc_id, instance_template['security_groups']),
+                cmd_args.region, vpc_id, instance_template['security_groups']),
             'subnet_id': self.first_subnet_id(vpc_id)
         })
 
@@ -310,12 +309,12 @@ class CreateServer(CommandBase):
     def parse_tags(cmd_args, instance_template):
         """handle tag parsing for parse_run_instance_args method"""
         instance_tags = [
-            {'Key': "Name", 'Value': cmd_args['name']},
+            {'Key': "Name", 'Value': cmd_args.name},
             {'Key': "Namespace", 'Value': consts.NAMESPACE},
             {'Key': "DefaultUser", 'Value': consts.AMI_DEFAULT_USER}
         ]
-        if cmd_args['tags']:
-            for tag_key, tag_value in cmd_args['tags']:
+        if cmd_args.tags:
+            for tag_key, tag_value in cmd_args.tags:
                 instance_tags.append({'Key': tag_key, 'Value': tag_value})
         if instance_template['ip_handler'] is not None:
             instance_tags.append({
@@ -402,18 +401,18 @@ class CreateServer(CommandBase):
             "ec2:DescribeImages",
             "ec2:CreateTags"
         ]
-        if cmd_args['elastic_ip'] is True:
+        if cmd_args.elastic_ip is True:
             needed_actions.extend([
                 "ec2:DescribeAddresses",
                 "ec2:AllocateAddress",
                 "ec2:AssociateAddress"
             ])
-        elif cmd_args['use_ip'] is not None:
+        elif cmd_args.use_ip is not None:
             needed_actions.extend([
                 "ec2:DescribeAddresses",
                 "ec2:AssociateAddress"
             ])
-            if cmd_args['force'] is True:
+            if cmd_args.force is True:
                 needed_actions.append("ec2:DisassociateAddress")
 
         denied_actions = validate_perms.blocked(actions=needed_actions)
