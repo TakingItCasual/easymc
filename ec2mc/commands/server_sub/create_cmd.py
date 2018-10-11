@@ -342,6 +342,8 @@ class CreateServer(CommandBase):
             'Name': "vpc-id",
             'Values': [vpc_id]
         }])['Subnets']
+        if not vpc_subnets:
+            halt.err(f"VPC {consts.NAMESPACE} in AWS region has no subnets.")
         vpc_subnets.sort(key=lambda k: k['AvailabilityZone'])
         return vpc_subnets[0]['SubnetId']
 
