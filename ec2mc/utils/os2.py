@@ -12,7 +12,7 @@ from ruamel import yaml
 from ec2mc import consts
 from ec2mc.utils import halt
 
-def dir_files(target_dir: Path, *, ext: str="") -> List[str]:
+def dir_files(target_dir: Path, *, ext: str = "") -> List[str]:
     """return names of files in directory"""
     return [f.name for f in target_dir.iterdir()
         if (target_dir / f).is_file() and str(f).endswith(ext)]

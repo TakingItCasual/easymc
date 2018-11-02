@@ -59,7 +59,7 @@ For each hour your server is running a day, that's 3GB ($0.27-$0.36) per month p
 
 Due to `AWS's Free Tier`_, you can transfer out 15GB a month for free during your first year.
 This should be sufficient for 1 player playing 5 hours a day, 5 players playing 1 hour a day, etc.
-Essentially, it's a discount of $4.05-$5.40 a month.
+Essentially, it's a networking discount of $4.05-$5.40 a month.
 
 For details on how prices vary between regions, see the following URL:
 

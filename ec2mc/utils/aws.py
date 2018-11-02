@@ -2,13 +2,14 @@
 
 import re
 from time import sleep
+from typing import Dict, List, Optional
 import boto3
 from botocore.exceptions import ClientError
 
 from ec2mc import consts
 from ec2mc.utils import halt
 
-def ec2_client(region):
+def ec2_client(region: Optional[str]):
     """wrapper for ec2_client_no_validate which validates specified region"""
     if region is None:  # True for when command has unused region argument
         if len(consts.REGIONS) > 1:
@@ -21,7 +22,7 @@ def ec2_client(region):
     return ec2_client_no_validate(region)
 
 
-def ec2_client_no_validate(region):
+def ec2_client_no_validate(region: str):
     """create and return EC2 client using IAM user access key and a region"""
     return boto3.client("ec2",
         aws_access_key_id=consts.KEY_ID,
@@ -38,7 +39,7 @@ def iam_client():
     )
 
 
-def get_region_vpc(region):
+def get_region_vpc(region: str) -> Optional[Dict]:
     """get VPC from region with name of aws_setup's namespace
 
     Requires ec2:DescribeVpcs permission.
@@ -54,7 +55,7 @@ def get_region_vpc(region):
     return None
 
 
-def get_vpc_security_groups(region, vpc_id):
+def get_vpc_security_groups(region: str, vpc_id: str) -> List[Dict]:
     """get non-default security groups in specified VPC
 
     Requires ec2:DescribeSecurityGroups permission.
@@ -66,7 +67,9 @@ def get_vpc_security_groups(region, vpc_id):
 
 
 # TODO: Attach tag(s) on resource (e.g. VPC) creation when it becomes supported
-def attach_tags(region, resource_id, name_tag=None):
+def attach_tags(
+    region: str, resource_id: str, name_tag: Optional[str] = None
+) -> None:
     """attempt to attach tag(s) to resource (including Namespace tag) for 60s
 
     Requires ec2:CreateTags permission.
@@ -100,7 +103,7 @@ def attach_tags(region, resource_id, name_tag=None):
         halt.err(f"Can't find {resource_id} a minute after its creation.")
 
 
-def validate_user_exists(path_prefix, user_name):
+def validate_user_exists(path_prefix: str, user_name: str) -> str:
     """validate IAM user exists (case insensitive), and return exact name
 
     Requires iam:ListUsers permission.
@@ -112,7 +115,7 @@ def validate_user_exists(path_prefix, user_name):
     halt.err(f"IAM user \"{user_name}\" not found from AWS.")
 
 
-def validate_group_exists(path_prefix, group_name):
+def validate_group_exists(path_prefix: str, group_name: str) -> str:
     """validate IAM group exists (case sensitive), and return name
 
     Requires iam:ListGroups permission.
@@ -124,7 +127,7 @@ def validate_group_exists(path_prefix, group_name):
     halt.err(f"IAM group \"{group_name}\" not found from AWS.")
 
 
-def access_key_owner(access_key_id):
+def access_key_owner(access_key_id: str) -> Optional[str]:
     """get name of IAM user who owns access key (or None if key invalid)
 
     Requires iam:GetAccessKeyLastUsed permission.

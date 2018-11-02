@@ -34,7 +34,7 @@ def generate_rsa_key_pair() -> bytes:
     )
 
 
-def pem_to_public_key(der_encoded: bool=False) -> bytes:
+def pem_to_public_key(der_encoded: bool = False) -> bytes:
     """convert pem RSA private key string to public key bytes"""
     pem_str = consts.RSA_KEY_PEM.read_text(encoding="utf-8")
 

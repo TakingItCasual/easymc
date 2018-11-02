@@ -6,14 +6,14 @@ from setuptools import find_packages
 from ec2mc import __version__
 from ec2mc import __min_python__
 
-CURRENT_PYTHON = sys.version_info[:2]
+CURRENT_PYTHON = sys.version_info[:3]
 if CURRENT_PYTHON < __min_python__:
     sys.stderr.write("""
 ==========================
 Unsupported Python version
 ==========================
 
-This version of ec2mc requires Python {}.{}. You're using Python {}.{}.
+This version of ec2mc requires Python {}.{}.{}. You're using Python {}.{}.{}.
 Install the required Python version and ensure it is in your PATH.
 """.format(*(__min_python__ + CURRENT_PYTHON)))
     sys.exit(1)
@@ -45,11 +45,11 @@ setup(
         "Operating System :: POSIX :: Linux",
         "Programming Language :: Python",
         "Programming Language :: Python :: {}".format(__min_python__[0]),
-        "Programming Language :: Python :: {}.{}".format(*__min_python__)
+        "Programming Language :: Python :: {}.{}".format(*__min_python__[:2])
     ],
     keywords="mc minecraft ssh server aws ec2 iam cloud-config",
     packages=find_packages(exclude=["docs", "tests"]),
-    python_requires="~={}.{}".format(*__min_python__),
+    python_requires="~={}.{}.{}".format(*__min_python__),
     entry_points={'console_scripts': ["ec2mc=ec2mc.__main__:main"]},
     include_package_data=True,
     install_requires=[

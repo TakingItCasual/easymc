@@ -1,7 +1,7 @@
 """provides functions to kill the script by raising SystemExit"""
 
 import sys
-from typing import List
+from typing import List, NoReturn
 
 def assert_empty(blocked_actions: List[str]) -> None:
     """used with validate_perms, which returns list of denied AWS actions"""
@@ -10,14 +10,14 @@ def assert_empty(blocked_actions: List[str]) -> None:
             *sorted(list(set(blocked_actions))))
 
 
-def err(*halt_messages: str) -> None:
+def err(*halt_messages: str) -> NoReturn:
     """prepend "Error: " to first halt message, then halt"""
     halt_msg_list = list(halt_messages)
     halt_msg_list[0] = f"Error: {halt_messages[0]}"
     stop(*halt_msg_list)
 
 
-def stop(*halt_messages: str) -> None:
+def stop(*halt_messages: str) -> NoReturn:
     """halts the script by raising SystemExit"""
     if halt_messages:
         print("")

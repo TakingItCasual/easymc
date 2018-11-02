@@ -3,6 +3,7 @@
 from abc import ABC
 from abc import abstractmethod
 import argparse
+from typing import List, Type
 
 from ec2mc.validate import validate_perms
 
@@ -26,13 +27,13 @@ class CommandBase(ABC):
         return argparse_obj.add_parser(cls.cmd_name(), help=cls.cmd_doc())
 
 
-    def blocked_actions(self, cmd_args):
+    def blocked_actions(self, cmd_args) -> List[str]:
         """return list of denied IAM actions needed for child's main"""
         return []
 
 
     @classmethod
-    def cmd_name(cls):
+    def cmd_name(cls) -> str:
         """convert child class' __module__ to name of argparse command"""
         name_str = cls.__module__.rsplit('.', 1)[-1]
         if not name_str.endswith(cls._module_postfix):
@@ -42,15 +43,18 @@ class CommandBase(ABC):
 
 
     @classmethod
-    def cmd_doc(cls):
+    def cmd_doc(cls) -> str:
         """return first line of main method's docstring"""
-        return cls.main.__doc__.splitlines()[0]
+        docstring = cls.main.__doc__
+        if docstring is not None:
+            return docstring.strip().splitlines()[0]
+        return "no description provided"
 
 
 class ParentCommand(CommandBase):
     """base class for command which just acts as parent for other commands"""
     _module_postfix = "_cmds"
-    sub_commands = []
+    sub_commands: List[Type[CommandBase]]
 
     def __init__(self, cmd_args):
         self.chosen_cmd = next(cmd(cmd_args) for cmd in self.sub_commands
@@ -73,16 +77,16 @@ class ParentCommand(CommandBase):
             sub_command.add_documentation(subcommands)
 
 
-    def blocked_actions(self, cmd_args):
+    def blocked_actions(self, cmd_args) -> List[str]:
         """pass along selected subcommand's denied IAM actions"""
         return self.chosen_cmd.blocked_actions(cmd_args)
 
 
 class ComponentSetup(ABC):
     """base class for aws_setup component checking/uploading/deleting"""
-    describe_actions = []
-    upload_actions = []
-    delete_actions = []
+    describe_actions: List[str]
+    upload_actions: List[str]
+    delete_actions: List[str]
 
     def __init__(self, config_aws_setup):
         pass
@@ -114,7 +118,7 @@ class ComponentSetup(ABC):
 
     @classmethod
     @abstractmethod
-    def blocked_actions(cls, sub_command):
+    def blocked_actions(cls, sub_command: str) -> List[str]:
         """check whether IAM user is allowed to perform actions on component
 
         Should be overridden by child classes in the following fashion:
