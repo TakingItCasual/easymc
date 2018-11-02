@@ -44,7 +44,7 @@ class CommandBase(ABC):
     @classmethod
     def cmd_doc(cls):
         """return first line of main method's docstring"""
-        return cls.main.__doc__.split("\n", 1)[0]
+        return cls.main.__doc__.splitlines()[0]
 
 
 class ParentCommand(CommandBase):

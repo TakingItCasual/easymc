@@ -4,6 +4,7 @@ Variables with "Set in..." comments are set once elsewhere.
 """
 
 from pathlib import Path
+from typing import Tuple
 
 # Path of script's distribution's inner ec2mc directory.
 DIST_DIR = Path(__file__).parent
@@ -14,8 +15,8 @@ CONFIG_DIR = Path().home() / ".ec2mc"
 CONFIG_JSON = CONFIG_DIR / "config.json"
 # PEM/PPK files containing RSA private key for SSHing into instances.
 # Set in ec2mc.validate.validate_setup:main (namespace used as file name)
-RSA_KEY_PEM = None
-RSA_KEY_PPK = None
+RSA_KEY_PEM: Path
+RSA_KEY_PPK: Path
 
 # Directory for ec2mc to find AWS setup files to upload to AWS.
 AWS_SETUP_DIR = CONFIG_DIR / "aws_setup"
@@ -29,14 +30,14 @@ IP_HANDLER_DIR = AWS_SETUP_DIR / "ip_handlers"
 
 # Use IP handler script described by an instance's IpHandler tag.
 # Set in ec2mc.validate.validate_config:main
-USE_HANDLER = None
+USE_HANDLER: bool
 
 # IAM user data needed for AWS programmatic access.
 # Set in ec2mc.validate.validate_config:validate_user
-KEY_ID = None
-KEY_SECRET = None
-IAM_ARN = None
-IAM_NAME = None
+KEY_ID: str
+KEY_SECRET: str
+IAM_ARN: str
+IAM_NAME: str
 
 """This string is used for the following purposes:
 - Path prefix for IAM groups, policies, and users ("/" on both sides).
@@ -50,7 +51,7 @@ IAM_NAME = None
   - Allocated elastic IP addresses.
 """
 # Set in ec2mc.validate.validate_setup:main
-NAMESPACE = None
+NAMESPACE: str
 
 # Limit configuration RW access to owner of file(s).
 CONFIG_PERMS = 0o600
@@ -59,7 +60,7 @@ PK_PERMS = 0o400
 
 # Tuple of regions found with ec2:GetRegions (filtered through whitelist)
 # Set in ec2mc.validate.validate_config:validate_region_whitelist
-REGIONS = None
+REGIONS: Tuple[str]
 
 # Name of the Amazon Linux 2 AMI to create instances with
 AMI_NAME = "amzn2-ami-hvm-2.0.20180810-x86_64-gp2"

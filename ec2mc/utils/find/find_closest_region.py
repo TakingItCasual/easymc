@@ -1,9 +1,10 @@
 from timeit import default_timer as timer
+from typing import List
 
 from ec2mc.utils import aws
 from ec2mc.utils.threader import Threader
 
-def main(regions):
+def main(regions: List[str]) -> str:
     """repeatedly use ec2:DescribeRegions action to estimate closest region"""
     ping_num = 50
 
@@ -25,7 +26,7 @@ def main(regions):
     return latencies_for_regions[0][0]
 
 
-def get_region_latency(ec2_client):
+def get_region_latency(ec2_client) -> float:
     """get AWS region endpoint latency"""
     start_time = timer()
     ec2_client.describe_regions()

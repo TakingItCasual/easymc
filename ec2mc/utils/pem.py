@@ -6,38 +6,35 @@ from cryptography.hazmat.primitives.asymmetric import rsa
 from ec2mc import consts
 from ec2mc.utils import halt
 
-def generate_rsa_key_pair():
+def generate_rsa_key_pair() -> bytes:
     """generate RSA private/public key pair, save private, return public
 
     Returns:
         bytes: Public key bytes
     """
-    # Generate private/public key pair
-    key = rsa.generate_private_key(
+    # Generate RSA private key
+    private_key = rsa.generate_private_key(
         public_exponent=65537,
         key_size=2048,
         backend=default_backend()
     )
 
-    # Get private key in PEM container format
-    private_key_str = key.private_bytes(
+    # Get private key string in PEM container format
+    private_key_pem_str = private_key.private_bytes(
         encoding=serialization.Encoding.PEM,
         format=serialization.PrivateFormat.TraditionalOpenSSL,
         encryption_algorithm=serialization.NoEncryption()
     ).decode("utf-8")
+    consts.RSA_KEY_PEM.write_text(private_key_pem_str, encoding="utf-8")
 
-    consts.RSA_KEY_PEM.write_text(private_key_str, encoding="utf-8")
-
-    # Get public key in OpenSSH format
-    public_key_bytes = key.public_key().public_bytes(
+    # Return public key bytes in OpenSSH format
+    return private_key.public_key().public_bytes(
         serialization.Encoding.OpenSSH,
         serialization.PublicFormat.OpenSSH
     )
 
-    return public_key_bytes
 
-
-def pem_to_public_key(der_encoded=False):
+def pem_to_public_key(der_encoded: bool=False) -> bytes:
     """convert pem RSA private key string to public key bytes"""
     pem_str = consts.RSA_KEY_PEM.read_text(encoding="utf-8")
 
@@ -61,7 +58,7 @@ def pem_to_public_key(der_encoded=False):
     )
 
 
-def local_key_fingerprint():
+def local_key_fingerprint() -> str:
     """get namespace private key's public key's fingerprint in AWS's format"""
     public_key_der_bytes = pem_to_public_key(der_encoded=True)
     md5_digest = hashlib.md5(public_key_der_bytes).hexdigest()

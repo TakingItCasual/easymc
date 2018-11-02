@@ -6,7 +6,7 @@ Costs
 
 For your first year using AWS, you won't be billed for the usage of some basic AWS services due to `AWS's Free Tier`_.
 How this applies to you will be explained below.
-There are four AWS services that you will be billed for using (three related to the instances themselves).
+There are four AWS services that you will be billed for using (three of which are directly related to the instances).
 Note that a Value Added Tax (VAT) is added on top of your other costs.
 
 Note that if you plan to use a server for more than a few hours a day, it's cheaper to just use `Minecraft Realms`_, or any of the numerous hosting services that will host old/modded versions of Minecraft for you.
@@ -52,7 +52,7 @@ Instance Networking Costs
 Billing is based on the amount of data transferred out from instances.
 Data transferred into instances (e.g. an instance downloading files, or receiving player commands) is free.
 
-It can cost between $0.09 to $0.12 per GB transferred out, depending on which AWS region the instance is located in.
+It can cost between $0.09 and $0.12 per GB transferred out, depending on which AWS region the instance is located in.
 
 Mincraft server bandwidth `is estimated`_ to be around 0.1GB per hour per player.
 For each hour your server is running a day, that's 3GB ($0.27-$0.36) per month per player.
@@ -68,9 +68,9 @@ https://aws.amazon.com/ec2/pricing/on-demand/#Data_Transfer
 Elastic IP Address Costs
 ------------------------
 
-Elastic IP addresses are free when attached to a running instance.
+Elastic IP addresses (EIPs) are free when attached to a running instance.
 Otherwise, you are billed $0.005 an hour for each address (in all AWS regions).
-This means you will be billed for your addresses whenever your servers aren't running.
+This means you will be billed for your addresses whenever your instances aren't running.
 
 `More specifically`_, you are not billed for an address if all of the following conditions are met:
 
@@ -78,16 +78,17 @@ This means you will be billed for your addresses whenever your servers aren't ru
 - The instance associated with the elastic IP address is running.
 - The instance has only one elastic IP address attached to it.
 
-If an address is left unused, the cost works out to $0.15 for each hour a day, or $3.6 for a whole month.
+Over the course of a month, an address will cost $0.15 for each hour a day its instance isn't running.
+This works out to $3.60 if the address is left unused for the entire month.
 
 Summary
 -------
 
-Your monthly bill is based on how many hours a day (on average) your instances are running, whether you're covered by `AWS's Free Tier`_, whether instances have elastic IP addresses (EIP), and how many players are on your servers (on average) when they're running.
+Your monthly bill is based on how many hours a day (on average) your instances are running, whether you're covered by `AWS's Free Tier`_, whether instances have elastic IP addresses (EIPs), how much storage space you've allocated, and how many players are on your servers (on average) when they're running.
 
 The following table shows the expected monthly bill for a :bash:`t2.small` instance.
 To get the total expected cost of a server, multiply "Cost per player" by the number of expected players, and add it to the relevant cost on the left. 
-When your free tier benefits expire, you will no longer recieve the $4.05-$5.40 networking discount, and you'll be billed an additional $0.80-$0.96 for the 8GB of storage.
+When your free tier benefits expire, you will no longer recieve the $4.05-$5.40 networking discount, and you'll start being billed the $0.80-$0.96 for the 8GB of storage.
 
 ====== ============= ============= ===============
 Uptime Instance running costs      Networking

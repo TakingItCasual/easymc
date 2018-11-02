@@ -31,13 +31,13 @@ def main(cmd_args, *, single_instance=False):
         halt.err("No namespace instances found.")
 
     for region in regions:
-        instances = [instance for instance in all_instances
+        region_instances = [instance for instance in all_instances
             if instance['region'] == region]
-        if not instances:
+        if not region_instances:
             continue
 
-        print(f"{region}: {len(instances)} instance(s) found:")
-        for instance in instances:
+        print(f"{region}: {len(region_instances)} instance(s) found:")
+        for instance in region_instances:
             print(f"  {instance['name']} ({instance['id']})")
             for tag_key, tag_value in instance['tags'].items():
                 print(f"    {tag_key}: {tag_value}")
