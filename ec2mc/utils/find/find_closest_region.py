@@ -12,7 +12,7 @@ def main(regions: List[str]) -> str:
     for region in regions:
         ec2_client = aws.ec2_client_no_validate(region)
         for _ in range(ping_num):
-            threader.add_thread(get_region_latency, (ec2_client,))
+            threader.add_thread(_get_region_latency, (ec2_client,))
     latencies = threader.get_results()
 
     latencies_for_regions = []
@@ -26,7 +26,7 @@ def main(regions: List[str]) -> str:
     return latencies_for_regions[0][0]
 
 
-def get_region_latency(ec2_client) -> float:
+def _get_region_latency(ec2_client) -> float:
     """get AWS region endpoint latency"""
     start_time = timer()
     ec2_client.describe_regions()

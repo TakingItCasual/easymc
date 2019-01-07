@@ -28,11 +28,11 @@ class AWSSetup(CommandBase):
         """
         if cmd_args.subcommand == "delete":
             path_prefix = f"/{consts.NAMESPACE}/"
-            if not self.namespace_groups_empty(path_prefix):
+            if not self._namespace_groups_empty(path_prefix):
                 halt.err("IAM User(s) attached to namespace IAM group(s).")
-            if not self.namespace_policies_empty(path_prefix):
+            if not self._namespace_policies_empty(path_prefix):
                 halt.err("IAM User(s) attached to namespace IAM policy(s).")
-            if not self.namespace_vpcs_empty():
+            if not self._namespace_vpcs_empty():
                 halt.err("EC2 instance(s) found under namespace VPC(s).")
 
         # AWS setup JSON config dictionary
@@ -51,7 +51,7 @@ class AWSSetup(CommandBase):
 
 
     @staticmethod
-    def namespace_groups_empty(path_prefix):
+    def _namespace_groups_empty(path_prefix):
         """return False if any users attached to namespace groups"""
         iam_client = aws.iam_client()
         aws_groups = iam_client.list_groups(PathPrefix=path_prefix)['Groups']
@@ -62,7 +62,7 @@ class AWSSetup(CommandBase):
 
 
     @staticmethod
-    def namespace_policies_empty(path_prefix):
+    def _namespace_policies_empty(path_prefix):
         """return False if any users attached to namespace policies"""
         iam_client = aws.iam_client()
         aws_policies = iam_client.list_policies(
@@ -80,18 +80,18 @@ class AWSSetup(CommandBase):
         return True
 
     @classmethod
-    def namespace_vpcs_empty(cls):
+    def _namespace_vpcs_empty(cls):
         """return False if any instances within namespace VPCs found"""
         threader = Threader()
         for region in consts.REGIONS:
-            threader.add_thread(cls.region_vpc_empty, (region,))
+            threader.add_thread(cls._region_vpc_empty, (region,))
         if not all(threader.get_results()):
             return False
         return True
 
 
     @staticmethod
-    def region_vpc_empty(region):
+    def _region_vpc_empty(region):
         """return False if any instances found in region's namespace VPC"""
         ec2_client = aws.ec2_client(region)
         namespace_vpc = aws.get_region_vpc(region)

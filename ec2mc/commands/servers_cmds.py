@@ -6,7 +6,7 @@ from ec2mc.commands.servers_sub import stop_cmd
 
 class Servers(ParentCommand):
 
-    sub_commands = [
+    _sub_commands = [
         check_cmd.CheckServers,
         start_cmd.StartServers,
         stop_cmd.StopServers

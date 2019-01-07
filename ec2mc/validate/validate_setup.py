@@ -13,8 +13,8 @@ def main():
 
     # If consts.AWS_SETUP_DIR nonexistant, copy from ec2mc.aws_setup_src
     if not consts.AWS_SETUP_DIR.is_dir():
-        cp_aws_setup_to_config(src_aws_setup_dir)
-    config_aws_setup = get_config_aws_setup_dict()
+        _cp_aws_setup_to_config(src_aws_setup_dir)
+    config_aws_setup = _get_config_aws_setup_dict()
 
     # Config's aws_setup.json must contain the 'Modified' key
     if 'Modified' not in config_aws_setup:
@@ -29,21 +29,22 @@ def main():
         # If source and config aws_setup differ, overwrite config aws_setup
         # If config aws_setup missing files, overwrite config aws_setup
         if diffs[1] or diffs[2]:
-            cp_aws_setup_to_config(src_aws_setup_dir)
+            _cp_aws_setup_to_config(src_aws_setup_dir)
             print("Config's aws_setup directory updated.")
-            config_aws_setup = get_config_aws_setup_dict()
+            config_aws_setup = _get_config_aws_setup_dict()
 
     consts.NAMESPACE = config_aws_setup['Namespace']
+    consts.IAM_PREFIX = f"/{consts.NAMESPACE}/"
     consts.RSA_KEY_PEM = consts.CONFIG_DIR / f"{consts.NAMESPACE}.pem"
     consts.RSA_KEY_PPK = consts.CONFIG_DIR / f"{consts.NAMESPACE}.ppk"
 
-    validate_iam_policies(config_aws_setup)
-    validate_iam_groups(config_aws_setup)
-    validate_vpc_security_groups(config_aws_setup)
-    validate_instance_templates()
+    _validate_iam_policies(config_aws_setup)
+    _validate_iam_groups(config_aws_setup)
+    _validate_vpc_security_groups(config_aws_setup)
+    _validate_instance_templates()
 
 
-def get_config_aws_setup_dict():
+def _get_config_aws_setup_dict():
     """return aws_setup.json from config in user's home dir as dict"""
     if not consts.AWS_SETUP_JSON.is_file():
         halt.err("aws_setup.json not found from config.")
@@ -54,14 +55,14 @@ def get_config_aws_setup_dict():
     return config_aws_setup
 
 
-def cp_aws_setup_to_config(src_aws_setup_dir):
+def _cp_aws_setup_to_config(src_aws_setup_dir):
     """delete config aws_setup, then copy source aws_setup to config"""
     if consts.AWS_SETUP_DIR.is_dir():
         shutil.rmtree(consts.AWS_SETUP_DIR, onerror=os2.del_readonly)
     shutil.copytree(src_aws_setup_dir, consts.AWS_SETUP_DIR)
 
 
-def validate_iam_policies(config_aws_setup):
+def _validate_iam_policies(config_aws_setup):
     """validate aws_setup.json reflects contents of iam_policies dir"""
     policy_dir = consts.AWS_SETUP_DIR / "iam_policies"
 
@@ -84,7 +85,7 @@ def validate_iam_policies(config_aws_setup):
         )
 
 
-def validate_iam_groups(config_aws_setup):
+def _validate_iam_groups(config_aws_setup):
     """validate IAM groups' policies are subsets of described IAM policies"""
     setup_policies = set(config_aws_setup['IAM']['Policies'].keys())
     for name, iam_group in config_aws_setup['IAM']['Groups'].items():
@@ -95,7 +96,7 @@ def validate_iam_groups(config_aws_setup):
                     if policy not in setup_policies])
 
 
-def validate_vpc_security_groups(config_aws_setup):
+def _validate_vpc_security_groups(config_aws_setup):
     """validate aws_setup.json reflects contents of vpc_security_groups dir"""
     sg_dir = consts.AWS_SETUP_DIR / "vpc_security_groups"
 
@@ -119,7 +120,7 @@ def validate_vpc_security_groups(config_aws_setup):
         os2.validate_dict(sg_dict, schema, f"SG {sg_file}")
 
 
-def validate_instance_templates():
+def _validate_instance_templates():
     """validate config aws_setup user_data YAML instance templates"""
     template_yaml_files = os2.dir_files(consts.USER_DATA_DIR, ext=".yaml")
 
@@ -138,4 +139,4 @@ def validate_instance_templates():
             if not dir_path.is_dir():
                 halt.err(f"{dir_path} directory for the {template_name} "
                     "template not found.")
-    # write_files path uniqueness validated in create:process_user_data
+    # write_files path uniqueness validated in create:_process_user_data

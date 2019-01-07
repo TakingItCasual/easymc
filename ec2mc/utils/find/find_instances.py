@@ -16,7 +16,7 @@ def main(cmd_args, *, single_instance=False):
 
     Returns: See what probe_regions returns.
     """
-    regions, tag_filter = parse_filters(cmd_args)
+    regions, tag_filter = _parse_filters(cmd_args)
 
     print("")
     print(f"Probing {len(regions)} AWS region(s) for instances...")
@@ -64,7 +64,7 @@ def probe_regions(regions=None, tag_filter=None):
     Returns:
         list[dict]: Found instance(s).
             'region' (str): AWS region that an instance is in.
-            For other key-value pairs, see what probe_region returns.
+            For other key-value pairs, see what _probe_region returns.
     """
     if regions is None:
         regions = consts.REGIONS
@@ -75,7 +75,7 @@ def probe_regions(regions=None, tag_filter=None):
 
     threader = Threader()
     for region in regions:
-        threader.add_thread(probe_region, (region, tag_filter))
+        threader.add_thread(_probe_region, (region, tag_filter))
     regions_instances = threader.get_results(return_dict=True)
 
     return [{'region': region, **instance}
@@ -83,7 +83,7 @@ def probe_regions(regions=None, tag_filter=None):
         for instance in instances]
 
 
-def probe_region(region, tag_filter):
+def _probe_region(region, tag_filter):
     """probe single AWS region for non-terminated named instances
 
     Requires ec2:DescribeInstances permission.
@@ -122,7 +122,7 @@ def probe_region(region, tag_filter):
     return sorted(region_instances, key=lambda k: k['name'])
 
 
-def parse_filters(cmd_args):
+def _parse_filters(cmd_args):
     """parses region and tag filters
 
     Args:

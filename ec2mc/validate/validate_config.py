@@ -12,7 +12,7 @@ def main():
     consts.CONFIG_DIR.mkdir(exist_ok=True)
 
     config_dict = {}
-    file_credentials = credentials_from_file()
+    file_credentials = _credentials_from_file()
     if not consts.CONFIG_JSON.is_file() and file_credentials is None:
         halt.err(f"{consts.CONFIG_JSON.name} not found from config directory.",
             "  An IAM user access key is needed to interact with AWS.",
@@ -36,14 +36,14 @@ def main():
         os2.save_json(config_dict, consts.CONFIG_JSON)
 
     # Validate config's IAM user access key and save to consts.
-    validate_user(config_dict)
+    _validate_user(config_dict)
     print(f"Access key validated as IAM user \"{consts.IAM_NAME}\".")
 
     # Validate config's region whitelist and save to consts.
-    validate_region_whitelist(config_dict)
+    _validate_region_whitelist(config_dict)
 
 
-def validate_user(config_dict):
+def _validate_user(config_dict):
     """validate config's IAM user access key and minimal permissions
 
     iam:GetUser, iam:SimulatePrincipalPolicy, iam:GetAccessKeyLastUsed, and
@@ -89,7 +89,7 @@ def validate_user(config_dict):
     ]))
 
 
-def validate_region_whitelist(config_dict):
+def _validate_region_whitelist(config_dict):
     """validate config's region whitelist and save to consts.REGIONS tuple
 
     Requires ec2:DescribeRegions permission.
@@ -115,7 +115,7 @@ def validate_region_whitelist(config_dict):
         consts.REGIONS = (closest_region,)
 
 
-def credentials_from_file():
+def _credentials_from_file():
     """return access key parsed from accessKeys.csv, or None if non-existent"""
     credentials_csv = consts.CONFIG_DIR / "accessKeys.csv"
     if not credentials_csv.is_file():

@@ -9,7 +9,7 @@ from ec2mc.commands.address_sub import release_cmd
 # TODO: Add command to move address from one region to another
 class Address(ParentCommand):
 
-    sub_commands = [
+    _sub_commands = [
         list_cmd.ListAddresses,
         request_cmd.RequestAddress,
         associate_cmd.AssociateAddress,

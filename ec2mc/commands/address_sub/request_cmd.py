@@ -9,7 +9,7 @@ from ec2mc.validate import validate_perms
 class RequestAddress(CommandBase):
 
     def __init__(self, cmd_args):
-        self.ec2_client = aws.ec2_client(cmd_args.region)
+        self._ec2_client = aws.ec2_client(cmd_args.region)
 
 
     def main(self, cmd_args):
@@ -19,10 +19,10 @@ class RequestAddress(CommandBase):
             cmd_args (namedtuple): See add_documentation method.
         """
         if cmd_args.ip is not None:
-            response = self.request_specific_address(
+            response = self._request_specific_address(
                 cmd_args.region, cmd_args.ip)
         else:
-            response = self.request_random_address()
+            response = self._request_random_address()
 
         aws.attach_tags(cmd_args.region, response['AllocationId'])
         public_ip = response['PublicIp']
@@ -31,7 +31,7 @@ class RequestAddress(CommandBase):
         print(f"Elastic IP address {public_ip} successfully allocated.")
 
 
-    def request_specific_address(self, region, ipv4_ip):
+    def _request_specific_address(self, region, ipv4_ip):
         """request specific IPv4 elastic IP address from AWS"""
         for address in find_addresses.probe_regions():
             if address['ip'] == ipv4_ip:
@@ -41,7 +41,7 @@ class RequestAddress(CommandBase):
                 halt.err("You already possess this elastic IP address.")
 
         try:
-            return self.ec2_client.allocate_address(
+            return self._ec2_client.allocate_address(
                 Domain="vpc",
                 Address=ipv4_ip
             )
@@ -53,10 +53,10 @@ class RequestAddress(CommandBase):
             halt.err(str(e))
 
 
-    def request_random_address(self):
+    def _request_random_address(self):
         """request random IPv4 elastic IP address from AWS"""
         with aws.ClientErrorHalt():
-            return self.ec2_client.allocate_address(Domain="vpc")
+            return self._ec2_client.allocate_address(Domain="vpc")
 
 
     @classmethod

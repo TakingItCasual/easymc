@@ -15,12 +15,12 @@ def main(instance, new_ip):
         print(f"  {handler_base} not found from config's ip_handlers.")
         return
 
-    handler = load_script(handler_path)
+    handler = _load_script(handler_path)
     if handler is not None:
         handler.main(instance['name'], new_ip)
 
 
-def load_script(script_path):
+def _load_script(script_path):
     """load python script"""
     try:
         spec = importlib.util.spec_from_file_location("handler", script_path)

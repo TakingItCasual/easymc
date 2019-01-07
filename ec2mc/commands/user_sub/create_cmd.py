@@ -37,7 +37,7 @@ class CreateUser(CommandBase):
         new_key = iam_client.create_access_key(
             UserName=cmd_args.name)['AccessKey']
         new_key = {new_key['AccessKeyId']: new_key['SecretAccessKey']}
-        self.access_key_usable_waiter(new_key)
+        self._access_key_usable_waiter(new_key)
 
         config_dict = os2.parse_json(consts.CONFIG_JSON)
         if 'backup_keys' not in config_dict:
@@ -60,7 +60,7 @@ class CreateUser(CommandBase):
 
 
     @staticmethod
-    def access_key_usable_waiter(new_key):
+    def _access_key_usable_waiter(new_key):
         """waiter for IAM user access key usability (not perfect)"""
         iam_client = boto3.client("iam",
             aws_access_key_id=next(iter(new_key)),

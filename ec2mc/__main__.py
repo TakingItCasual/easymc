@@ -32,7 +32,7 @@ def main(args=None):
     if args is None:
         args = sys.argv[1:]
     try:
-        # Available commands from the ec2mc.commands directory
+        # Classes of available commands in the commands directory
         commands = [
             configure_cmd.Configure,
             aws_setup_cmd.AWSSetup,
@@ -42,8 +42,8 @@ def main(args=None):
             user_cmds.User
         ]
 
-        # Use argparse to turn args into dict of arguments
-        cmd_args = argv_to_cmd_args(args, commands)
+        # Use argparse to turn args into namedtuple of arguments
+        cmd_args = _argv_to_cmd_args(args, commands)
 
         # If basic configuration being done, skip config validation
         if cmd_args.command != "configure":
@@ -52,7 +52,7 @@ def main(args=None):
             # Validate config's aws_setup.json and YAML instance templates
             validate_setup.main()
 
-        # Get the command class object from the commands list
+        # Create an instance from the appropriate command class
         chosen_cmd = next(cmd(cmd_args) for cmd in commands
             if cmd.cmd_name() == cmd_args.command)
 
@@ -65,7 +65,7 @@ def main(args=None):
     return True
 
 
-def argv_to_cmd_args(args, commands):
+def _argv_to_cmd_args(args, commands):
     """recursively initialize ec2mc's argparse and its help
 
     Returns:

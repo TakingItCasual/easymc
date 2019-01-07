@@ -16,10 +16,10 @@ class Configure(CommandBase):
             os2.validate_dict(config_dict, schema, "config.json")
 
         if cmd_args.subcommand == "access_key":
-            config_dict = self.set_access_key(
+            config_dict = self._set_access_key(
                 config_dict, cmd_args.key_id, cmd_args.key_secret)
         elif cmd_args.subcommand == "whitelist":
-            self.set_region_whitelist(config_dict, cmd_args.regions)
+            self._set_region_whitelist(config_dict, cmd_args.regions)
         elif cmd_args.subcommand == "use_handler":
             config_dict['use_handler'] = cmd_args.boolean
             print(f"IP handler usage set to {str(cmd_args.boolean)}.")
@@ -28,7 +28,7 @@ class Configure(CommandBase):
 
 
     @staticmethod
-    def set_access_key(config_dict, key_id, key_secret):
+    def _set_access_key(config_dict, key_id, key_secret):
         """set id and secret of config's default access key"""
         if 'access_key' in config_dict:
             print("Existing access key overwritten.")
@@ -39,7 +39,7 @@ class Configure(CommandBase):
 
 
     @staticmethod
-    def set_region_whitelist(config_dict, regions):
+    def _set_region_whitelist(config_dict, regions):
         """set regions for config's region whitelist"""
         if regions:
             config_dict['region_whitelist'] = list(set(regions))

@@ -7,7 +7,7 @@ from ec2mc.validate import validate_perms
 class RotateUserKey(CommandBase):
 
     def __init__(self, cmd_args):
-        self.iam_client = aws.iam_client()
+        self._iam_client = aws.iam_client()
 
 
     def main(self, cmd_args):
@@ -15,12 +15,12 @@ class RotateUserKey(CommandBase):
         path_prefix = f"/{consts.NAMESPACE}/"
         user_name = aws.validate_user_exists(path_prefix, cmd_args.name)
 
-        old_access_keys = self.iam_client.list_access_keys(
+        old_access_keys = self._iam_client.list_access_keys(
             UserName=user_name)['AccessKeyMetadata']
         old_key_ids = [key['AccessKeyId'] for key in old_access_keys]
 
-        new_key = self.rotate_user_key(old_key_ids, user_name)
-        self.update_config_dict(new_key, old_key_ids)
+        new_key = self._rotate_user_key(old_key_ids, user_name)
+        self._update_config_dict(new_key, old_key_ids)
 
         print("")
         print(f"{user_name}'s access key rotated.")
@@ -29,21 +29,21 @@ class RotateUserKey(CommandBase):
         print("  User's updated zipped configuration created in config.")
 
 
-    def rotate_user_key(self, old_key_ids, user_name):
+    def _rotate_user_key(self, old_key_ids, user_name):
         """rotate IAM user's access key"""
         for key_id in old_key_ids:
             if key_id != consts.KEY_ID:
-                self.iam_client.delete_access_key(
+                self._iam_client.delete_access_key(
                     UserName=user_name,
                     AccessKeyId=key_id
                 )
 
-        new_key = self.iam_client.create_access_key(
+        new_key = self._iam_client.create_access_key(
             UserName=user_name)['AccessKey']
         new_key = {new_key['AccessKeyId']: new_key['SecretAccessKey']}
 
         if consts.KEY_ID in old_key_ids:
-            self.iam_client.delete_access_key(
+            self._iam_client.delete_access_key(
                 UserName=user_name,
                 AccessKeyId=consts.KEY_ID
             )
@@ -52,7 +52,7 @@ class RotateUserKey(CommandBase):
 
 
     @staticmethod
-    def update_config_dict(new_key, old_key_ids):
+    def _update_config_dict(new_key, old_key_ids):
         """remove old access keys and place new one in config"""
         config_dict = os2.parse_json(consts.CONFIG_JSON)
 

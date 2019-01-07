@@ -34,7 +34,7 @@ class CommandBase(ABC):
 
     @classmethod
     def cmd_name(cls) -> str:
-        """convert child class' __module__ to name of argparse command"""
+        """return child class' file name to use as argparse command name"""
         name_str = cls.__module__.rsplit('.', 1)[-1]
         if not name_str.endswith(cls._module_postfix):
             raise ImportError(f"{name_str} module name must end with "
@@ -48,22 +48,22 @@ class CommandBase(ABC):
         docstring = cls.main.__doc__
         if docstring is not None:
             return docstring.strip().splitlines()[0]
-        return "no description provided"
+        raise NotImplementedError(f"{cls.__name__}'s main missing docstring.")
 
 
 class ParentCommand(CommandBase):
     """base class for command which just acts as parent for other commands"""
     _module_postfix = "_cmds"
-    sub_commands: List[Type[CommandBase]]
+    _sub_commands: List[Type[CommandBase]]
 
     def __init__(self, cmd_args):
-        self.chosen_cmd = next(cmd(cmd_args) for cmd in self.sub_commands
+        self._chosen_cmd = next(cmd(cmd_args) for cmd in self._sub_commands
             if cmd.cmd_name() == cmd_args.subcommand)
 
 
     def main(self, cmd_args):
         """Execute chosen subcommand"""
-        self.chosen_cmd.main(cmd_args)
+        self._chosen_cmd.main(cmd_args)
 
 
     @classmethod
@@ -73,13 +73,13 @@ class ParentCommand(CommandBase):
         subcommands = cmd_parser.add_subparsers(
             title="subcommands", metavar="<subcommand>", dest="subcommand")
         subcommands.required = True
-        for sub_command in cls.sub_commands:
+        for sub_command in cls._sub_commands:
             sub_command.add_documentation(subcommands)
 
 
     def blocked_actions(self, cmd_args) -> List[str]:
         """pass along selected subcommand's denied IAM actions"""
-        return self.chosen_cmd.blocked_actions(cmd_args)
+        return self._chosen_cmd.blocked_actions(cmd_args)
 
 
 class ComponentSetup(ABC):

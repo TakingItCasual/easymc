@@ -8,7 +8,7 @@ from ec2mc.validate import validate_perms
 class DeleteUser(CommandBase):
 
     def __init__(self, cmd_args):
-        self.iam_client = aws.iam_client()
+        self._iam_client = aws.iam_client()
 
 
     def main(self, cmd_args):
@@ -21,10 +21,10 @@ class DeleteUser(CommandBase):
             halt.err("You cannot delete yourself.")
 
         user_name = aws.validate_user_exists(path_prefix, user_name)
-        self.delete_user_access_keys(user_name)
-        self.remove_user_from_groups(user_name)
-        self.detach_user_from_policies(user_name)
-        self.iam_client.delete_user(UserName=user_name)
+        self._delete_user_access_keys(user_name)
+        self._remove_user_from_groups(user_name)
+        self._detach_user_from_policies(user_name)
+        self._iam_client.delete_user(UserName=user_name)
 
         print("")
         print(f"IAM user \"{user_name}\" deleted from AWS.")
@@ -35,12 +35,12 @@ class DeleteUser(CommandBase):
             print("  User's zipped configuration deleted from config.")
 
 
-    def delete_user_access_keys(self, user_name):
+    def _delete_user_access_keys(self, user_name):
         """delete IAM user's access key(s)"""
-        aws_access_keys = self.iam_client.list_access_keys(
+        aws_access_keys = self._iam_client.list_access_keys(
             UserName=user_name)['AccessKeyMetadata']
         for access_key in aws_access_keys:
-            self.iam_client.delete_access_key(
+            self._iam_client.delete_access_key(
                 UserName=user_name,
                 AccessKeyId=access_key['AccessKeyId']
             )
@@ -54,23 +54,23 @@ class DeleteUser(CommandBase):
                 os2.save_json(config_dict, consts.CONFIG_JSON)
 
 
-    def remove_user_from_groups(self, user_name):
+    def _remove_user_from_groups(self, user_name):
         """remove IAM user from IAM groups"""
-        user_groups = self.iam_client.list_groups_for_user(
+        user_groups = self._iam_client.list_groups_for_user(
             UserName=user_name)['Groups']
         for user_group in user_groups:
-            self.iam_client.remove_user_from_group(
+            self._iam_client.remove_user_from_group(
                 GroupName=user_group['GroupName'],
                 UserName=user_name
             )
 
 
-    def detach_user_from_policies(self, user_name):
+    def _detach_user_from_policies(self, user_name):
         """detach IAM user from IAM policies"""
-        user_policies = self.iam_client.list_attached_user_policies(
+        user_policies = self._iam_client.list_attached_user_policies(
             UserName=user_name)['AttachedPolicies']
         for user_policy in user_policies:
-            self.iam_client.detach_user_policy(
+            self._iam_client.detach_user_policy(
                 UserName=user_name,
                 PolicyArn=user_policy['PolicyArn']
             )

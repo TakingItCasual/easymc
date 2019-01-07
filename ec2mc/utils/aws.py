@@ -142,16 +142,16 @@ class ClientErrorHalt:
     """context manager to catch ClientErrors"""
 
     def __init__(self, *, allow=None):
-        self.pass_exceptions = allow
+        self._pass_exceptions = allow
         if allow is None:
-            self.pass_exceptions = []
+            self._pass_exceptions = []
 
     def __enter__(self):
         return None
 
     def __exit__(self, exc_type, exc_value, traceback):
         if exc_type is not None and issubclass(exc_type, ClientError):
-            if exc_value.response['Error']['Code'] in self.pass_exceptions:
+            if exc_value.response['Error']['Code'] in self._pass_exceptions:
                 return True  # Ignore ClientError
             halt.err(str(exc_value))
         return False  # Allow other exceptions to propagate

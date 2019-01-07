@@ -49,7 +49,8 @@ setup(
     ],
     keywords="mc minecraft ssh server aws ec2 iam cloud-config",
     packages=find_packages(exclude=["docs", "tests"]),
-    python_requires="~={}.{}.{}".format(*__min_python__),
+    python_requires=">={}.{}.{},<{}".format(
+        *__min_python__, __min_python__[0] + 1),
     entry_points={'console_scripts': ["ec2mc=ec2mc.__main__:main"]},
     include_package_data=True,
     install_requires=[

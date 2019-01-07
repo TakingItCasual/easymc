@@ -33,14 +33,14 @@ IP_HANDLER_DIR = AWS_SETUP_DIR / "ip_handlers"
 USE_HANDLER: bool
 
 # IAM user data needed for AWS programmatic access.
-# Set in ec2mc.validate.validate_config:validate_user
+# Set in ec2mc.validate.validate_config:_validate_user
 KEY_ID: str
 KEY_SECRET: str
 IAM_ARN: str
 IAM_NAME: str
 
 """This string is used for the following purposes:
-- Path prefix for IAM groups, policies, and users ("/" on both sides).
+- Path prefix for IAM users, groups, and policies ("/" on both sides).
 - Name and Namespace tags of:
   - VPC created in each region.
     - VPC's route table.
@@ -52,6 +52,9 @@ IAM_NAME: str
 """
 # Set in ec2mc.validate.validate_setup:main
 NAMESPACE: str
+# Path prefix for IAM users, groups, and policies
+# Set in ec2mc.validate.validate_setup:main
+IAM_PREFIX: str
 
 # Limit configuration RW access to owner of file(s).
 CONFIG_PERMS = 0o600
@@ -59,7 +62,7 @@ CONFIG_PERMS = 0o600
 PK_PERMS = 0o400
 
 # Tuple of regions found with ec2:GetRegions (filtered through whitelist)
-# Set in ec2mc.validate.validate_config:validate_region_whitelist
+# Set in ec2mc.validate.validate_config:_validate_region_whitelist
 REGIONS: Tuple[str]
 
 # Name of the Amazon Linux 2 AMI to create instances with

@@ -14,14 +14,14 @@ class BeUser(CommandBase):
         if user_name.lower() == consts.IAM_NAME.lower():
             halt.err(f"You are already {consts.IAM_NAME}.")
 
-        user_name = self.switch_access_key(user_name)
+        user_name = self._switch_access_key(user_name)
 
         print("")
         print(f"{user_name}'s access key set as default in config.")
 
 
     @staticmethod
-    def switch_access_key(user_name):
+    def _switch_access_key(user_name):
         """set access key stored in backup access keys list as default"""
         config_dict = os2.parse_json(consts.CONFIG_JSON)
         if 'backup_keys' not in config_dict:

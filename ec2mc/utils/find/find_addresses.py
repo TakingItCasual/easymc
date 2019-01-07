@@ -27,7 +27,7 @@ def probe_regions():
 
     threader = Threader()
     for region in consts.REGIONS:
-        threader.add_thread(probe_region, (region, all_instances))
+        threader.add_thread(_probe_region, (region, all_instances))
     region_addresses = threader.get_results(return_dict=True)
 
     return [{'region': region, **address}
@@ -35,7 +35,7 @@ def probe_regions():
         for address in addresses]
 
 
-def probe_region(region, instances):
+def _probe_region(region, instances):
     """return elastic IP addresses in region
 
     Requires ec2:DescribeAddresses permission.

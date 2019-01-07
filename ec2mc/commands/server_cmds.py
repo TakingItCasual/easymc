@@ -6,7 +6,7 @@ from ec2mc.commands.server_sub import ssh_cmd
 
 class Server(ParentCommand):
 
-    sub_commands = [
+    _sub_commands = [
         create_cmd.CreateServer,
         delete_cmd.DeleteServer,
         ssh_cmd.SSHServer

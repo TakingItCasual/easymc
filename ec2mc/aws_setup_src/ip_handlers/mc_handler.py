@@ -14,12 +14,12 @@ def main(instance_name, new_ip):
         instance_name (str): Tag value for instance tag key "Name".
         new_ip (str): Instance's new IP to update client's server list with.
     """
-    servers_dat_path = find_minecraft_servers_dat()
+    servers_dat_path = _find_minecraft_servers_dat()
     if servers_dat_path is not None:
-        update_servers_dat(servers_dat_path, instance_name, new_ip)
+        _update_servers_dat(servers_dat_path, instance_name, new_ip)
 
 
-def update_servers_dat(servers_dat_path, server_name, new_ip):
+def _update_servers_dat(servers_dat_path, server_name, new_ip):
     """update IP of server_name in server list with new_ip
 
     Args:
@@ -49,7 +49,7 @@ def update_servers_dat(servers_dat_path, server_name, new_ip):
     servers_dat_nbt.save(gzipped=False)
 
 
-def find_minecraft_servers_dat():
+def _find_minecraft_servers_dat():
     """retrieve servers.dat path from config, or search home directory"""
     # Path to text file containing path to Minecraft client's servers.dat file.
     mc_servers_dat_txt = consts.CONFIG_DIR / "mc_servers_dat_path.txt"

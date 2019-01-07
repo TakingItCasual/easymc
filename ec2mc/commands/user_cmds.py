@@ -9,7 +9,7 @@ from ec2mc.commands.user_sub import delete_cmd
 
 class User(ParentCommand):
 
-    sub_commands = [
+    _sub_commands = [
         list_cmd.ListUsers,
         be_cmd.BeUser,
         create_cmd.CreateUser,

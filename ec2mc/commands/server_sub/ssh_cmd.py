@@ -39,9 +39,9 @@ class SSHServer(CommandBase):
         print(user_and_hostname)
 
         if shutil.which("ssh") is not None:
-            self.open_openssh_session(user_and_hostname, consts.RSA_KEY_PEM)
+            self._open_openssh_session(user_and_hostname, consts.RSA_KEY_PEM)
         elif shutil.which("putty") is not None:
-            self.open_putty_session(user_and_hostname, consts.RSA_KEY_PPK)
+            self._open_putty_session(user_and_hostname, consts.RSA_KEY_PPK)
         else:
             if platform.system() == "Windows":
                 halt.err("Neither OpenSSH for Windows nor PuTTY were found.",
@@ -53,7 +53,7 @@ class SSHServer(CommandBase):
 
 
     @staticmethod
-    def open_openssh_session(user_and_hostname, pem_key_path):
+    def _open_openssh_session(user_and_hostname, pem_key_path):
         """open interactive SSH session using the OpenSSH client"""
         if not pem_key_path.is_file():
             halt.err(f"{pem_key_path.name} not found from config.",
@@ -73,7 +73,7 @@ class SSHServer(CommandBase):
 
 
     @staticmethod
-    def open_putty_session(user_and_hostname, ppk_key_path):
+    def _open_putty_session(user_and_hostname, ppk_key_path):
         """open interactive SSH session using the PuTTY client"""
         if not ppk_key_path.is_file():
             halt.err(f"{ppk_key_path.name} not found from config.",

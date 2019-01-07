@@ -15,7 +15,7 @@ from ec2mc.validate import validate_perms
 class CreateServer(CommandBase):
 
     def __init__(self, cmd_args):
-        self.ec2_client = aws.ec2_client(cmd_args.region)
+        self._ec2_client = aws.ec2_client(cmd_args.region)
 
 
     def main(self, cmd_args):
@@ -28,21 +28,21 @@ class CreateServer(CommandBase):
         if f"{cmd_args.template}.yaml" not in template_yaml_files:
             halt.err(f"Template {cmd_args.template} not found from config.")
 
-        self.validate_name_is_unique(cmd_args.name)
-        self.validate_limits_not_reached(cmd_args.elastic_ip)
+        self._validate_name_is_unique(cmd_args.name)
+        self._validate_limits_not_reached(cmd_args.elastic_ip)
 
         inst_template = os2.parse_yaml(consts.USER_DATA_DIR /
             f"{cmd_args.template}.yaml")['ec2mc_template_info']
 
-        self.validate_type_and_size_allowed(
+        self._validate_type_and_size_allowed(
             inst_template['instance_type'], inst_template['volume_size'])
         if cmd_args.use_ip is not None:
-            address = self.validate_address(
+            address = self._validate_address(
                 cmd_args.use_ip, cmd_args.region, cmd_args.force)
 
-        creation_kwargs = self.parse_run_instance_args(cmd_args, inst_template)
-        user_data = self.process_user_data(cmd_args.template, inst_template)
-        self.create_instance(creation_kwargs, user_data, dry_run=True)
+        creation_kwargs = self._parse_creation_kwargs(cmd_args, inst_template)
+        user_data = self._process_user_data(cmd_args.template, inst_template)
+        self._create_instance(creation_kwargs, user_data, dry_run=True)
 
         print("")
         if cmd_args.confirm is False:
@@ -50,21 +50,21 @@ class CreateServer(CommandBase):
             print("Append the -c argument to confirm instance creation.")
             return
 
-        instance = self.create_instance(
+        instance = self._create_instance(
             creation_kwargs, user_data, dry_run=False)
         print("Instance created. It may take a few minutes to initialize.")
         if consts.USE_HANDLER is True:
             print("  Utilize IP handler with \"ec2mc servers check\".")
 
         if cmd_args.elastic_ip is True:
-            self.create_elastic_ip(cmd_args.region, instance['InstanceId'])
+            self._create_elastic_ip(cmd_args.region, instance['InstanceId'])
             print("New elastic IP associated with created instance.")
         elif cmd_args.use_ip is not None:
-            self.reuse_elastic_ip(address, instance['InstanceId'])
+            self._reuse_elastic_ip(address, instance['InstanceId'])
             print("Existing elastic IP associated with created instance.")
 
 
-    def parse_run_instance_args(self, cmd_args, instance_template):
+    def _parse_creation_kwargs(self, cmd_args, instance_template):
         """parse arguments for run_instances from argparse args and template
 
         Args:
@@ -79,7 +79,7 @@ class CreateServer(CommandBase):
                 'ip_handler' (str): Local IpHandler script to handle IPs with.
 
         Returns:
-            dict: Arguments needed for instance creation.
+            dict: Keyword arguments needed for instance creation.
                 'ami_id' (str): EC2 image ID (determines instance OS).
                 'device_name' (str): Device Name for operating system (?).
                 'instance_type' (str): EC2 instance type to create.
@@ -89,14 +89,12 @@ class CreateServer(CommandBase):
                 'subnet_id' (str): ID of VPC subnet to assign to instance.
                 'key_name' (str): Name of EC2 key pair to assign (for SSH).
         """
-        creation_kwargs = {}
-
-        creation_kwargs.update({
+        creation_kwargs = {
             'instance_type': instance_template['instance_type'],
             'volume_size': instance_template['volume_size']
-        })
+        }
 
-        aws_images = self.ec2_client.describe_images(Filters=[
+        aws_images = self._ec2_client.describe_images(Filters=[
             {'Name': "name", 'Values': [consts.AMI_NAME]}
         ])['Images']
         if not aws_images:
@@ -113,18 +111,18 @@ class CreateServer(CommandBase):
         vpc_id = vpc_info['VpcId']
 
         creation_kwargs.update({
-            'tags': self.parse_tags(cmd_args, instance_template),
-            'key_name': self.validate_ec2_key_pair(),
-            'sg_ids': self.template_security_groups(
+            'tags': self._parse_tags(cmd_args, instance_template),
+            'key_name': self._validate_ec2_key_pair(),
+            'sg_ids': self._template_security_groups(
                 cmd_args.region, vpc_id, instance_template['security_groups']),
-            'subnet_id': self.first_subnet_id(vpc_id)
+            'subnet_id': self._first_subnet_id(vpc_id)
         })
 
         return creation_kwargs
 
 
     @classmethod
-    def process_user_data(cls, template_name, template):
+    def _process_user_data(cls, template_name, template):
         """add template files to user_data's write_files
 
         Args:
@@ -140,7 +138,7 @@ class CreateServer(CommandBase):
             consts.USER_DATA_DIR / f"{template_name}.yaml")
 
         if 'write_directories' in template:
-            write_files = cls.write_files_gen(template['write_directories'])
+            write_files = cls._write_files_gen(template['write_directories'])
             if write_files:
                 user_data.setdefault('write_files', []).extend(write_files)
 
@@ -159,7 +157,7 @@ class CreateServer(CommandBase):
 
 
     @staticmethod
-    def write_files_gen(write_dirs):
+    def _write_files_gen(write_dirs):
         """fill out write_files list from specified directory(s)"""
         write_files = []
         for write_dir in write_dirs:
@@ -180,16 +178,16 @@ class CreateServer(CommandBase):
         return write_files
 
 
-    def create_instance(self, creation_kwargs, user_data, *, dry_run):
+    def _create_instance(self, creation_kwargs, user_data, *, dry_run):
         """create EC2 instance and initialize with user_data
 
         Args:
-            creation_kwargs (dict): See what parse_run_instance_args returns.
-            user_data (str): cloud-config to initialize instance on boot.
+            creation_kwargs (dict): See what _parse_creation_kwargs returns.
+            user_data (str): See what _process_user_data returns.
             dry_run (bool): If True, only test if IAM user is allowed to.
         """
         with aws.ClientErrorHalt(allow=["DryRunOperation"]):
-            return self.ec2_client.run_instances(
+            return self._ec2_client.run_instances(
                 DryRun=dry_run,
                 KeyName=creation_kwargs['key_name'],
                 MinCount=1, MaxCount=1,
@@ -209,29 +207,29 @@ class CreateServer(CommandBase):
             )['Instances'][0]
 
 
-    def create_elastic_ip(self, region, instance_id):
+    def _create_elastic_ip(self, region, instance_id):
         """allocate new elastic IP address, and associate with instance"""
         with aws.ClientErrorHalt():
-            allocation_id = self.ec2_client.allocate_address(
+            allocation_id = self._ec2_client.allocate_address(
                 Domain="vpc")['AllocationId']
 
         aws.attach_tags(region, allocation_id)
-        self.associate_elastic_ip(instance_id, allocation_id)
+        self._associate_elastic_ip(instance_id, allocation_id)
 
 
-    def reuse_elastic_ip(self, address, instance_id):
+    def _reuse_elastic_ip(self, address, instance_id):
         """associate already owned elastic IP with instance"""
         if 'association_id' in address:
-            self.ec2_client.disassociate_address(
+            self._ec2_client.disassociate_address(
                 AssociationId=address['association_id'])
-        self.associate_elastic_ip(instance_id, address['allocation_id'])
+        self._associate_elastic_ip(instance_id, address['allocation_id'])
 
 
-    def associate_elastic_ip(self, instance_id, allocation_id):
+    def _associate_elastic_ip(self, instance_id, allocation_id):
         """attempt to assign elastic IP to instance for 60 seconds"""
         for _ in range(60):
             with aws.ClientErrorHalt(allow=["InvalidInstanceID"]):
-                self.ec2_client.associate_address(
+                self._ec2_client.associate_address(
                     AllocationId=allocation_id,
                     InstanceId=instance_id,
                     AllowReassociation=False
@@ -243,7 +241,7 @@ class CreateServer(CommandBase):
 
 
     @staticmethod
-    def validate_name_is_unique(instance_name):
+    def _validate_name_is_unique(instance_name):
         """validate desired instance name isn't in use by another instance"""
         all_instances = find_instances.probe_regions()
         instance_names = [instance['name'] for instance in all_instances]
@@ -251,9 +249,9 @@ class CreateServer(CommandBase):
             halt.err(f"Instance name \"{instance_name}\" already in use.")
 
 
-    def validate_limits_not_reached(self, allocate_address):
+    def _validate_limits_not_reached(self, allocate_address):
         """validate instance/address limits haven't been reached"""
-        attributes = self.ec2_client.describe_account_attributes(
+        attributes = self._ec2_client.describe_account_attributes(
             AttributeNames=["max-instances", "vpc-max-elastic-ips"]
         )['AccountAttributes']
         max_instances = int(next(
@@ -266,13 +264,13 @@ class CreateServer(CommandBase):
             if attribute['AttributeName'] == "vpc-max-elastic-ips"))
 
         instance_count = sum(len(reservation['Instances']) for reservation
-            in self.ec2_client.describe_instances()['Reservations'])
+            in self._ec2_client.describe_instances()['Reservations'])
         if instance_count >= max_instances:
             halt.err(f"You cannot possess more than {max_instances} "
                 "instances in this region.")
 
         if allocate_address is True:
-            address_count = len(self.ec2_client.describe_addresses(Filters=[
+            address_count = len(self._ec2_client.describe_addresses(Filters=[
                 {'Name': "domain", 'Values': ["vpc"]}
             ])['Addresses'])
             if address_count >= max_addresses:
@@ -281,7 +279,7 @@ class CreateServer(CommandBase):
 
 
     @staticmethod
-    def validate_type_and_size_allowed(instance_type, volume_size):
+    def _validate_type_and_size_allowed(instance_type, volume_size):
         """validate user is allowed to create instance with type and size"""
         if validate_perms.blocked(actions=["ec2:RunInstances"],
                 resources=["arn:aws:ec2:*:*:instance/*"],
@@ -294,7 +292,7 @@ class CreateServer(CommandBase):
 
 
     @staticmethod
-    def validate_address(elastic_ip, region, force_disassociation):
+    def _validate_address(elastic_ip, region, force_disassociation):
         """validate elastic IP address exists and is available"""
         address = find_addresses.main(elastic_ip)
         if 'association_id' in address and force_disassociation is False:
@@ -306,8 +304,8 @@ class CreateServer(CommandBase):
 
 
     @staticmethod
-    def parse_tags(cmd_args, instance_template):
-        """handle tag parsing for parse_run_instance_args method"""
+    def _parse_tags(cmd_args, instance_template):
+        """handle tag parsing for _parse_creation_kwargs method"""
         instance_tags = [
             {'Key': "Name", 'Value': cmd_args.name},
             {'Key': "Namespace", 'Value': consts.NAMESPACE},
@@ -325,7 +323,7 @@ class CreateServer(CommandBase):
 
 
     @staticmethod
-    def template_security_groups(region, vpc_id, security_groups):
+    def _template_security_groups(region, vpc_id, security_groups):
         """return VPC security group ID(s)"""
         vpc_sgs = aws.get_vpc_security_groups(region, vpc_id)
         vpc_sg_names = [sg['GroupName'] for sg in vpc_sgs]
@@ -336,32 +334,34 @@ class CreateServer(CommandBase):
             if sg['GroupName'] in security_groups]
 
 
-    def first_subnet_id(self, vpc_id):
+    def _first_subnet_id(self, vpc_id):
         """return ID of VPC's first subnet (alphabetically ordered)"""
-        vpc_subnets = self.ec2_client.describe_subnets(Filters=[{
-            'Name': "vpc-id",
-            'Values': [vpc_id]
-        }])['Subnets']
+        vpc_subnets = self._ec2_client.describe_subnets(Filters=[
+            {'Name': "vpc-id", 'Values': [vpc_id]}
+        ])['Subnets']
         if not vpc_subnets:
             halt.err(f"VPC {consts.NAMESPACE} in AWS region has no subnets.")
         vpc_subnets.sort(key=lambda k: k['AvailabilityZone'])
         return vpc_subnets[0]['SubnetId']
 
 
-    def validate_ec2_key_pair(self):
+    def _validate_ec2_key_pair(self):
         """validate EC2 key pair exists, and matches local RSA key file"""
-        ec2_key_pairs = self.ec2_client.describe_key_pairs(Filters=[{
-            'Name': "key-name",
-            'Values': [consts.NAMESPACE]
-        }])['KeyPairs']
+        ec2_key_pairs = self._ec2_client.describe_key_pairs(Filters=[
+            {'Name': "key-name", 'Values': [consts.NAMESPACE]}
+        ])['KeyPairs']
         if not ec2_key_pairs:
             halt.err(f"EC2 key pair {consts.NAMESPACE} not found from AWS.",
                 "  Have you uploaded the AWS setup?")
+
+        pem_path = consts.RSA_KEY_PEM.name
         if not consts.RSA_KEY_PEM.is_file():
-            halt.err(f"{consts.RSA_KEY_PEM.name} not found from config.")
+            halt.err(f"{pem_path} not found from config.")
         if pem.local_key_fingerprint() != ec2_key_pairs[0]['KeyFingerprint']:
-            halt.err("Local RSA key fingerprint doesn't match EC2 key pair's.")
-        return ec2_key_pairs[0]['KeyName']
+            halt.err(f"Fingerprints of config's {pem_path} and EC2 key pair "
+                "do not match.")
+
+        return ec2_key_pairs[0]['KeyName']  # Should be same as namespace
 
 
     @classmethod

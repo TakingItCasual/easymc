@@ -5,13 +5,13 @@ class Threader:
     """thread arbitrary number of functions, then block when results wanted
 
     Attributes:
-        result_queue (Queue): Thread-safe queue that holds the results.
-        threads (list[Thread]): Threads of functions added with add_thread.
+        _result_queue (Queue): Thread-safe queue that holds the results.
+        _threads (list[Thread]): Threads of functions added with add_thread.
     """
 
     def __init__(self):
-        self.result_queue = Queue()
-        self.threads = []
+        self._result_queue = Queue()
+        self._threads = []
 
 
     def _worker(self, func, fargs):
@@ -22,8 +22,8 @@ class Threader:
 
         Args: See add_thread
         """
-        return self.result_queue.put([
-            len(self.threads), fargs[0], func(*fargs)])
+        return self._result_queue.put([
+            len(self._threads), fargs[0], func(*fargs)])
 
 
     def add_thread(self, func, fargs):
@@ -41,8 +41,8 @@ class Threader:
         if not isinstance(fargs, tuple) or not fargs:
             raise ValueError("fargs must be a non-empty tuple.")
 
-        self.threads.append(Thread(target=self._worker, args=(func, fargs)))
-        self.threads[-1].start()
+        self._threads.append(Thread(target=self._worker, args=(func, fargs)))
+        self._threads[-1].start()
 
 
     def get_results(self, return_dict=False):
@@ -52,12 +52,12 @@ class Threader:
             return_dict (bool): Return dict instead of list. Threaded
                 functions' first arguments used as keys.
         """
-        for thread in self.threads:
+        for thread in self._threads:
             thread.join()
 
         thread_data = []
-        while not self.result_queue.empty():
-            thread_data.append(self.result_queue.get())
+        while not self._result_queue.empty():
+            thread_data.append(self._result_queue.get())
         thread_data.sort(key=lambda thread_index: thread_index[0])
 
         if return_dict:
